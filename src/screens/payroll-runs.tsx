@@ -16,7 +16,7 @@ import { Avatar } from '../components/ui/avatar'
 import { Drawer } from '../components/ui/drawer'
 import { Tabs } from '../components/ui/tabs'
 import { useConfirm } from '../components/ui/confirm'
-import { useToast } from '../components/ui/toast'
+import { toast } from 'sonner'
 import {
   Table,
   THead,
@@ -27,12 +27,10 @@ import {
 import { QueryState } from '../components/ui/query-state'
 import { StatCard } from './dashboard'
 import {
-  QK,
-  payrollMutations,
-  useApiMutation,
   usePayrollPeriods,
   usePayrollRows,
-} from '../api/resources'
+  useGeneratePayroll,
+} from '@/hooks/usePayroll'
 import type { PayrollPeriod, PayrollRow, PeriodStatus } from '../types/domain'
 import { fmtDate, fmtVND } from '../lib/format'
 import { cn } from '../lib/utils'
@@ -77,7 +75,6 @@ function PayItem({ label, value, bold, negative, highlight }: PayItemProps) {
 }
 
 export function PayrollRunsScreen() {
-  const toast = useToast()
   const { confirm, node: confirmNode } = useConfirm()
   const { data: periods = [] } = usePayrollPeriods()
   const [periodId, setPeriodId] = useState<string>('p1')
@@ -86,10 +83,7 @@ export function PayrollRunsScreen() {
   const [selected, setSelected] = useState<PayrollRow | null>(null)
   const [tab, setTab] = useState<'all' | 'draft' | 'confirmed'>('all')
 
-  const generateMut = useApiMutation(
-    (id: string) => payrollMutations.generate(id),
-    { invalidate: [QK.payroll(periodId)] },
-  )
+  const generateMut = useGeneratePayroll()
 
   const totals = useMemo(
     () =>
@@ -113,9 +107,8 @@ export function PayrollRunsScreen() {
     })
     if (!ok) return
     await generateMut.mutateAsync(periodId)
-    toast({
-      title: 'Đã tạo bảng lương',
-      desc: `${rows.length} dòng cho ${period.name}`,
+    toast.success('Đã tạo bảng lương', {
+      description: `${rows.length} dòng cho ${period.name}`,
     })
   }
 
@@ -315,7 +308,7 @@ export function PayrollRunsScreen() {
             </Button>
             <Button
               onClick={() => {
-                toast({ title: 'Đã xác nhận bảng lương' })
+                toast.success('Đã xác nhận bảng lương')
                 setSelected(null)
               }}
             >

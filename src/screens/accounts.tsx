@@ -8,7 +8,7 @@ import { Select } from '../components/ui/select'
 import { Badge } from '../components/ui/badge'
 import { Avatar } from '../components/ui/avatar'
 import { Modal } from '../components/ui/modal'
-import { useToast } from '../components/ui/toast'
+import { toast } from 'sonner'
 import {
   Table,
   THead,
@@ -18,12 +18,10 @@ import {
 } from '../components/ui/table'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
-import {
-  useAccounts,
-  useDepartments,
-  useEmployees,
-  useRoles,
-} from '../api/resources'
+import { useAccounts } from '@/hooks/useAccounts'
+import { useDepartments } from '@/hooks/useDepartments'
+import { useEmployees } from '@/hooks/useEmployees'
+import { useRoles } from '@/hooks/useRoles'
 import type { Account, AccountStatus } from '../types/domain'
 import { cn } from '../lib/utils'
 
@@ -45,8 +43,8 @@ const blank: EditableAccount = {
 }
 
 export function AccountsScreen() {
-  const toast = useToast()
-  const { data: list = [], isLoading, error } = useAccounts()
+  const { data: paged, isLoading, error } = useAccounts()
+  const list = paged?.items ?? []
   const { data: employees = [] } = useEmployees()
   const { data: roles = [] } = useRoles()
   const { data: departments = [] } = useDepartments()
@@ -223,9 +221,9 @@ export function AccountsScreen() {
             </Button>
             <Button
               onClick={() => {
-                toast({
-                  title: editing.id ? 'Đã cập nhật' : 'Đã tạo tài khoản',
-                })
+                toast.success(
+                  editing.id ? 'Đã cập nhật' : 'Đã tạo tài khoản',
+                )
                 setOpen(false)
               }}
             >

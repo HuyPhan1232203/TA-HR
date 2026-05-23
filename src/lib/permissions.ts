@@ -1,7 +1,7 @@
-import type { AuthSession } from './auth-storage'
+import type { IAuthSession } from '@/types/AuthType'
 
 export function hasPermission(
-  session: AuthSession | null,
+  session: IAuthSession | null,
   perm: string,
 ): boolean {
   if (!session) return false
@@ -10,7 +10,7 @@ export function hasPermission(
 }
 
 export function hasAnyPermission(
-  session: AuthSession | null,
+  session: IAuthSession | null,
   perms: string[],
 ): boolean {
   return perms.some((p) => hasPermission(session, p))

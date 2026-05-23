@@ -7,7 +7,8 @@ import { Badge, type BadgeVariant } from '../components/ui/badge'
 import { Avatar } from '../components/ui/avatar'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
-import { useAccounts, useAuditLogs } from '../api/resources'
+import { useAccounts } from '@/hooks/useAccounts'
+import { useAuditLogs } from '@/hooks/useAuditLogs'
 
 const ACTION_COLOR: Record<string, BadgeVariant> = {
   LOGIN: 'muted',
@@ -22,7 +23,8 @@ const ACTION_COLOR: Record<string, BadgeVariant> = {
 
 export function AuditLogsScreen() {
   const { data: logs = [], isLoading, error } = useAuditLogs()
-  const { data: accounts = [] } = useAccounts()
+  const { data: pagedAccounts } = useAccounts()
+  const accounts = pagedAccounts?.items ?? []
 
   return (
     <div>

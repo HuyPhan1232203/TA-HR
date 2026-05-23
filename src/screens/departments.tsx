@@ -9,17 +9,17 @@ import { Select } from '../components/ui/select'
 import { Badge } from '../components/ui/badge'
 import { Modal } from '../components/ui/modal'
 import { useConfirm } from '../components/ui/confirm'
-import { useToast } from '../components/ui/toast'
+import { toast } from 'sonner'
 import { DataTable } from '../components/ui/data-table'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
 import {
-  departmentMutations,
-  useApiMutation,
   useDepartments,
-  useEmployees,
-  QK,
-} from '../api/resources'
+  useCreateDepartment,
+  useUpdateDepartment,
+  useDeleteDepartment,
+} from '@/hooks/useDepartments'
+import { useEmployees } from '@/hooks/useEmployees'
 import type { Department } from '../types/domain'
 
 interface EditableDepartment {
@@ -38,7 +38,6 @@ const blankDepartment: EditableDepartment = {
 }
 
 export function DepartmentsScreen() {
-  const toast = useToast()
   const { confirm, node: confirmNode } = useConfirm()
   const { data: list = [], isLoading, error } = useDepartments()
   const { data: employees = [] } = useEmployees()
@@ -46,20 +45,9 @@ export function DepartmentsScreen() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<EditableDepartment>(blankDepartment)
 
-  const createMut = useApiMutation(
-    (payload: Omit<Department, 'id' | 'headcount'>) =>
-      departmentMutations.create(payload),
-    { invalidate: [QK.departments] },
-  )
-  const updateMut = useApiMutation(
-    (vars: { id: string; payload: Partial<Department> }) =>
-      departmentMutations.update(vars.id, vars.payload),
-    { invalidate: [QK.departments] },
-  )
-  const removeMut = useApiMutation(
-    (id: string) => departmentMutations.remove(id),
-    { invalidate: [QK.departments] },
-  )
+  const createMut = useCreateDepartment()
+  const updateMut = useUpdateDepartment()
+  const removeMut = useDeleteDepartment()
 
   const filtered = useMemo(
     () =>
@@ -89,17 +77,23 @@ export function DepartmentsScreen() {
 
   const save = async () => {
     if (!editing.code || !editing.name) {
-      toast({
-        kind: 'error',
-        title: 'Thiếu thông tin',
-        desc: 'Code và tên phòng ban là bắt buộc.',
+      toast.error('Thiếu thông tin', {
+        description: 'Code và tên phòng ban là bắt buộc.',
       })
       return
     }
     try {
       if (editing.id) {
-        await updateMut.mutateAsync({ id: editing.id, payload: editing })
-        toast({ title: 'Đã cập nhật phòng ban', desc: editing.name })
+        await updateMut.mutateAsync({
+          id: editing.id,
+          data: {
+            code: editing.code,
+            name: editing.name,
+            status: editing.status,
+            manager: editing.manager,
+          },
+        })
+        toast.success('Đã cập nhật phòng ban', { description: editing.name })
       } else {
         await createMut.mutateAsync({
           code: editing.code,
@@ -107,14 +101,12 @@ export function DepartmentsScreen() {
           status: editing.status,
           manager: editing.manager,
         })
-        toast({ title: 'Đã tạo phòng ban', desc: editing.name })
+        toast.success('Đã tạo phòng ban', { description: editing.name })
       }
       setOpen(false)
     } catch (err) {
-      toast({
-        kind: 'error',
-        title: 'Lỗi',
-        desc: err instanceof Error ? err.message : 'Không thể lưu',
+      toast.error('Lỗi', {
+        description: err instanceof Error ? err.message : 'Không thể lưu',
       })
     }
   }
@@ -129,12 +121,10 @@ export function DepartmentsScreen() {
     if (!ok) return
     try {
       await removeMut.mutateAsync(d.id)
-      toast({ title: 'Đã xóa', desc: d.name })
+      toast.success('Đã xóa', { description: d.name })
     } catch (err) {
-      toast({
-        kind: 'error',
-        title: 'Lỗi',
-        desc: err instanceof Error ? err.message : 'Không thể xóa',
+      toast.error('Lỗi', {
+        description: err instanceof Error ? err.message : 'Không thể xóa',
       })
     }
   }

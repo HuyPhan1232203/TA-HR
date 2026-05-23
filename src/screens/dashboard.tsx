@@ -20,7 +20,8 @@ import {
 import { Tabs } from '../components/ui/tabs'
 import { Avatar } from '../components/ui/avatar'
 import { PageHeader } from '../components/layout/page-header'
-import { useAuditLogs, useDepartments } from '../api/resources'
+import { useDepartments } from '@/hooks/useDepartments'
+import { useAuditLogs } from '@/hooks/useAuditLogs'
 
 interface StatCardProps {
   label: string

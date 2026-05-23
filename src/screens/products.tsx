@@ -7,7 +7,7 @@ import { Badge } from '../components/ui/badge'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
 import { StatCard } from './dashboard'
-import { useProducts } from '../api/resources'
+import { useProducts } from '@/hooks/useProducts'
 import { fmtDate } from '../lib/format'
 
 export function ProductsScreen() {
