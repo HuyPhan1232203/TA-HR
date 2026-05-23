@@ -6,7 +6,17 @@ import axios, {
 } from 'axios'
 import { loadSession } from './auth-storage'
 
-export const API_BASE_URL: string = import.meta.env.VITE_API_URL ?? ''
+// Paths in this app always start with `/api/...` per PROJECT_API_UI_FLOW.md.
+// VITE_API_URL may be configured as an origin ("http://host:8088") or with a
+// trailing "/api". Normalize to the origin so we never produce "/api/api/...".
+function normalizeOrigin(raw: string): string {
+  const trimmed = raw.trim().replace(/\/+$/, '')
+  return trimmed.replace(/\/api$/i, '')
+}
+
+export const API_BASE_URL: string = normalizeOrigin(
+  import.meta.env.VITE_API_URL ?? '',
+)
 
 export interface ApiResponse<T> {
   success: boolean

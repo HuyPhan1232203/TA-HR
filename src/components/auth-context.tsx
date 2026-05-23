@@ -1,0 +1,56 @@
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react'
+import {
+  clearSession,
+  loadSession,
+  saveSession,
+  type AuthSession,
+} from '../lib/auth-storage'
+
+interface AuthContextValue {
+  session: AuthSession | null
+  signIn: (session: AuthSession) => void
+  signOut: () => void
+}
+
+const AuthCtx = createContext<AuthContextValue | null>(null)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<AuthSession | null>(() => loadSession())
+
+  const signIn = useCallback((next: AuthSession) => {
+    saveSession(next)
+    setSession(next)
+  }, [])
+
+  const signOut = useCallback(() => {
+    clearSession()
+    setSession(null)
+  }, [])
+
+  useEffect(() => {
+    const onUnauthorized = () => signOut()
+    window.addEventListener('auth:unauthorized', onUnauthorized)
+    return () =>
+      window.removeEventListener('auth:unauthorized', onUnauthorized)
+  }, [signOut])
+
+  return (
+    <AuthCtx.Provider value={{ session, signIn, signOut }}>
+      {children}
+    </AuthCtx.Provider>
+  )
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthCtx)
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+  return ctx
+}
