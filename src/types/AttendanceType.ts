@@ -1,24 +1,29 @@
-import type { IEmployee } from './EmployeeType'
+export type AttendanceStatus = 'Draft' | 'Confirmed'
 
-export type AttendanceKind = 'work' | 'ot' | 'leave' | 'off'
-
-export interface IAttendanceCell {
-  d: number
-  kind: AttendanceKind
-  hours?: number
-}
-
-export interface IAttendanceRow {
-  employee: IEmployee
-  cells: IAttendanceCell[]
+export interface IAttendance {
+  id: string
+  employeeId: string
+  workDate: string
+  shiftCode?: string
+  checkIn: string
+  checkOut: string
+  workingHours: number
+  workingDayValue: number
+  overtimeHours: number
+  status: AttendanceStatus
 }
 
 export interface ICreateAttendance {
   employeeId: string
-  date: string
+  workDate: string
   checkIn: string
   checkOut: string
-  workHours: number
-  otHours: number
-  note?: string
+  workingHours: number
+  overtimeHours: number
+}
+
+export interface IAttendanceFilter {
+  employeeId?: string
+  fromDate?: string
+  toDate?: string
 }

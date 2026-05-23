@@ -1,12 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { attendanceApi } from '@/api/attendance.api'
-import type { IAttendanceRow, ICreateAttendance } from '@/types/AttendanceType'
+import type {
+  IAttendance,
+  IAttendanceFilter,
+  ICreateAttendance,
+} from '@/types/AttendanceType'
 
-export function useAttendances(month: string) {
-  return useQuery<IAttendanceRow[]>({
-    queryKey: ['attendances', month],
+export function useAttendances(filter?: IAttendanceFilter) {
+  return useQuery<IAttendance[]>({
+    queryKey: ['attendances', filter],
     queryFn: async () => {
-      const res = await attendanceApi.getAttendances(month)
+      const res = await attendanceApi.getAttendances(filter)
       if (!res.success) throw new Error(res.message)
       return res.data ?? []
     },
@@ -18,7 +22,6 @@ export function useCreateAttendance() {
   return useMutation({
     mutationFn: (data: ICreateAttendance) =>
       attendanceApi.createAttendance(data),
-    onSuccess: () =>
-      qc.invalidateQueries({ queryKey: ['attendances'] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['attendances'] }),
   })
 }

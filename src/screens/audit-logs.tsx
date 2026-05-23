@@ -1,14 +1,22 @@
-import { Download, Eye } from 'lucide-react'
+import { useState } from 'react'
+import { Download } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
-import { Input } from '../components/ui/input'
-import { Select } from '../components/ui/select'
-import { Badge, type BadgeVariant } from '../components/ui/badge'
-import { Avatar } from '../components/ui/avatar'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
+import { DatePicker } from '@/components/ui/date-picker'
+import { Badge, badgeVariants } from '@/components/ui/badge'
+import type { VariantProps } from 'class-variance-authority'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
-import { useAccounts } from '@/hooks/useAccounts'
 import { useAuditLogs } from '@/hooks/useAuditLogs'
+
+type BadgeVariant = VariantProps<typeof badgeVariants>['variant']
 
 const ACTION_COLOR: Record<string, BadgeVariant> = {
   LOGIN: 'muted',
@@ -23,8 +31,9 @@ const ACTION_COLOR: Record<string, BadgeVariant> = {
 
 export function AuditLogsScreen() {
   const { data: logs = [], isLoading, error } = useAuditLogs()
-  const { data: pagedAccounts } = useAccounts()
-  const accounts = pagedAccounts?.items ?? []
+  const [fromDate, setFromDate] = useState('2026-05-15')
+  const [toDate, setToDate] = useState('2026-05-22')
+  const [actionFilter, setActionFilter] = useState('all')
 
   return (
     <div>
@@ -40,24 +49,25 @@ export function AuditLogsScreen() {
 
       <Card>
         <div className="p-4 border-b flex items-center gap-3 flex-wrap">
-          <Input type="date" defaultValue="2026-05-15" className="w-[160px]" />
+          <DatePicker
+            value={fromDate}
+            onChange={setFromDate}
+            className="w-[160px]"
+          />
           <span className="text-muted-foreground text-sm">→</span>
-          <Input type="date" defaultValue="2026-05-22" className="w-[160px]" />
-          <Select className="w-[180px]" defaultValue="all">
-            <option value="all">Mọi người dùng</option>
-            {accounts.map((a) => (
-              <option key={a.id} value={a.username}>
-                @{a.username}
-              </option>
-            ))}
-          </Select>
-          <Select className="w-[200px]" defaultValue="all">
-            <option value="all">Mọi loại hành động</option>
-            <option>LOGIN</option>
-            <option>EMPLOYEE_*</option>
-            <option>PAYROLL_*</option>
-            <option>ATTENDANCE_*</option>
-            <option>ACCOUNT_*</option>
+          <DatePicker value={toDate} onChange={setToDate} className="w-[160px]" />
+          <Select value={actionFilter} onValueChange={setActionFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Mọi loại hành động" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Mọi loại hành động</SelectItem>
+              <SelectItem value="LOGIN">LOGIN</SelectItem>
+              <SelectItem value="EMPLOYEE_*">EMPLOYEE_*</SelectItem>
+              <SelectItem value="PAYROLL_*">PAYROLL_*</SelectItem>
+              <SelectItem value="ATTENDANCE_*">ATTENDANCE_*</SelectItem>
+              <SelectItem value="ACCOUNT_*">ACCOUNT_*</SelectItem>
+            </SelectContent>
           </Select>
           <div className="flex-1" />
           <div className="text-xs text-muted-foreground num">
@@ -72,31 +82,26 @@ export function AuditLogsScreen() {
                 key={log.id}
                 className="flex items-start gap-4 px-5 py-3.5 hover:bg-muted/30"
               >
-                <div className="text-xs font-mono text-muted-foreground num pt-0.5 w-[140px] shrink-0">
-                  {log.at}
+                <div className="text-xs font-mono text-muted-foreground num pt-0.5 w-[160px] shrink-0">
+                  {new Date(log.performedAtUtc).toLocaleString('vi-VN')}
                 </div>
-                <Avatar name={log.actor} size={28} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm">
-                    <span className="font-medium">@{log.actor}</span>{' '}
-                    <Badge
-                      variant={ACTION_COLOR[log.action] ?? 'muted'}
-                      className="ml-1"
-                    >
+                  <div className="text-sm flex items-center gap-2 flex-wrap">
+                    <Badge variant={ACTION_COLOR[log.action] ?? 'muted'}>
                       {log.action}
                     </Badge>
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {log.module}
+                    </span>
                   </div>
-                  <div className="text-xs text-muted-foreground mt-1 truncate">
-                    Đối tượng:{' '}
-                    <span className="text-foreground">{log.target}</span>
+                  <div className="text-sm mt-1">{log.description}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5 truncate">
+                    {log.entityName}
+                    {log.entityId ? (
+                      <span className="font-mono"> · {log.entityId.slice(0, 8)}</span>
+                    ) : null}
                   </div>
                 </div>
-                <div className="text-xs font-mono text-muted-foreground num pt-0.5 shrink-0">
-                  {log.ip}
-                </div>
-                <Button variant="ghost" size="iconsm" aria-label="Xem">
-                  <Eye className="size-4" />
-                </Button>
               </div>
             ))}
           </div>

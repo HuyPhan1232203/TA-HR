@@ -6,17 +6,16 @@ import type {
   ICreateAccount,
   IUpdateAccount,
 } from '@/types/AccountType'
-import type { PagingResponse } from '@/types'
 
 const KEY = ['accounts'] as const
 
 export function useAccounts(filter?: IAccountFilter) {
-  return useQuery<PagingResponse<IAccount>>({
+  return useQuery<IAccount[]>({
     queryKey: [...KEY, filter] as const,
     queryFn: async () => {
       const res = await accountApi.getAccounts(filter)
       if (!res.success) throw new Error(res.message)
-      return res.data ?? { items: [], total: 0, page: 1, pageSize: 20 }
+      return res.data ?? []
     },
   })
 }

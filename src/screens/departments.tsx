@@ -5,10 +5,23 @@ import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { Select } from '../components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '../components/ui/badge'
-import { Modal } from '../components/ui/modal'
-import { useConfirm } from '../components/ui/confirm'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { ConfirmDialog, type ConfirmState } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
 import { DataTable } from '../components/ui/data-table'
 import { QueryState } from '../components/ui/query-state'
@@ -19,31 +32,27 @@ import {
   useUpdateDepartment,
   useDeleteDepartment,
 } from '@/hooks/useDepartments'
-import { useEmployees } from '@/hooks/useEmployees'
-import type { Department } from '../types/domain'
+import type { IDepartment } from '@/types/DepartmentType'
 
 interface EditableDepartment {
   id?: string
   code: string
   name: string
-  status: 'Active' | 'Inactive'
-  manager: string
+  isActive: boolean
 }
 
 const blankDepartment: EditableDepartment = {
   code: '',
   name: '',
-  status: 'Active',
-  manager: '',
+  isActive: true,
 }
 
 export function DepartmentsScreen() {
-  const { confirm, node: confirmNode } = useConfirm()
   const { data: list = [], isLoading, error } = useDepartments()
-  const { data: employees = [] } = useEmployees()
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<EditableDepartment>(blankDepartment)
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
 
   const createMut = useCreateDepartment()
   const updateMut = useUpdateDepartment()
@@ -64,14 +73,8 @@ export function DepartmentsScreen() {
     setEditing({ ...blankDepartment })
     setOpen(true)
   }
-  const openEdit = (d: Department) => {
-    setEditing({
-      id: d.id,
-      code: d.code,
-      name: d.name,
-      status: d.status,
-      manager: d.manager,
-    })
+  const openEdit = (d: IDepartment) => {
+    setEditing({ id: d.id, code: d.code, name: d.name, isActive: d.isActive })
     setOpen(true)
   }
 
@@ -89,8 +92,7 @@ export function DepartmentsScreen() {
           data: {
             code: editing.code,
             name: editing.name,
-            status: editing.status,
-            manager: editing.manager,
+            isActive: editing.isActive,
           },
         })
         toast.success('Đã cập nhật phòng ban', { description: editing.name })
@@ -98,8 +100,7 @@ export function DepartmentsScreen() {
         await createMut.mutateAsync({
           code: editing.code,
           name: editing.name,
-          status: editing.status,
-          manager: editing.manager,
+          isActive: editing.isActive,
         })
         toast.success('Đã tạo phòng ban', { description: editing.name })
       }
@@ -111,25 +112,28 @@ export function DepartmentsScreen() {
     }
   }
 
-  const remove = async (d: Department) => {
-    const ok = await confirm({
+  const remove = (d: IDepartment) => {
+    setConfirmState({
       title: 'Xóa phòng ban?',
-      body: `Phòng ban "${d.name}" sẽ bị xóa. Hành động này không thể hoàn tác.`,
+      description: `Phòng ban "${d.name}" sẽ bị xóa. Hành động này không thể hoàn tác.`,
       danger: true,
       confirmText: 'Xóa',
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await removeMut.mutateAsync(d.id)
+            toast.success('Đã xóa', { description: d.name })
+          } catch (err) {
+            toast.error('Lỗi', {
+              description: err instanceof Error ? err.message : 'Không thể xóa',
+            })
+          }
+        })()
+      },
     })
-    if (!ok) return
-    try {
-      await removeMut.mutateAsync(d.id)
-      toast.success('Đã xóa', { description: d.name })
-    } catch (err) {
-      toast.error('Lỗi', {
-        description: err instanceof Error ? err.message : 'Không thể xóa',
-      })
-    }
   }
 
-  const columns = useMemo<ColumnDef<Department>[]>(
+  const columns = useMemo<ColumnDef<IDepartment>[]>(
     () => [
       {
         accessorKey: 'code',
@@ -148,25 +152,11 @@ export function DepartmentsScreen() {
         ),
       },
       {
-        accessorKey: 'manager',
-        header: 'Quản lý',
-        cell: ({ row }) => (
-          <span className="text-muted-foreground">{row.original.manager}</span>
-        ),
-      },
-      {
-        accessorKey: 'headcount',
-        header: () => <div className="text-right">Nhân sự</div>,
-        cell: ({ row }) => (
-          <div className="text-right num">{row.original.headcount}</div>
-        ),
-      },
-      {
-        accessorKey: 'status',
+        accessorKey: 'isActive',
         header: 'Trạng thái',
         cell: ({ row }) => (
-          <Badge variant={row.original.status === 'Active' ? 'success' : 'muted'}>
-            {row.original.status === 'Active' ? 'Đang hoạt động' : 'Ngừng'}
+          <Badge variant={row.original.isActive ? 'success' : 'muted'}>
+            {row.original.isActive ? 'Đang hoạt động' : 'Ngừng'}
           </Badge>
         ),
       },
@@ -177,7 +167,7 @@ export function DepartmentsScreen() {
           <div className="flex items-center gap-1 justify-end">
             <Button
               variant="ghost"
-              size="iconsm"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation()
                 openEdit(row.original)
@@ -188,10 +178,10 @@ export function DepartmentsScreen() {
             </Button>
             <Button
               variant="ghost"
-              size="iconsm"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation()
-                void remove(row.original)
+                remove(row.original)
               }}
               aria-label="Xóa"
             >
@@ -239,7 +229,7 @@ export function DepartmentsScreen() {
         </div>
 
         <QueryState isLoading={isLoading} error={error}>
-          <DataTable<Department>
+          <DataTable<IDepartment>
             columns={columns}
             data={filtered}
             emptyMessage="Chưa có phòng ban nào"
@@ -247,13 +237,61 @@ export function DepartmentsScreen() {
         </QueryState>
       </Card>
 
-      <Modal
-        open={open}
-        onClose={() => setOpen(false)}
-        title={editing.id ? 'Sửa phòng ban' : 'Thêm phòng ban'}
-        description="Mã phòng ban dùng tham chiếu duy nhất trong hệ thống."
-        footer={
-          <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {editing.id ? 'Sửa phòng ban' : 'Thêm phòng ban'}
+            </DialogTitle>
+            <DialogDescription>
+              Mã phòng ban dùng tham chiếu duy nhất trong hệ thống.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Mã phòng ban *</Label>
+                <Input
+                  value={editing.code}
+                  onChange={(e) =>
+                    setEditing({
+                      ...editing,
+                      code: e.target.value.toUpperCase(),
+                    })
+                  }
+                  placeholder="VD: HR"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Trạng thái</Label>
+                <Select
+                  value={editing.isActive ? 'active' : 'inactive'}
+                  onValueChange={(v) =>
+                    setEditing({ ...editing, isActive: v === 'active' })
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Đang hoạt động</SelectItem>
+                    <SelectItem value="inactive">Ngừng</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Tên phòng ban *</Label>
+              <Input
+                value={editing.name}
+                onChange={(e) =>
+                  setEditing({ ...editing, name: e.target.value })
+                }
+                placeholder="Tên đầy đủ"
+              />
+            </div>
+          </div>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Hủy
             </Button>
@@ -263,64 +301,24 @@ export function DepartmentsScreen() {
             >
               Lưu
             </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Mã phòng ban *</Label>
-              <Input
-                value={editing.code}
-                onChange={(e) =>
-                  setEditing({ ...editing, code: e.target.value.toUpperCase() })
-                }
-                placeholder="VD: HR"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Trạng thái</Label>
-              <Select
-                value={editing.status}
-                onChange={(e) =>
-                  setEditing({
-                    ...editing,
-                    status: e.target.value as 'Active' | 'Inactive',
-                  })
-                }
-              >
-                <option value="Active">Đang hoạt động</option>
-                <option value="Inactive">Ngừng</option>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Tên phòng ban *</Label>
-            <Input
-              value={editing.name}
-              onChange={(e) => setEditing({ ...editing, name: e.target.value })}
-              placeholder="Tên đầy đủ"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Quản lý</Label>
-            <Select
-              value={editing.manager}
-              onChange={(e) =>
-                setEditing({ ...editing, manager: e.target.value })
-              }
-            >
-              <option value="">— Chưa gán —</option>
-              {employees.map((e) => (
-                <option key={e.id} value={e.name}>
-                  {e.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-        </div>
-      </Modal>
-      {confirmNode}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={!!confirmState}
+        onOpenChange={(o) => {
+          if (!o) setConfirmState(null)
+        }}
+        title={confirmState?.title ?? ''}
+        description={confirmState?.description}
+        danger={confirmState?.danger}
+        confirmText={confirmState?.confirmText}
+        onConfirm={() => {
+          confirmState?.onConfirm()
+          setConfirmState(null)
+        }}
+      />
     </div>
   )
 }

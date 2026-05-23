@@ -1,37 +1,27 @@
 import { useMemo, useState } from 'react'
-import {
-  Download,
-  Info,
-  MoreHorizontal,
-  Plus,
-  Search,
-  Upload,
-} from 'lucide-react'
+import { Download, Plus, Search } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
-import {
-  Card as CardP,
-  CardBody,
-  CardDesc,
-  CardHeader,
-  CardTitle,
-} from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { Select } from '../components/ui/select'
-import { Textarea } from '../components/ui/textarea'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
 import { Badge } from '../components/ui/badge'
 import { Avatar } from '../components/ui/avatar'
-import { Drawer } from '../components/ui/drawer'
-import { Tabs } from '../components/ui/tabs'
 import {
-  Table,
-  THead,
-  TH,
-  TR,
-  TD,
-} from '../components/ui/table'
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet'
 import { DataTable } from '../components/ui/data-table'
 import { QueryState } from '../components/ui/query-state'
 import { FilterBar, PageHeader } from '../components/layout/page-header'
@@ -42,32 +32,35 @@ import {
   useUpdateEmployee,
 } from '@/hooks/useEmployees'
 import { useDepartments } from '@/hooks/useDepartments'
-import { useOperations } from '@/hooks/useOperations'
-import { useRoles } from '@/hooks/useRoles'
-import type { Employee, EmployeeStatus } from '../types/domain'
-import { fmtDate, fmtVND } from '../lib/format'
+import type {
+  EmployeeStatus,
+  IEmployee,
+  SalaryCalculationType,
+} from '@/types/EmployeeType'
 
 type DrawerMode = 'create' | 'edit'
 
 interface DrawerState {
   mode: DrawerMode
-  employee: Employee
+  employee: IEmployee
 }
 
-const blankEmployee: Employee = {
+const SALARY_TYPES: SalaryCalculationType[] = [
+  'Monthly',
+  'Daily',
+  'Hourly',
+  'Mixed',
+]
+
+const blankEmployee: IEmployee = {
   id: '',
   code: '',
-  name: '',
-  dept: 'ENG',
-  role: '',
-  email: '',
-  phone: '',
+  fullName: '',
+  departmentId: '',
+  positionName: '',
+  salaryCalculationType: 'Monthly',
   status: 'Active',
-  joinedAt: '',
-  salary: 0,
 }
-
-type EmployeeTab = 'profile' | 'account' | 'salary'
 
 export function EmployeesScreen() {
   const { data: list = [], isLoading, error } = useEmployees()
@@ -82,30 +75,32 @@ export function EmployeesScreen() {
   const createMut = useCreateEmployee()
   const updateMut = useUpdateEmployee()
 
+  const deptName = (id: string) =>
+    departments.find((d) => d.id === id)?.name ?? '—'
+
   const filtered = useMemo(
     () =>
       list.filter(
         (e) =>
           (!q ||
-            e.name.toLowerCase().includes(q.toLowerCase()) ||
-            e.code.toLowerCase().includes(q.toLowerCase()) ||
-            e.email.toLowerCase().includes(q.toLowerCase())) &&
-          (deptFilter === 'all' || e.dept === deptFilter) &&
+            e.fullName.toLowerCase().includes(q.toLowerCase()) ||
+            e.code.toLowerCase().includes(q.toLowerCase())) &&
+          (deptFilter === 'all' || e.departmentId === deptFilter) &&
           (statusFilter === 'all' || e.status === statusFilter),
       ),
     [list, q, deptFilter, statusFilter],
   )
 
-  const onSave = async (emp: Employee) => {
+  const onSave = async (emp: IEmployee) => {
     try {
       if (drawer?.mode === 'create') {
         const { id: _id, ...rest } = emp
         void _id
         await createMut.mutateAsync(rest)
-        toast.success('Đã tạo nhân viên', { description: emp.name })
+        toast.success('Đã tạo nhân viên', { description: emp.fullName })
       } else {
         await updateMut.mutateAsync({ id: emp.id, data: emp })
-        toast.success('Đã cập nhật', { description: emp.name })
+        toast.success('Đã cập nhật', { description: emp.fullName })
       }
       setDrawer(null)
     } catch (err) {
@@ -115,92 +110,55 @@ export function EmployeesScreen() {
     }
   }
 
-  const columns = useMemo<ColumnDef<Employee>[]>(
+  const columns = useMemo<ColumnDef<IEmployee>[]>(
     () => [
       {
-        accessorKey: 'name',
+        accessorKey: 'fullName',
         header: 'Nhân viên',
         cell: ({ row }) => (
           <div className="flex items-center gap-3">
-            <Avatar name={row.original.name} size={34} />
+            <Avatar name={row.original.fullName} size={34} />
             <div>
-              <div className="font-medium">{row.original.name}</div>
-              <div className="text-xs text-muted-foreground">
-                Vào làm {fmtDate(row.original.joinedAt)}
-              </div>
+              <div className="font-medium">{row.original.fullName}</div>
+              <code className="text-xs font-mono text-muted-foreground">
+                {row.original.code}
+              </code>
             </div>
           </div>
         ),
       },
       {
-        accessorKey: 'code',
-        header: 'Mã',
-        cell: ({ row }) => (
-          <code className="text-xs font-mono px-1.5 py-0.5 bg-muted rounded">
-            {row.original.code}
-          </code>
-        ),
-      },
-      {
-        accessorKey: 'dept',
+        accessorKey: 'departmentId',
         header: 'Phòng ban',
         cell: ({ row }) => (
-          <Badge variant="outline">
-            {departments.find((d) => d.code === row.original.dept)?.name ??
-              row.original.dept}
-          </Badge>
+          <Badge variant="outline">{deptName(row.original.departmentId)}</Badge>
         ),
       },
       {
-        accessorKey: 'role',
+        accessorKey: 'positionName',
         header: 'Chức danh',
-        cell: ({ row }) => <span className="text-sm">{row.original.role}</span>,
-      },
-      {
-        id: 'contact',
-        header: 'Liên hệ',
         cell: ({ row }) => (
-          <div className="text-xs text-muted-foreground">
-            <div>{row.original.email}</div>
-            <div>{row.original.phone}</div>
-          </div>
+          <span className="text-sm">{row.original.positionName}</span>
         ),
       },
       {
-        accessorKey: 'salary',
-        header: () => <div className="text-right">Lương cơ bản</div>,
+        accessorKey: 'salaryCalculationType',
+        header: 'Hình thức lương',
         cell: ({ row }) => (
-          <div className="text-right num font-medium">
-            {fmtVND(row.original.salary)}
-          </div>
+          <Badge variant="secondary">{row.original.salaryCalculationType}</Badge>
         ),
       },
       {
         accessorKey: 'status',
         header: 'Trạng thái',
-        cell: ({ row }) => {
-          const s = row.original.status
-          return (
-            <Badge
-              variant={
-                s === 'Active' ? 'success' : s === 'Onleave' ? 'warning' : 'muted'
-              }
-            >
-              {s === 'Active' ? 'Đang làm' : s === 'Onleave' ? 'Nghỉ phép' : 'Đã nghỉ'}
-            </Badge>
-          )
-        },
-      },
-      {
-        id: 'actions',
-        header: '',
-        cell: () => (
-          <Button variant="ghost" size="iconsm" aria-label="More">
-            <MoreHorizontal className="size-4" />
-          </Button>
+        cell: ({ row }) => (
+          <Badge variant={row.original.status === 'Active' ? 'success' : 'muted'}>
+            {row.original.status === 'Active' ? 'Đang làm' : 'Ngừng'}
+          </Badge>
         ),
       },
     ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [departments],
   )
 
@@ -208,20 +166,15 @@ export function EmployeesScreen() {
     <div>
       <PageHeader
         title="Nhân viên"
-        description="Hồ sơ, tài khoản và đơn giá lương. /api/employees"
+        description="Hồ sơ nhân viên. /api/employees"
         actions={
-          <>
-            <Button variant="outline">
-              <Upload className="size-4" /> Nhập Excel
-            </Button>
-            <Button
-              onClick={() =>
-                setDrawer({ mode: 'create', employee: { ...blankEmployee } })
-              }
-            >
-              <Plus className="size-4" /> Thêm nhân viên
-            </Button>
-          </>
+          <Button
+            onClick={() =>
+              setDrawer({ mode: 'create', employee: { ...blankEmployee } })
+            }
+          >
+            <Plus className="size-4" /> Thêm nhân viên
+          </Button>
         }
       />
 
@@ -232,33 +185,35 @@ export function EmployeesScreen() {
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Tìm theo mã, tên, email…"
+              placeholder="Tìm theo mã, tên…"
               className="pl-8 w-[280px]"
             />
           </div>
-          <Select
-            value={deptFilter}
-            onChange={(e) => setDeptFilter(e.target.value)}
-            className="w-[180px]"
-          >
-            <option value="all">Tất cả phòng ban</option>
-            {departments.map((d) => (
-              <option key={d.id} value={d.code}>
-                {d.name}
-              </option>
-            ))}
+          <Select value={deptFilter} onValueChange={setDeptFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Tất cả phòng ban" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả phòng ban</SelectItem>
+              {departments.map((d) => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           <Select
             value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value as 'all' | EmployeeStatus)
-            }
-            className="w-[160px]"
+            onValueChange={(v) => setStatusFilter(v as 'all' | EmployeeStatus)}
           >
-            <option value="all">Mọi trạng thái</option>
-            <option value="Active">Đang làm việc</option>
-            <option value="Onleave">Nghỉ phép</option>
-            <option value="Resigned">Đã nghỉ việc</option>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Mọi trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Mọi trạng thái</SelectItem>
+              <SelectItem value="Active">Đang làm việc</SelectItem>
+              <SelectItem value="Inactive">Ngừng</SelectItem>
+            </SelectContent>
           </Select>
           <div className="flex-1" />
           <Button variant="outline" size="sm">
@@ -267,7 +222,7 @@ export function EmployeesScreen() {
         </FilterBar>
 
         <QueryState isLoading={isLoading} error={error}>
-          <DataTable<Employee>
+          <DataTable<IEmployee>
             columns={columns}
             data={filtered}
             onRowClick={(emp) => setDrawer({ mode: 'edit', employee: emp })}
@@ -290,266 +245,142 @@ export function EmployeesScreen() {
 interface EmployeeDrawerProps {
   drawer: DrawerState | null
   onClose: () => void
-  onSave: (emp: Employee) => void
+  onSave: (emp: IEmployee) => void
   saving: boolean
 }
 
 function EmployeeDrawer({ drawer, onClose, onSave, saving }: EmployeeDrawerProps) {
   const { data: departments = [] } = useDepartments()
-  const { data: roles = [] } = useRoles()
-  const { data: operations = [] } = useOperations()
-  const [tab, setTab] = useState<EmployeeTab>('profile')
-  const [form, setForm] = useState<Employee | null>(drawer?.employee ?? null)
+  const [form, setForm] = useState<IEmployee | null>(drawer?.employee ?? null)
 
   if (!drawer || !form) return null
 
   return (
-    <Drawer
+    <Sheet
       open
-      onClose={onClose}
-      title={drawer.mode === 'create' ? 'Thêm nhân viên' : form.name}
-      description={
-        drawer.mode === 'create'
-          ? 'Tạo hồ sơ nhân viên mới'
-          : `Mã NV ${form.code} · ${departments.find((d) => d.code === form.dept)?.name ?? ''}`
-      }
-      width={620}
-      footer={
-        <>
+      onOpenChange={(o) => {
+        if (!o) onClose()
+      }}
+    >
+      <SheetContent
+        side="right"
+        className="w-[560px] sm:max-w-[560px] flex flex-col p-0"
+      >
+        <SheetHeader>
+          <SheetTitle>
+            {drawer.mode === 'create' ? 'Thêm nhân viên' : form.fullName}
+          </SheetTitle>
+          <SheetDescription>
+            {drawer.mode === 'create'
+              ? 'Tạo hồ sơ nhân viên mới'
+              : `Mã NV ${form.code}`}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto scrollbar-thin px-4">
+          <div className="space-y-4">
+        <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-lg">
+          <Avatar name={form.fullName || '?'} size={56} />
+          <div className="flex-1">
+            <div className="font-medium">{form.fullName || 'Nhân viên mới'}</div>
+            <div className="text-xs text-muted-foreground">
+              {form.positionName || 'Chưa có chức danh'}
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label>Mã nhân viên *</Label>
+            <Input
+              value={form.code}
+              onChange={(e) => setForm({ ...form, code: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Họ và tên *</Label>
+            <Input
+              value={form.fullName}
+              onChange={(e) => setForm({ ...form, fullName: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Phòng ban</Label>
+            <Select
+              value={form.departmentId || undefined}
+              onValueChange={(v) => setForm({ ...form, departmentId: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="— Chọn phòng ban —" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Chức danh</Label>
+            <Input
+              value={form.positionName}
+              onChange={(e) =>
+                setForm({ ...form, positionName: e.target.value })
+              }
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Hình thức lương</Label>
+            <Select
+              value={form.salaryCalculationType}
+              onValueChange={(v) =>
+                setForm({
+                  ...form,
+                  salaryCalculationType: v as SalaryCalculationType,
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SALARY_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Trạng thái</Label>
+            <Select
+              value={form.status}
+              onValueChange={(v) =>
+                setForm({ ...form, status: v as EmployeeStatus })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Đang làm việc</SelectItem>
+                <SelectItem value="Inactive">Ngừng</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          </div>
+          </div>
+        </div>
+        <SheetFooter>
           <Button variant="outline" onClick={onClose}>
             Hủy
           </Button>
           <Button onClick={() => onSave(form)} disabled={saving}>
             Lưu thay đổi
           </Button>
-        </>
-      }
-    >
-      <Tabs<EmployeeTab>
-        tabs={[
-          { value: 'profile', label: 'Hồ sơ' },
-          { value: 'account', label: 'Tài khoản' },
-          { value: 'salary', label: 'Lương' },
-        ]}
-        value={tab}
-        onChange={setTab}
-        className="mb-5"
-      />
-
-      {tab === 'profile' && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-lg">
-            <Avatar name={form.name || '?'} size={56} />
-            <div className="flex-1">
-              <div className="font-medium">{form.name || 'Nhân viên mới'}</div>
-              <div className="text-xs text-muted-foreground">
-                {form.role || 'Chưa có chức danh'}
-              </div>
-            </div>
-            <Button variant="outline" size="sm">
-              <Upload className="size-4" /> Ảnh đại diện
-            </Button>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Mã nhân viên *</Label>
-              <Input
-                value={form.code}
-                onChange={(e) => setForm({ ...form, code: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Họ và tên *</Label>
-              <Input
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Email công ty</Label>
-              <Input
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Số điện thoại</Label>
-              <Input
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Phòng ban</Label>
-              <Select
-                value={form.dept}
-                onChange={(e) => setForm({ ...form, dept: e.target.value })}
-              >
-                {departments.map((d) => (
-                  <option key={d.id} value={d.code}>
-                    {d.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Chức danh</Label>
-              <Input
-                value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Ngày vào làm</Label>
-              <Input
-                type="date"
-                value={form.joinedAt}
-                onChange={(e) => setForm({ ...form, joinedAt: e.target.value })}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Trạng thái</Label>
-              <Select
-                value={form.status}
-                onChange={(e) =>
-                  setForm({ ...form, status: e.target.value as EmployeeStatus })
-                }
-              >
-                <option value="Active">Đang làm việc</option>
-                <option value="Onleave">Nghỉ phép</option>
-                <option value="Resigned">Đã nghỉ việc</option>
-              </Select>
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Ghi chú</Label>
-            <Textarea placeholder="Ghi chú nội bộ về nhân viên…" />
-          </div>
-        </div>
-      )}
-
-      {tab === 'account' && (
-        <div className="space-y-4">
-          <div className="rounded-lg border bg-muted/30 p-3.5 flex items-start gap-3">
-            <Info className="size-4 mt-0.5 text-muted-foreground" />
-            <div className="text-xs text-muted-foreground">
-              Tài khoản cho phép nhân viên đăng nhập hệ thống. Cần quyền{' '}
-              <code className="font-mono">accounts.manage</code> để chỉnh sửa.
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Tên đăng nhập</Label>
-              <Input defaultValue={form.code.toLowerCase().replace('nv', 'u')} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Email đăng nhập</Label>
-              <Input defaultValue={form.email} />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Vai trò</Label>
-            <div className="flex flex-wrap gap-2 p-3 border rounded-md">
-              {roles.map((r) => {
-                const checked = r.code === 'employee'
-                return (
-                  <label
-                    key={r.id}
-                    className={
-                      checked
-                        ? 'flex items-center gap-2 px-2.5 py-1 rounded-md border cursor-pointer text-sm bg-primary/10 border-primary/30 text-primary'
-                        : 'flex items-center gap-2 px-2.5 py-1 rounded-md border cursor-pointer text-sm hover:bg-muted'
-                    }
-                  >
-                    <input
-                      type="checkbox"
-                      defaultChecked={checked}
-                      className="rounded"
-                    />
-                    {r.name}
-                  </label>
-                )
-              })}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Mật khẩu khởi tạo</Label>
-              <Input type="password" placeholder="••••••••" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Yêu cầu đổi lần đầu</Label>
-              <Select defaultValue="yes">
-                <option value="yes">Có</option>
-                <option value="no">Không</option>
-              </Select>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {tab === 'salary' && (
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Lương cơ bản</Label>
-            <div className="relative">
-              <Input
-                className="num"
-                value={form.salary}
-                onChange={(e) =>
-                  setForm({ ...form, salary: Number(e.target.value) || 0 })
-                }
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                ₫/tháng
-              </span>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Hình thức lương</Label>
-              <Select defaultValue="monthly">
-                <option value="monthly">Lương tháng</option>
-                <option value="piece">Lương sản phẩm</option>
-                <option value="hybrid">Hỗn hợp</option>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Hiệu lực từ</Label>
-              <Input type="date" defaultValue="2026-01-01" />
-            </div>
-          </div>
-          <CardP>
-            <CardHeader>
-              <CardTitle className="text-sm">Đơn giá theo công đoạn</CardTitle>
-              <CardDesc>/api/employee-salary-rates/{form.id || '{id}'}</CardDesc>
-            </CardHeader>
-            <CardBody>
-              <Table>
-                <THead>
-                  <TR>
-                    <TH>Công đoạn</TH>
-                    <TH className="text-right">Đơn giá</TH>
-                    <TH />
-                  </TR>
-                </THead>
-                <tbody>
-                  {operations.slice(0, 3).map((op) => (
-                    <TR key={op.id}>
-                      <TD className="text-sm">{op.name}</TD>
-                      <TD className="text-right num">{fmtVND(2500)}</TD>
-                      <TD />
-                    </TR>
-                  ))}
-                </tbody>
-              </Table>
-              <Button variant="outline" size="sm" className="mt-3 w-full">
-                <Plus className="size-4" /> Thêm công đoạn
-              </Button>
-            </CardBody>
-          </CardP>
-        </div>
-      )}
-    </Drawer>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   )
 }

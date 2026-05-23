@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Download, History, Plus, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import {
@@ -11,26 +11,36 @@ import { Input } from '../components/ui/input'
 import { QueryState } from '../components/ui/query-state'
 import {
   Table,
-  THead,
-  TH,
-  TR,
-  TD,
-} from '../components/ui/table'
+  TableHeader,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+} from '@/components/ui/table'
 import { toast } from 'sonner'
 import { PageHeader } from '../components/layout/page-header'
 import { useOperations } from '@/hooks/useOperations'
 import { useProducts } from '@/hooks/useProducts'
-import { useProductRates } from '@/hooks/useRates'
+import { useRates } from '@/hooks/useRates'
 import { fmtDate, fmtVND } from '../lib/format'
 import { cn } from '../lib/utils'
 
 export function RatesScreen() {
   const { data: products = [] } = useProducts()
   const { data: operations = [] } = useOperations()
-  const [productCode, setProductCode] = useState('SP-A001')
-  const product = products.find((p) => p.code === productCode)
-  const { data: rates = [], isLoading, error } = useProductRates(productCode)
-  const total = rates.reduce((s, r) => s + r.rate, 0)
+  const { data: allRates = [], isLoading, error } = useRates()
+  const [selectedId, setSelectedId] = useState('')
+
+  // Default to the first product once loaded, until the user picks one.
+  const productId =
+    selectedId || (products.length > 0 ? products[0].id : '')
+
+  const product = products.find((p) => p.id === productId)
+  const rates = useMemo(
+    () => allRates.filter((r) => r.productId === productId),
+    [allRates, productId],
+  )
+  const total = rates.reduce((s, r) => s + r.unitPrice, 0)
 
   return (
     <div>
@@ -54,10 +64,10 @@ export function RatesScreen() {
               <button
                 key={p.id}
                 type="button"
-                onClick={() => setProductCode(p.code)}
+                onClick={() => setSelectedId(p.id)}
                 className={cn(
                   'w-full text-left p-3 rounded-md transition-colors',
-                  productCode === p.code
+                  productId === p.id
                     ? 'bg-primary/10 text-primary'
                     : 'hover:bg-muted',
                 )}
@@ -86,53 +96,49 @@ export function RatesScreen() {
           </CardHeader>
           <QueryState isLoading={isLoading} error={error}>
             <Table>
-              <THead>
-                <TR>
-                  <TH>Công đoạn</TH>
-                  <TH>Mô tả</TH>
-                  <TH>Đơn vị</TH>
-                  <TH className="text-right">Đơn giá</TH>
-                  <TH>Hiệu lực từ</TH>
-                  <TH className="w-[80px]" />
-                </TR>
-              </THead>
-              <tbody>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Công đoạn</TableHead>
+                  <TableHead>Loại giờ</TableHead>
+                  <TableHead className="text-right">Đơn giá</TableHead>
+                  <TableHead>Hiệu lực từ</TableHead>
+                  <TableHead className="w-[80px]" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {rates.map((r) => {
-                  const op = operations.find((o) => o.code === r.operation)
+                  const op = operations.find((o) => o.id === r.operationId)
                   return (
-                    <TR key={r.id}>
-                      <TD>
+                    <TableRow key={r.id}>
+                      <TableCell>
                         <div className="font-medium text-sm">{op?.name}</div>
                         <code className="text-xs font-mono text-muted-foreground">
                           {op?.code}
                         </code>
-                      </TD>
-                      <TD className="text-xs text-muted-foreground">
-                        {op?.category}
-                      </TD>
-                      <TD className="text-sm">{op?.unit}</TD>
-                      <TD className="text-right">
+                      </TableCell>
+                      <TableCell className="text-sm">{r.workTimeType}</TableCell>
+                      <TableCell className="text-right">
                         <Input
                           className="num text-right h-8 w-[120px] ml-auto"
-                          defaultValue={r.rate}
+                          defaultValue={r.unitPrice}
                           onBlur={() => toast.success('Đã cập nhật đơn giá')}
                         />
-                      </TD>
-                      <TD className="text-sm">{fmtDate(r.effectiveFrom)}</TD>
-                      <TD>
+                      </TableCell>
+                      <TableCell className="text-sm">{fmtDate(r.effectiveFrom)}</TableCell>
+                      <TableCell>
                         <div className="flex gap-1 justify-end">
-                          <Button variant="ghost" size="iconsm" aria-label="Lịch sử">
+                          <Button variant="ghost" size="icon-sm" aria-label="Lịch sử">
                             <History className="size-4" />
                           </Button>
-                          <Button variant="ghost" size="iconsm" aria-label="Xóa">
+                          <Button variant="ghost" size="icon-sm" aria-label="Xóa">
                             <Trash2 className="size-4" />
                           </Button>
                         </div>
-                      </TD>
-                    </TR>
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
-              </tbody>
+              </TableBody>
             </Table>
           </QueryState>
         </Card>

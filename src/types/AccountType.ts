@@ -1,21 +1,20 @@
-export type AccountStatus = 'Active' | 'Disabled'
+export type AccountStatus = 'Active' | 'Inactive'
 
 export interface IAccount {
   id: string
   username: string
-  employee: string | null
   fullName: string
-  roles: string[]
   status: AccountStatus
-  lastLogin: string
+  roles: string[]
+  employeeId: string | null
 }
 
 export interface ICreateAccount {
   username: string
   fullName: string
-  employee: string | null
-  roles: string[]
   status: AccountStatus
+  roleIds: string[]
+  employeeId: string | null
   password?: string
 }
 
@@ -23,8 +22,5 @@ export type IUpdateAccount = Partial<Omit<ICreateAccount, 'password'>>
 
 export interface IAccountFilter {
   q?: string
-  role?: string
   status?: AccountStatus
-  page?: number
-  pageSize?: number
 }

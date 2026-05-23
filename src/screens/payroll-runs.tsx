@@ -1,29 +1,37 @@
 import { useMemo, useState } from 'react'
 import {
-  AlertTriangle,
   Check,
   DollarSign,
   Download,
-  Plus,
+  Package,
   Search,
   Sparkles,
+  Wallet,
 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
 import { Avatar } from '../components/ui/avatar'
-import { Drawer } from '../components/ui/drawer'
-import { Tabs } from '../components/ui/tabs'
-import { useConfirm } from '../components/ui/confirm'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ConfirmDialog, type ConfirmState } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
 import {
   Table,
-  THead,
-  TH,
-  TR,
-  TD,
-} from '../components/ui/table'
+  TableHeader,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+} from '@/components/ui/table'
 import { QueryState } from '../components/ui/query-state'
 import { StatCard } from './dashboard'
 import {
@@ -31,7 +39,7 @@ import {
   usePayrollRows,
   useGeneratePayroll,
 } from '@/hooks/usePayroll'
-import type { PayrollPeriod, PayrollRow, PeriodStatus } from '../types/domain'
+import type { IPayrollRow, PeriodStatus } from '../types/PayrollType'
 import { fmtDate, fmtVND } from '../lib/format'
 import { cn } from '../lib/utils'
 
@@ -45,11 +53,10 @@ interface PayItemProps {
   label: string
   value: number
   bold?: boolean
-  negative?: boolean
   highlight?: boolean
 }
 
-function PayItem({ label, value, bold, negative, highlight }: PayItemProps) {
+function PayItem({ label, value, bold, highlight }: PayItemProps) {
   return (
     <div
       className={cn(
@@ -64,7 +71,6 @@ function PayItem({ label, value, bold, negative, highlight }: PayItemProps) {
         className={cn(
           'text-sm num',
           bold && 'font-semibold',
-          negative && 'text-destructive',
           highlight && 'text-primary',
         )}
       >
@@ -74,14 +80,17 @@ function PayItem({ label, value, bold, negative, highlight }: PayItemProps) {
   )
 }
 
+type PayrollTab = 'all' | 'draft' | 'confirmed'
+
 export function PayrollRunsScreen() {
-  const { confirm, node: confirmNode } = useConfirm()
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
   const { data: periods = [] } = usePayrollPeriods()
-  const [periodId, setPeriodId] = useState<string>('p1')
-  const period: PayrollPeriod | undefined = periods.find((p) => p.id === periodId)
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null)
+  const periodId = selectedPeriodId ?? periods[0]?.id ?? null
+  const period = periods.find((p) => p.id === periodId)
   const { data: rows = [], isLoading, error } = usePayrollRows(periodId)
-  const [selected, setSelected] = useState<PayrollRow | null>(null)
-  const [tab, setTab] = useState<'all' | 'draft' | 'confirmed'>('all')
+  const [selected, setSelected] = useState<IPayrollRow | null>(null)
+  const [tab, setTab] = useState<PayrollTab>('all')
 
   const generateMut = useGeneratePayroll()
 
@@ -89,26 +98,33 @@ export function PayrollRunsScreen() {
     () =>
       rows.reduce(
         (s, r) => ({
-          gross: s.gross + r.gross,
-          net: s.net + r.net,
-          deductions: s.deductions + r.deductions,
+          gross: s.gross + r.grossSalary,
+          product: s.product + r.productSalary,
+          net: s.net + r.netSalary,
         }),
-        { gross: 0, net: 0, deductions: 0 },
+        { gross: 0, product: 0, net: 0 },
       ),
     [rows],
   )
 
-  const generate = async () => {
-    if (!period) return
-    const ok = await confirm({
+  const generate = () => {
+    if (!period || !periodId) return
+    setConfirmState({
       title: 'Tạo lại bảng lương?',
-      body: `Hệ thống sẽ tính lại toàn bộ bảng lương cho ${period.name} từ chấm công, sản lượng và đơn giá. Mất khoảng vài giây.`,
+      description: `Hệ thống sẽ tính lại toàn bộ bảng lương cho ${period.name} từ chấm công, sản lượng và đơn giá. Mất khoảng vài giây.`,
       confirmText: 'Generate',
-    })
-    if (!ok) return
-    await generateMut.mutateAsync(periodId)
-    toast.success('Đã tạo bảng lương', {
-      description: `${rows.length} dòng cho ${period.name}`,
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await generateMut.mutateAsync(periodId)
+            toast.success('Đã tạo bảng lương', { description: period.name })
+          } catch (e) {
+            toast.error('Không thể tạo bảng lương', {
+              description: e instanceof Error ? e.message : undefined,
+            })
+          }
+        })()
+      },
     })
   }
 
@@ -117,7 +133,7 @@ export function PayrollRunsScreen() {
 
   const filteredRows = rows.filter((r) => {
     if (tab === 'all') return true
-    if (tab === 'draft') return r.status === 'Draft'
+    if (tab === 'draft') return r.status === 'Calculated'
     return r.status === 'Confirmed'
   })
 
@@ -135,7 +151,7 @@ export function PayrollRunsScreen() {
                 key={p.id}
                 type="button"
                 onClick={() => {
-                  setPeriodId(p.id)
+                  setSelectedPeriodId(p.id)
                   setSelected(null)
                 }}
                 className={cn(
@@ -152,10 +168,7 @@ export function PayrollRunsScreen() {
                   </Badge>
                 </div>
                 <div className="text-[11px] text-muted-foreground mt-1">
-                  {fmtDate(p.startDate)} → {fmtDate(p.endDate)}
-                </div>
-                <div className="text-[11px] num text-muted-foreground mt-0.5">
-                  {p.employees} NV · {fmtVND(p.totalAmount)}
+                  {fmtDate(p.fromDate)} → {fmtDate(p.toDate)}
                 </div>
               </button>
             )
@@ -172,7 +185,7 @@ export function PayrollRunsScreen() {
             </h2>
             <div className="flex items-center gap-3 mt-1.5 text-sm text-muted-foreground">
               <span>
-                {fmtDate(period.startDate)} → {fmtDate(period.endDate)}
+                {fmtDate(period.fromDate)} → {fmtDate(period.toDate)}
               </span>
               <span>·</span>
               <span>{rows.length} nhân viên</span>
@@ -184,7 +197,7 @@ export function PayrollRunsScreen() {
               <Download className="size-4" /> Xuất Excel
             </Button>
             {period.status === 'Open' && (
-              <Button onClick={() => void generate()} disabled={generateMut.isPending}>
+              <Button onClick={generate} disabled={generateMut.isPending}>
                 {generateMut.isPending ? (
                   <>
                     <Sparkles className="size-4 animate-pulse" /> Đang tạo…
@@ -201,12 +214,8 @@ export function PayrollRunsScreen() {
 
         <div className="grid grid-cols-3 gap-4 mb-5">
           <StatCard label="Tổng lương gộp" value={fmtVND(totals.gross)} icon={DollarSign} />
-          <StatCard
-            label="Tổng khấu trừ"
-            value={fmtVND(totals.deductions)}
-            icon={AlertTriangle}
-          />
-          <StatCard label="Thực lĩnh" value={fmtVND(totals.net)} icon={Check} />
+          <StatCard label="Tổng lương SP" value={fmtVND(totals.product)} icon={Package} />
+          <StatCard label="Thực lĩnh" value={fmtVND(totals.net)} icon={Wallet} />
         </div>
 
         <Card>
@@ -218,91 +227,121 @@ export function PayrollRunsScreen() {
                 className="pl-8 w-[260px]"
               />
             </div>
-            <Tabs<typeof tab>
-              tabs={[
-                { value: 'all', label: 'Tất cả' },
-                { value: 'draft', label: 'Bản nháp' },
-                { value: 'confirmed', label: 'Đã xác nhận' },
-              ]}
-              value={tab}
-              onChange={setTab}
-            />
+            <Tabs value={tab} onValueChange={(v) => setTab(v as PayrollTab)}>
+              <TabsList>
+                <TabsTrigger value="all">Tất cả</TabsTrigger>
+                <TabsTrigger value="draft">Đã tính</TabsTrigger>
+                <TabsTrigger value="confirmed">Đã xác nhận</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
           <QueryState isLoading={isLoading} error={error}>
             <Table>
-              <THead>
-                <TR>
-                  <TH>Nhân viên</TH>
-                  <TH className="text-right">Công</TH>
-                  <TH className="text-right">OT</TH>
-                  <TH className="text-right">Sản phẩm</TH>
-                  <TH className="text-right">Phụ cấp</TH>
-                  <TH className="text-right">Khấu trừ</TH>
-                  <TH className="text-right">Thực lĩnh</TH>
-                  <TH>Trạng thái</TH>
-                </TR>
-              </THead>
-              <tbody>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nhân viên</TableHead>
+                  <TableHead className="text-right">Lương công</TableHead>
+                  <TableHead className="text-right">Lương SP</TableHead>
+                  <TableHead className="text-right">OT</TableHead>
+                  <TableHead className="text-right">Gộp</TableHead>
+                  <TableHead className="text-right">Thực lĩnh</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredRows.map((r) => (
-                  <TR
-                    key={r.employee.id}
+                  <TableRow
+                    key={r.employeeId}
                     className="cursor-pointer"
                     onClick={() => setSelected(r)}
                   >
-                    <TD>
+                    <TableCell>
                       <div className="flex items-center gap-2.5">
-                        <Avatar name={r.employee.name} size={30} />
+                        <Avatar name={r.employeeName} size={30} />
                         <div>
                           <div className="font-medium text-sm">
-                            {r.employee.name}
+                            {r.employeeName}
                           </div>
                           <div className="text-[11px] text-muted-foreground">
-                            {r.employee.code} · {r.employee.dept}
+                            {r.employeeCode}
                           </div>
                         </div>
                       </div>
-                    </TD>
-                    <TD className="text-right num">{r.workDays}</TD>
-                    <TD className="text-right num">{r.ot}h</TD>
-                    <TD className="text-right num text-muted-foreground">
-                      {fmtVND(r.piecework)}
-                    </TD>
-                    <TD className="text-right num text-muted-foreground">
-                      {fmtVND(r.allowance)}
-                    </TD>
-                    <TD className="text-right num text-destructive">
-                      - {fmtVND(r.deductions)}
-                    </TD>
-                    <TD className="text-right num font-semibold">
-                      {fmtVND(r.net)}
-                    </TD>
-                    <TD>
+                    </TableCell>
+                    <TableCell className="text-right num">{fmtVND(r.attendanceSalary)}</TableCell>
+                    <TableCell className="text-right num text-muted-foreground">
+                      {fmtVND(r.productSalary)}
+                    </TableCell>
+                    <TableCell className="text-right num text-muted-foreground">
+                      {fmtVND(r.overtimeSalary)}
+                    </TableCell>
+                    <TableCell className="text-right num">{fmtVND(r.grossSalary)}</TableCell>
+                    <TableCell className="text-right num font-semibold">
+                      {fmtVND(r.netSalary)}
+                    </TableCell>
+                    <TableCell>
                       <Badge
                         variant={r.status === 'Confirmed' ? 'success' : 'secondary'}
                       >
-                        {r.status === 'Confirmed' ? 'Đã xác nhận' : 'Bản nháp'}
+                        {r.status === 'Confirmed' ? 'Đã xác nhận' : 'Đã tính'}
                       </Badge>
-                    </TD>
-                  </TR>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
+              </TableBody>
             </Table>
           </QueryState>
         </Card>
       </div>
 
-      <Drawer
+      <Sheet
         open={!!selected}
-        onClose={() => setSelected(null)}
-        title={selected?.employee.name}
-        description={
-          selected
-            ? `${selected.employee.code} · ${selected.employee.role}`
-            : undefined
-        }
-        width={520}
-        footer={
-          <>
+        onOpenChange={(o) => {
+          if (!o) setSelected(null)
+        }}
+      >
+        <SheetContent
+          side="right"
+          className="w-[520px] sm:max-w-[520px] flex flex-col p-0"
+        >
+          <SheetHeader>
+            <SheetTitle>{selected?.employeeName}</SheetTitle>
+            <SheetDescription>
+              {selected ? selected.employeeCode : undefined}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto scrollbar-thin px-4">
+            {selected && (
+              <div className="space-y-5">
+            <div className="rounded-lg border p-4 bg-muted/30">
+              <div className="text-xs text-muted-foreground">Thực lĩnh</div>
+              <div className="text-3xl font-semibold num tracking-tight mt-1">
+                {fmtVND(selected.netSalary)}
+              </div>
+              <div className="text-xs text-muted-foreground mt-1">
+                {period.name}
+              </div>
+            </div>
+
+            <div>
+              <div className="text-sm font-medium mb-2">Chi tiết</div>
+              <div className="rounded-lg border divide-y">
+                <PayItem label="Lương công" value={selected.attendanceSalary} />
+                <PayItem label="Lương sản phẩm" value={selected.productSalary} />
+                <PayItem label="OT" value={selected.overtimeSalary} />
+                <PayItem label="Tổng gộp" value={selected.grossSalary} bold />
+                <PayItem
+                  label="Thực lĩnh"
+                  value={selected.netSalary}
+                  bold
+                  highlight
+                />
+              </div>
+            </div>
+              </div>
+            )}
+          </div>
+          <SheetFooter>
             <Button variant="outline" onClick={() => setSelected(null)}>
               Đóng
             </Button>
@@ -314,70 +353,23 @@ export function PayrollRunsScreen() {
             >
               <Check className="size-4" /> Xác nhận
             </Button>
-          </>
-        }
-      >
-        {selected && (
-          <div className="space-y-5">
-            <div className="rounded-lg border p-4 bg-muted/30">
-              <div className="text-xs text-muted-foreground">Thực lĩnh</div>
-              <div className="text-3xl font-semibold num tracking-tight mt-1">
-                {fmtVND(selected.net)}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {period.name}
-              </div>
-            </div>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
-            <div>
-              <div className="text-sm font-medium mb-2">Chi tiết</div>
-              <div className="rounded-lg border divide-y">
-                <PayItem
-                  label="Lương cơ bản (theo công)"
-                  value={
-                    selected.gross -
-                    selected.ot * 120_000 -
-                    selected.piecework -
-                    selected.allowance
-                  }
-                />
-                <PayItem
-                  label={`OT (${selected.ot} giờ × 120.000 ₫)`}
-                  value={selected.ot * 120_000}
-                />
-                <PayItem label="Lương sản phẩm" value={selected.piecework} />
-                <PayItem label="Phụ cấp" value={selected.allowance} />
-                <PayItem label="Tổng gộp" value={selected.gross} bold />
-                <PayItem
-                  label="Bảo hiểm & thuế TNCN"
-                  value={-selected.deductions}
-                  negative
-                />
-                <PayItem
-                  label="Thực lĩnh"
-                  value={selected.net}
-                  bold
-                  highlight
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium">Điều chỉnh thủ công</div>
-                <Button variant="outline" size="sm">
-                  <Plus className="size-4" /> Thêm dòng
-                </Button>
-              </div>
-              <div className="rounded-lg border p-3 text-xs text-muted-foreground text-center">
-                Chưa có điều chỉnh. POST /api/payrolls/{'{payrollId}'}/items
-              </div>
-            </div>
-          </div>
-        )}
-      </Drawer>
-
-      {confirmNode}
+      <ConfirmDialog
+        open={!!confirmState}
+        onOpenChange={(o) => {
+          if (!o) setConfirmState(null)
+        }}
+        title={confirmState?.title ?? ''}
+        description={confirmState?.description}
+        confirmText={confirmState?.confirmText}
+        onConfirm={() => {
+          confirmState?.onConfirm()
+          setConfirmState(null)
+        }}
+      />
     </div>
   )
 }

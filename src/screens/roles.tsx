@@ -13,71 +13,29 @@ import { Badge } from '../components/ui/badge'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
 import { toast } from 'sonner'
-import { usePermissionGroups } from '@/hooks/usePermissions'
-import { useRoles } from '@/hooks/useRoles'
+import { usePermissions } from '@/hooks/usePermissions'
+import { useRoles, useUpdateRole } from '@/hooks/useRoles'
+import type { IPermission } from '@/types/PermissionType'
+import type { IRole } from '@/types/RoleType'
 import { cn } from '../lib/utils'
-
-const DEFAULT_GRANTS: Record<string, string[]> = {
-  r1: [],
-  r2: [
-    'hr.departments.manage',
-    'hr.departments.read',
-    'hr.employees.manage',
-    'hr.employees.read',
-    'accounts.read',
-  ],
-  r3: [
-    'payroll.read',
-    'payroll.periods.read',
-    'payroll.periods.manage',
-    'payroll.generate',
-    'payroll.confirm',
-    'payroll.reports.read',
-    'hr.employees.read',
-  ],
-  r4: [
-    'hr.employees.read',
-    'attendance.read',
-    'attendance.manage',
-    'production.products.manage',
-    'payroll.read',
-  ],
-  r5: ['hr.employees.read', 'payroll.read', 'attendance.read'],
-}
 
 export function RolesScreen() {
   const { data: roles = [], isLoading, error } = useRoles()
-  const { data: permGroups = [] } = usePermissionGroups()
-  const allPerms = useMemo(
-    () => permGroups.flatMap((g) => g.perms),
-    [permGroups],
-  )
-  const [selectedId, setSelectedId] = useState('r4')
+  const { data: permissions = [] } = usePermissions()
 
-  const [permState, setPermState] = useState<Record<string, Set<string>>>(() => {
-    const out: Record<string, Set<string>> = {}
-    Object.entries(DEFAULT_GRANTS).forEach(([k, v]) => {
-      out[k] = new Set(v)
-    })
-    return out
-  })
+  // Group flat permissions by module client-side.
+  const groups = useMemo(() => {
+    const map = new Map<string, IPermission[]>()
+    for (const p of permissions) {
+      const arr = map.get(p.module) ?? []
+      arr.push(p)
+      map.set(p.module, arr)
+    }
+    return Array.from(map.entries())
+  }, [permissions])
 
-  const selected = roles.find((r) => r.id === selectedId)
-  const stored = permState[selectedId]
-  // admin (r1) implicitly holds every permission until explicitly edited
-  const grants =
-    selectedId === 'r1' && (stored?.size ?? 0) === 0
-      ? new Set(allPerms)
-      : (stored ?? new Set<string>())
-
-  const toggle = (perm: string) => {
-    setPermState((s) => {
-      const next = new Set(s[selectedId] ?? [])
-      if (next.has(perm)) next.delete(perm)
-      else next.add(perm)
-      return { ...s, [selectedId]: next }
-    })
-  }
+  const [selectedId, setSelectedId] = useState<string>('')
+  const selected = roles.find((r) => r.id === selectedId) ?? roles[0]
 
   return (
     <div>
@@ -106,136 +64,198 @@ export function RolesScreen() {
                   onClick={() => setSelectedId(r.id)}
                   className={cn(
                     'w-full text-left p-3 rounded-lg transition-colors',
-                    selectedId === r.id ? 'bg-primary/10 text-primary' : 'hover:bg-muted',
+                    selected?.id === r.id
+                      ? 'bg-primary/10 text-primary'
+                      : 'hover:bg-muted',
                   )}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <div className="font-medium text-sm">{r.name}</div>
-                    <Badge variant="muted">{r.accounts}</Badge>
+                    <div className="flex items-center gap-1">
+                      {r.isSystem && <Badge variant="muted">Hệ thống</Badge>}
+                      <Badge variant={r.isActive ? 'success' : 'destructive'}>
+                        {r.isActive ? 'Hoạt động' : 'Tắt'}
+                      </Badge>
+                    </div>
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">
                     <code className="font-mono">{r.code}</code>
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1 line-clamp-1">
-                    {r.description}
                   </div>
                 </button>
               ))}
             </div>
           </Card>
 
-          <Card>
-            <CardHeader className="border-b">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <CardTitle>{selected?.name ?? '—'}</CardTitle>
-                  <CardDesc>
-                    <code className="font-mono">{selected?.code ?? ''}</code> ·{' '}
-                    {selected?.accounts ?? 0} tài khoản đang dùng
-                  </CardDesc>
-                </div>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm">
-                    <Edit className="size-4" /> Sửa
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="size-4" /> Xóa
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardBody>
-              <div className="flex items-center justify-between mb-4">
-                <div className="text-sm font-medium">Phân quyền theo module</div>
-                <div className="text-xs text-muted-foreground">
-                  {grants.size} / {allPerms.length} quyền
-                </div>
-              </div>
-              <div className="space-y-4">
-                {permGroups.map((g) => {
-                  const granted = g.perms.filter((p) => grants.has(p)).length
-                  const all = granted === g.perms.length && granted > 0
-                  return (
-                    <div key={g.module} className="border rounded-lg">
-                      <div className="flex items-center justify-between gap-3 px-4 py-3 bg-muted/30 border-b">
-                        <div>
-                          <div className="font-medium text-sm">{g.label}</div>
-                          <div className="text-xs text-muted-foreground font-mono">
-                            {g.module}
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant={all ? 'success' : granted > 0 ? 'warning' : 'muted'}
-                          >
-                            {granted}/{g.perms.length}
-                          </Badge>
-                          <label className="flex items-center gap-1.5 text-xs cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={all}
-                              onChange={() => {
-                                setPermState((s) => {
-                                  const next = new Set(s[selectedId] ?? [])
-                                  if (all)
-                                    g.perms.forEach((p) => next.delete(p))
-                                  else g.perms.forEach((p) => next.add(p))
-                                  return { ...s, [selectedId]: next }
-                                })
-                              }}
-                            />
-                            Chọn tất cả
-                          </label>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-1 p-2">
-                        {g.perms.map((p) => {
-                          const checked = grants.has(p)
-                          return (
-                            <label
-                              key={p}
-                              className={cn(
-                                'flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer text-sm transition-colors',
-                                checked ? 'bg-primary/5' : 'hover:bg-muted',
-                              )}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => toggle(p)}
-                                className="rounded"
-                              />
-                              <code className="font-mono text-xs truncate">
-                                {p}
-                              </code>
-                            </label>
-                          )
-                        })}
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            </CardBody>
-            <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
-              <Button variant="outline">Hủy</Button>
-              <Button
-                onClick={() =>
-                  toast.success('Đã lưu phân quyền', {
-                    description: selected?.name ?? '',
-                  })
-                }
-              >
-                Lưu phân quyền
-              </Button>
-            </div>
-          </Card>
+          {selected ? (
+            <PermissionEditor
+              key={selected.id}
+              role={selected}
+              groups={groups}
+              permissions={permissions}
+            />
+          ) : (
+            <Card>
+              <CardBody>
+                <CardDesc>Chọn một vai trò để xem phân quyền.</CardDesc>
+              </CardBody>
+            </Card>
+          )}
         </div>
       </QueryState>
     </div>
+  )
+}
+
+interface PermissionEditorProps {
+  role: IRole
+  groups: [string, IPermission[]][]
+  permissions: IPermission[]
+}
+
+function PermissionEditor({ role, groups, permissions }: PermissionEditorProps) {
+  const updateRole = useUpdateRole()
+
+  // Local editable set of granted permission CODES, seeded from the role.
+  // Remounted via `key={role.id}` upstream, so the initializer reseeds on
+  // role change without a synchronizing effect.
+  const [grants, setGrants] = useState<Set<string>>(
+    () => new Set(role.permissions),
+  )
+
+  const toggle = (code: string) => {
+    setGrants((prev) => {
+      const next = new Set(prev)
+      if (next.has(code)) next.delete(code)
+      else next.add(code)
+      return next
+    })
+  }
+
+  const save = async () => {
+    // Map checked permission CODES → permission IDS for the write payload.
+    const permissionIds = permissions
+      .filter((p) => grants.has(p.code))
+      .map((p) => p.id)
+    try {
+      await updateRole.mutateAsync({
+        id: role.id,
+        data: {
+          code: role.code,
+          name: role.name,
+          isActive: role.isActive,
+          permissionIds,
+        },
+      })
+      toast.success('Đã lưu phân quyền', { description: role.name })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra')
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="border-b">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <CardTitle>{role.name}</CardTitle>
+            <CardDesc>
+              <code className="font-mono">{role.code}</code>
+              {role.isSystem ? ' · Vai trò hệ thống' : ''}
+            </CardDesc>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm">
+              <Edit className="size-4" /> Sửa
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="size-4" /> Xóa
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardBody>
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-sm font-medium">Phân quyền theo module</div>
+          <div className="text-xs text-muted-foreground">
+            {grants.size} / {permissions.length} quyền
+          </div>
+        </div>
+        <div className="space-y-4">
+          {groups.map(([module, perms]) => {
+            const granted = perms.filter((p) => grants.has(p.code)).length
+            const all = granted === perms.length && granted > 0
+            return (
+              <div key={module} className="border rounded-lg">
+                <div className="flex items-center justify-between gap-3 px-4 py-3 bg-muted/30 border-b">
+                  <div>
+                    <div className="font-medium text-sm">{module}</div>
+                    <div className="text-xs text-muted-foreground font-mono">
+                      {module}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant={all ? 'success' : granted > 0 ? 'warning' : 'muted'}
+                    >
+                      {granted}/{perms.length}
+                    </Badge>
+                    <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={all}
+                        onChange={() => {
+                          setGrants((prev) => {
+                            const next = new Set(prev)
+                            if (all)
+                              perms.forEach((p) => next.delete(p.code))
+                            else perms.forEach((p) => next.add(p.code))
+                            return next
+                          })
+                        }}
+                      />
+                      Chọn tất cả
+                    </label>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-1 p-2">
+                  {perms.map((p) => {
+                    const checked = grants.has(p.code)
+                    return (
+                      <label
+                        key={p.id}
+                        className={cn(
+                          'flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer text-sm transition-colors',
+                          checked ? 'bg-primary/5' : 'hover:bg-muted',
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggle(p.code)}
+                          className="rounded"
+                        />
+                        <code className="font-mono text-xs truncate">
+                          {p.code}
+                        </code>
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </CardBody>
+      <div className="flex justify-end gap-2 p-4 border-t bg-muted/20">
+        <Button variant="outline">Hủy</Button>
+        <Button onClick={save} disabled={updateRole.isPending}>
+          Lưu phân quyền
+        </Button>
+      </div>
+    </Card>
   )
 }
