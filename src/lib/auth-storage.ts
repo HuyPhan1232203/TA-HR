@@ -1,27 +1,36 @@
-const STORAGE_KEY = 'hr.auth'
+import Cookies from 'js-cookie'
+import type { IAuthSession } from '@/types/AuthType'
 
-export interface AuthSession {
-  accessToken: string
-  accountId?: string
-  username?: string
-  fullName?: string
-  displayName?: string
-  employeeId?: string
-  roles?: string[]
-  permissions?: string[]
+const STORAGE_KEY = 'hr.auth'
+const TOKEN_KEY = import.meta.env.VITE_ACCESS_TOKEN_KEY
+
+export function setToken(token: string): void {
+  Cookies.set(TOKEN_KEY, token, {
+    expires: 7,
+    secure: location.protocol === 'https:',
+    sameSite: 'strict',
+  })
 }
 
-export function loadSession(): AuthSession | null {
+export function getToken(): string | undefined {
+  return Cookies.get(TOKEN_KEY)
+}
+
+export function clearToken(): void {
+  Cookies.remove(TOKEN_KEY)
+}
+
+export function loadSession(): IAuthSession | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return null
-    return JSON.parse(raw) as AuthSession
+    return JSON.parse(raw) as IAuthSession
   } catch {
     return null
   }
 }
 
-export function saveSession(session: AuthSession): void {
+export function saveSession(session: IAuthSession): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(session))
 }
 

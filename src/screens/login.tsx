@@ -4,9 +4,10 @@ import { AlertTriangle } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { useAuth } from '../components/auth-context'
-import { loginRequest } from '../api/auth'
-import { API_BASE_URL } from '../lib/api'
+import { useAuth } from '@/components/auth-context'
+import { authApi } from '@/api/auth.api'
+import { setToken } from '@/lib/auth-storage'
+import { toast } from 'sonner'
 
 interface FromState {
   from?: Location
@@ -30,8 +31,24 @@ export function LoginScreen() {
     }
     setLoading(true)
     try {
-      const session = await loginRequest(username, password)
-      signIn(session)
+      const loginRes = await authApi.login({ username, password })
+      const login = loginRes.data
+      if (!login) throw new Error(loginRes.message || 'Đăng nhập thất bại')
+
+      setToken(login.accessToken)
+
+      const permRes = await authApi.myPermissions()
+      const permissions = permRes.data ?? []
+
+      signIn({
+        accountId: login.accountId,
+        username: login.username,
+        fullName: login.fullName,
+        employeeId: login.employeeId,
+        roles: login.roles,
+        permissions,
+      })
+      toast.success('Đăng nhập thành công')
       const from = (location.state as FromState | null)?.from?.pathname ?? '/dashboard'
       navigate(from, { replace: true })
     } catch (err) {
@@ -103,7 +120,7 @@ export function LoginScreen() {
         </div>
 
         <div className="relative text-xs opacity-60">
-          © 2026 TA-HR · API {API_BASE_URL || '(proxy /api)'}
+          © 2026 TA-HR · API {import.meta.env.VITE_API_URL}
         </div>
       </div>
 

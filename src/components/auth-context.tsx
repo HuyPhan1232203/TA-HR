@@ -8,28 +8,30 @@ import {
 } from 'react'
 import {
   clearSession,
+  clearToken,
   loadSession,
   saveSession,
-  type AuthSession,
-} from '../lib/auth-storage'
+} from '@/lib/auth-storage'
+import type { IAuthSession } from '@/types/AuthType'
 
 interface AuthContextValue {
-  session: AuthSession | null
-  signIn: (session: AuthSession) => void
+  session: IAuthSession | null
+  signIn: (session: IAuthSession) => void
   signOut: () => void
 }
 
 const AuthCtx = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<AuthSession | null>(() => loadSession())
+  const [session, setSession] = useState<IAuthSession | null>(() => loadSession())
 
-  const signIn = useCallback((next: AuthSession) => {
+  const signIn = useCallback((next: IAuthSession) => {
     saveSession(next)
     setSession(next)
   }, [])
 
   const signOut = useCallback(() => {
+    clearToken()
     clearSession()
     setSession(null)
   }, [])
@@ -37,8 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const onUnauthorized = () => signOut()
     window.addEventListener('auth:unauthorized', onUnauthorized)
-    return () =>
-      window.removeEventListener('auth:unauthorized', onUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', onUnauthorized)
   }, [signOut])
 
   return (
