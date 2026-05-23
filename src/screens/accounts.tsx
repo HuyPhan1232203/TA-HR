@@ -18,36 +18,50 @@ import {
 } from '../components/ui/table'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
-import { useAccounts } from '@/hooks/useAccounts'
+import {
+  useAccounts,
+  useCreateAccount,
+  useUpdateAccount,
+} from '@/hooks/useAccounts'
 import { useDepartments } from '@/hooks/useDepartments'
 import { useEmployees } from '@/hooks/useEmployees'
 import { useRoles } from '@/hooks/useRoles'
-import type { Account, AccountStatus } from '../types/domain'
+import type {
+  AccountStatus,
+  IAccount,
+  ICreateAccount,
+  IUpdateAccount,
+} from '@/types/AccountType'
 import { cn } from '../lib/utils'
 
 interface EditableAccount {
   id?: string
   username: string
   fullName: string
-  employee: string
-  roles: string[]
+  employeeId: string | null
+  roleIds: string[]
   status: AccountStatus
+  password: string
+  confirmPassword: string
 }
 
 const blank: EditableAccount = {
   username: '',
   fullName: '',
-  employee: '',
-  roles: [],
+  employeeId: null,
+  roleIds: [],
   status: 'Active',
+  password: '',
+  confirmPassword: '',
 }
 
 export function AccountsScreen() {
-  const { data: paged, isLoading, error } = useAccounts()
-  const list = paged?.items ?? []
+  const { data: list = [], isLoading, error } = useAccounts()
   const { data: employees = [] } = useEmployees()
   const { data: roles = [] } = useRoles()
   const { data: departments = [] } = useDepartments()
+  const createAccount = useCreateAccount()
+  const updateAccount = useUpdateAccount()
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<EditableAccount>(blank)
@@ -55,19 +69,54 @@ export function AccountsScreen() {
   const filtered = list.filter(
     (a) =>
       !q ||
-      a.username.includes(q.toLowerCase()) ||
+      a.username.toLowerCase().includes(q.toLowerCase()) ||
       a.fullName.toLowerCase().includes(q.toLowerCase()),
   )
 
-  const startEdit = (a: Account) =>
+  const startEdit = (a: IAccount) =>
     setEditing({
       id: a.id,
       username: a.username,
       fullName: a.fullName,
-      employee: a.employee ?? '',
-      roles: a.roles,
+      employeeId: a.employeeId,
+      // a.roles are role CODES → map to role IDS for the checkboxes
+      roleIds: a.roles
+        .map((code) => roles.find((r) => r.code === code)?.id)
+        .filter((id): id is string => Boolean(id)),
       status: a.status,
+      password: '',
+      confirmPassword: '',
     })
+
+  const save = async () => {
+    try {
+      if (editing.id) {
+        const data: IUpdateAccount = {
+          username: editing.username,
+          fullName: editing.fullName,
+          employeeId: editing.employeeId,
+          roleIds: editing.roleIds,
+          status: editing.status,
+        }
+        await updateAccount.mutateAsync({ id: editing.id, data })
+        toast.success('Đã cập nhật tài khoản')
+      } else {
+        const data: ICreateAccount = {
+          username: editing.username,
+          fullName: editing.fullName,
+          employeeId: editing.employeeId,
+          roleIds: editing.roleIds,
+          status: editing.status,
+          ...(editing.password ? { password: editing.password } : {}),
+        }
+        await createAccount.mutateAsync(data)
+        toast.success('Đã tạo tài khoản')
+      }
+      setOpen(false)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Có lỗi xảy ra')
+    }
+  }
 
   return (
     <div>
@@ -108,7 +157,7 @@ export function AccountsScreen() {
           <Select className="w-[160px]" defaultValue="all">
             <option value="all">Mọi trạng thái</option>
             <option value="Active">Đang hoạt động</option>
-            <option value="Disabled">Khóa</option>
+            <option value="Inactive">Khóa</option>
           </Select>
         </div>
         <QueryState isLoading={isLoading} error={error}>
@@ -119,13 +168,12 @@ export function AccountsScreen() {
                 <TH>Nhân viên liên kết</TH>
                 <TH>Vai trò</TH>
                 <TH>Trạng thái</TH>
-                <TH>Đăng nhập gần nhất</TH>
                 <TH className="w-[80px]" />
               </TR>
             </THead>
             <tbody>
               {filtered.map((a) => {
-                const emp = employees.find((e) => e.id === a.employee)
+                const emp = employees.find((e) => e.id === a.employeeId)
                 return (
                   <TR key={a.id}>
                     <TD>
@@ -142,10 +190,11 @@ export function AccountsScreen() {
                     <TD>
                       {emp ? (
                         <div className="text-sm">
-                          <div>{emp.name}</div>
+                          <div>{emp.fullName}</div>
                           <div className="text-xs text-muted-foreground">
                             {emp.code} ·{' '}
-                            {departments.find((d) => d.code === emp.dept)?.name}
+                            {departments.find((d) => d.id === emp.departmentId)
+                              ?.name}
                           </div>
                         </div>
                       ) : (
@@ -184,9 +233,6 @@ export function AccountsScreen() {
                         {a.status === 'Active' ? 'Hoạt động' : 'Đã khóa'}
                       </Badge>
                     </TD>
-                    <TD className="text-xs text-muted-foreground num">
-                      {a.lastLogin}
-                    </TD>
                     <TD>
                       <Button
                         variant="ghost"
@@ -220,12 +266,8 @@ export function AccountsScreen() {
               Hủy
             </Button>
             <Button
-              onClick={() => {
-                toast.success(
-                  editing.id ? 'Đã cập nhật' : 'Đã tạo tài khoản',
-                )
-                setOpen(false)
-              }}
+              onClick={save}
+              disabled={createAccount.isPending || updateAccount.isPending}
             >
               Lưu
             </Button>
@@ -256,15 +298,18 @@ export function AccountsScreen() {
           <div className="space-y-1.5">
             <Label>Liên kết nhân viên</Label>
             <Select
-              value={editing.employee}
+              value={editing.employeeId ?? ''}
               onChange={(e) =>
-                setEditing({ ...editing, employee: e.target.value })
+                setEditing({
+                  ...editing,
+                  employeeId: e.target.value || null,
+                })
               }
             >
               <option value="">— Không liên kết —</option>
               {employees.map((e) => (
                 <option key={e.id} value={e.id}>
-                  {e.code} — {e.name}
+                  {e.code} — {e.fullName}
                 </option>
               ))}
             </Select>
@@ -273,7 +318,7 @@ export function AccountsScreen() {
             <Label>Vai trò</Label>
             <div className="flex flex-wrap gap-2 p-3 border rounded-md">
               {roles.map((r) => {
-                const checked = editing.roles.includes(r.code)
+                const checked = editing.roleIds.includes(r.id)
                 return (
                   <label
                     key={r.id}
@@ -290,9 +335,9 @@ export function AccountsScreen() {
                       onChange={(e) =>
                         setEditing({
                           ...editing,
-                          roles: e.target.checked
-                            ? [...editing.roles, r.code]
-                            : editing.roles.filter((x) => x !== r.code),
+                          roleIds: e.target.checked
+                            ? [...editing.roleIds, r.id]
+                            : editing.roleIds.filter((x) => x !== r.id),
                         })
                       }
                       className="rounded"
@@ -307,11 +352,25 @@ export function AccountsScreen() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Mật khẩu</Label>
-                <Input type="password" placeholder="••••••••" />
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  value={editing.password}
+                  onChange={(e) =>
+                    setEditing({ ...editing, password: e.target.value })
+                  }
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Xác nhận mật khẩu</Label>
-                <Input type="password" placeholder="••••••••" />
+                <Input
+                  type="password"
+                  placeholder="••••••••"
+                  value={editing.confirmPassword}
+                  onChange={(e) =>
+                    setEditing({ ...editing, confirmPassword: e.target.value })
+                  }
+                />
               </div>
             </div>
           )}
@@ -327,7 +386,7 @@ export function AccountsScreen() {
               }
             >
               <option value="Active">Đang hoạt động</option>
-              <option value="Disabled">Đã khóa</option>
+              <option value="Inactive">Đã khóa</option>
             </Select>
           </div>
         </div>

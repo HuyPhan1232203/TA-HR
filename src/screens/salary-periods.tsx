@@ -1,11 +1,10 @@
 import { useState } from 'react'
-import { Check, Clock, DollarSign, Eye, Lock, Plus, Trash2, Unlock } from 'lucide-react'
+import { Check, Clock, Eye, Lock, Plus, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import { Select } from '../components/ui/select'
-import { Textarea } from '../components/ui/textarea'
 import { Badge } from '../components/ui/badge'
 import { Modal } from '../components/ui/modal'
 import { useConfirm } from '../components/ui/confirm'
@@ -19,14 +18,14 @@ import {
 } from '../components/ui/table'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
-import { StatCard } from './dashboard'
 import {
   usePayrollPeriods,
   useLockPeriod,
   useMarkPaid,
+  useCreatePeriod,
 } from '@/hooks/usePayroll'
-import type { PayrollPeriod, PeriodStatus } from '../types/domain'
-import { fmtDate, fmtVND } from '../lib/format'
+import type { IPayrollPeriod, PeriodStatus } from '../types/PayrollType'
+import { fmtDate } from '../lib/format'
 
 function statusVariant(status: PeriodStatus) {
   if (status === 'Open') return 'default' as const
@@ -76,30 +75,65 @@ export function SalaryPeriodsScreen() {
   const { confirm, node: confirmNode } = useConfirm()
   const { data: list = [], isLoading, error } = usePayrollPeriods()
   const [open, setOpen] = useState(false)
+  const [name, setName] = useState('')
+  const [fromDate, setFromDate] = useState('')
+  const [toDate, setToDate] = useState('')
 
   const lockMut = useLockPeriod()
   const paidMut = useMarkPaid()
+  const createMut = useCreatePeriod()
 
-  const lock = async (p: PayrollPeriod) => {
+  const lock = async (p: IPayrollPeriod) => {
     const ok = await confirm({
       title: 'Khóa kỳ lương?',
       body: `Khóa "${p.name}" để chuyển sang trạng thái Locked. Sau khi khóa không thể chỉnh sửa bảng lương.`,
       confirmText: 'Khóa kỳ',
     })
     if (!ok) return
-    await lockMut.mutateAsync(p.id)
-    toast.success('Đã khóa kỳ lương', { description: p.name })
+    try {
+      await lockMut.mutateAsync(p.id)
+      toast.success('Đã khóa kỳ lương', { description: p.name })
+    } catch (e) {
+      toast.error('Không thể khóa kỳ lương', {
+        description: e instanceof Error ? e.message : undefined,
+      })
+    }
   }
 
-  const paid = async (p: PayrollPeriod) => {
+  const paid = async (p: IPayrollPeriod) => {
     const ok = await confirm({
       title: 'Đánh dấu đã trả?',
       body: `Đánh dấu "${p.name}" đã được trả lương. Hành động này không thể hoàn tác.`,
       confirmText: 'Xác nhận đã trả',
     })
     if (!ok) return
-    await paidMut.mutateAsync(p.id)
-    toast.success('Đã đánh dấu đã trả', { description: p.name })
+    try {
+      await paidMut.mutateAsync(p.id)
+      toast.success('Đã đánh dấu đã trả', { description: p.name })
+    } catch (e) {
+      toast.error('Không thể cập nhật trạng thái', {
+        description: e instanceof Error ? e.message : undefined,
+      })
+    }
+  }
+
+  const create = async () => {
+    if (!name || !fromDate || !toDate) {
+      toast.error('Vui lòng nhập đủ tên kỳ và khoảng thời gian')
+      return
+    }
+    try {
+      await createMut.mutateAsync({ name, fromDate, toDate })
+      toast.success('Đã tạo kỳ lương', { description: name })
+      setName('')
+      setFromDate('')
+      setToDate('')
+      setOpen(false)
+    } catch (e) {
+      toast.error('Không thể tạo kỳ lương', {
+        description: e instanceof Error ? e.message : undefined,
+      })
+    }
   }
 
   return (
@@ -113,18 +147,6 @@ export function SalaryPeriodsScreen() {
           </Button>
         }
       />
-
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <StatCard label="Kỳ đang mở" value="1" icon={Unlock} hint="PR-2026-05" />
-        <StatCard
-          label="Đã khóa chờ trả"
-          value="1"
-          icon={Lock}
-          hint="PR-2026-04"
-        />
-        <StatCard label="Đã trả lương" value="3" icon={Check} hint="Q1 2026" />
-        <StatCard label="Tổng chi 12 tháng" value="32.4 tỷ ₫" icon={DollarSign} />
-      </div>
 
       <Card>
         <div className="p-4 border-b flex items-center justify-between">
@@ -141,10 +163,7 @@ export function SalaryPeriodsScreen() {
             <THead>
               <TR>
                 <TH>Tên kỳ</TH>
-                <TH>Mã</TH>
                 <TH>Thời gian</TH>
-                <TH className="text-right">Nhân viên</TH>
-                <TH className="text-right">Tổng chi</TH>
                 <TH>Trạng thái</TH>
                 <TH className="w-[280px]">Thao tác</TH>
               </TR>
@@ -153,17 +172,8 @@ export function SalaryPeriodsScreen() {
               {list.map((p) => (
                 <TR key={p.id}>
                   <TD className="font-medium">{p.name}</TD>
-                  <TD>
-                    <code className="text-xs font-mono px-1.5 py-0.5 bg-muted rounded">
-                      {p.code}
-                    </code>
-                  </TD>
                   <TD className="text-sm text-muted-foreground">
-                    {fmtDate(p.startDate)} → {fmtDate(p.endDate)}
-                  </TD>
-                  <TD className="text-right num">{p.employees}</TD>
-                  <TD className="text-right num font-medium">
-                    {fmtVND(p.totalAmount)}
+                    {fmtDate(p.fromDate)} → {fmtDate(p.toDate)}
                   </TD>
                   <TD>
                     <Badge variant={statusVariant(p.status)}>
@@ -223,13 +233,8 @@ export function SalaryPeriodsScreen() {
             <Button variant="outline" onClick={() => setOpen(false)}>
               Hủy
             </Button>
-            <Button
-              onClick={() => {
-                toast.success('Đã tạo kỳ lương')
-                setOpen(false)
-              }}
-            >
-              Tạo kỳ
+            <Button onClick={() => void create()} disabled={createMut.isPending}>
+              {createMut.isPending ? 'Đang tạo…' : 'Tạo kỳ'}
             </Button>
           </>
         }
@@ -238,25 +243,29 @@ export function SalaryPeriodsScreen() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label>Tên kỳ *</Label>
-              <Input defaultValue="Kỳ lương tháng 06/2026" />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Mã *</Label>
-              <Input defaultValue="PR-2026-06" />
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Kỳ lương tháng 06/2026"
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Bắt đầu</Label>
-                <Input type="date" defaultValue="2026-06-01" />
+                <Input
+                  type="date"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                />
               </div>
               <div className="space-y-1.5">
                 <Label>Kết thúc</Label>
-                <Input type="date" defaultValue="2026-06-30" />
+                <Input
+                  type="date"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                />
               </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Ghi chú</Label>
-              <Textarea placeholder="Ghi chú nội bộ về kỳ lương…" />
             </div>
           </div>
           <div>

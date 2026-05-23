@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Check, Edit, Eye, Package, Play, Plus, Search } from 'lucide-react'
+import { Check, Edit, Eye, Package, Plus, Search } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
@@ -8,7 +8,6 @@ import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
 import { StatCard } from './dashboard'
 import { useProducts } from '@/hooks/useProducts'
-import { fmtDate } from '../lib/format'
 
 export function ProductsScreen() {
   const { data: list = [], isLoading, error } = useProducts()
@@ -25,11 +24,7 @@ export function ProductsScreen() {
     [list, q],
   )
 
-  const activeCount = list.filter((p) => p.status === 'Active').length
-  const avgOps =
-    list.length === 0
-      ? 0
-      : Math.round(list.reduce((s, p) => s + p.operations, 0) / list.length)
+  const activeCount = list.filter((p) => p.isActive).length
 
   return (
     <div>
@@ -43,10 +38,9 @@ export function ProductsScreen() {
         }
       />
 
-      <div className="grid grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-2 gap-4 mb-6">
         <StatCard label="Tổng sản phẩm" value={String(list.length)} icon={Package} />
-        <StatCard label="Đang sản xuất" value={String(activeCount)} icon={Check} />
-        <StatCard label="Trung bình công đoạn" value={String(avgOps)} icon={Play} />
+        <StatCard label="Đang sử dụng" value={String(activeCount)} icon={Check} />
       </div>
 
       <Card>
@@ -83,20 +77,14 @@ export function ProductsScreen() {
                   <div className="min-w-0">
                     <div className="font-medium text-sm truncate">{p.name}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">
-                      Cập nhật {fmtDate(p.lastUpdated)}
+                      Đơn vị: {p.unit}
                     </div>
                   </div>
-                  <Badge variant={p.status === 'Active' ? 'success' : 'muted'}>
-                    {p.status === 'Active' ? 'Đang SX' : 'Tạm dừng'}
+                  <Badge variant={p.isActive ? 'success' : 'muted'}>
+                    {p.isActive ? 'Đang dùng' : 'Ngừng'}
                   </Badge>
                 </div>
-                <div className="mt-3 pt-3 border-t flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
-                    <span className="num font-medium text-foreground">
-                      {p.operations}
-                    </span>{' '}
-                    công đoạn
-                  </span>
+                <div className="mt-3 pt-3 border-t flex items-center justify-end">
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Button variant="ghost" size="iconsm" aria-label="Xem">
                       <Eye className="size-4" />

@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { payrollApi } from '@/api/payroll.api'
 import type {
+  ICreatePeriod,
   IPayrollPeriod,
   IPayrollReport,
   IPayrollRow,
@@ -28,6 +29,14 @@ export function usePayrollRows(periodId: string | null) {
       if (!res.success) throw new Error(res.message)
       return res.data ?? []
     },
+  })
+}
+
+export function useCreatePeriod() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (data: ICreatePeriod) => payrollApi.createPeriod(data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: PERIODS_KEY }),
   })
 }
 

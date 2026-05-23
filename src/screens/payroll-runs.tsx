@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
 import {
-  AlertTriangle,
   Check,
   DollarSign,
   Download,
-  Plus,
+  Package,
   Search,
   Sparkles,
+  Wallet,
 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
@@ -31,7 +31,7 @@ import {
   usePayrollRows,
   useGeneratePayroll,
 } from '@/hooks/usePayroll'
-import type { PayrollPeriod, PayrollRow, PeriodStatus } from '../types/domain'
+import type { IPayrollRow, PeriodStatus } from '../types/PayrollType'
 import { fmtDate, fmtVND } from '../lib/format'
 import { cn } from '../lib/utils'
 
@@ -45,11 +45,10 @@ interface PayItemProps {
   label: string
   value: number
   bold?: boolean
-  negative?: boolean
   highlight?: boolean
 }
 
-function PayItem({ label, value, bold, negative, highlight }: PayItemProps) {
+function PayItem({ label, value, bold, highlight }: PayItemProps) {
   return (
     <div
       className={cn(
@@ -64,7 +63,6 @@ function PayItem({ label, value, bold, negative, highlight }: PayItemProps) {
         className={cn(
           'text-sm num',
           bold && 'font-semibold',
-          negative && 'text-destructive',
           highlight && 'text-primary',
         )}
       >
@@ -77,10 +75,11 @@ function PayItem({ label, value, bold, negative, highlight }: PayItemProps) {
 export function PayrollRunsScreen() {
   const { confirm, node: confirmNode } = useConfirm()
   const { data: periods = [] } = usePayrollPeriods()
-  const [periodId, setPeriodId] = useState<string>('p1')
-  const period: PayrollPeriod | undefined = periods.find((p) => p.id === periodId)
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null)
+  const periodId = selectedPeriodId ?? periods[0]?.id ?? null
+  const period = periods.find((p) => p.id === periodId)
   const { data: rows = [], isLoading, error } = usePayrollRows(periodId)
-  const [selected, setSelected] = useState<PayrollRow | null>(null)
+  const [selected, setSelected] = useState<IPayrollRow | null>(null)
   const [tab, setTab] = useState<'all' | 'draft' | 'confirmed'>('all')
 
   const generateMut = useGeneratePayroll()
@@ -89,27 +88,31 @@ export function PayrollRunsScreen() {
     () =>
       rows.reduce(
         (s, r) => ({
-          gross: s.gross + r.gross,
-          net: s.net + r.net,
-          deductions: s.deductions + r.deductions,
+          gross: s.gross + r.grossSalary,
+          product: s.product + r.productSalary,
+          net: s.net + r.netSalary,
         }),
-        { gross: 0, net: 0, deductions: 0 },
+        { gross: 0, product: 0, net: 0 },
       ),
     [rows],
   )
 
   const generate = async () => {
-    if (!period) return
+    if (!period || !periodId) return
     const ok = await confirm({
       title: 'Tạo lại bảng lương?',
       body: `Hệ thống sẽ tính lại toàn bộ bảng lương cho ${period.name} từ chấm công, sản lượng và đơn giá. Mất khoảng vài giây.`,
       confirmText: 'Generate',
     })
     if (!ok) return
-    await generateMut.mutateAsync(periodId)
-    toast.success('Đã tạo bảng lương', {
-      description: `${rows.length} dòng cho ${period.name}`,
-    })
+    try {
+      await generateMut.mutateAsync(periodId)
+      toast.success('Đã tạo bảng lương', { description: period.name })
+    } catch (e) {
+      toast.error('Không thể tạo bảng lương', {
+        description: e instanceof Error ? e.message : undefined,
+      })
+    }
   }
 
   if (!period) return null
@@ -117,7 +120,7 @@ export function PayrollRunsScreen() {
 
   const filteredRows = rows.filter((r) => {
     if (tab === 'all') return true
-    if (tab === 'draft') return r.status === 'Draft'
+    if (tab === 'draft') return r.status === 'Calculated'
     return r.status === 'Confirmed'
   })
 
@@ -135,7 +138,7 @@ export function PayrollRunsScreen() {
                 key={p.id}
                 type="button"
                 onClick={() => {
-                  setPeriodId(p.id)
+                  setSelectedPeriodId(p.id)
                   setSelected(null)
                 }}
                 className={cn(
@@ -152,10 +155,7 @@ export function PayrollRunsScreen() {
                   </Badge>
                 </div>
                 <div className="text-[11px] text-muted-foreground mt-1">
-                  {fmtDate(p.startDate)} → {fmtDate(p.endDate)}
-                </div>
-                <div className="text-[11px] num text-muted-foreground mt-0.5">
-                  {p.employees} NV · {fmtVND(p.totalAmount)}
+                  {fmtDate(p.fromDate)} → {fmtDate(p.toDate)}
                 </div>
               </button>
             )
@@ -172,7 +172,7 @@ export function PayrollRunsScreen() {
             </h2>
             <div className="flex items-center gap-3 mt-1.5 text-sm text-muted-foreground">
               <span>
-                {fmtDate(period.startDate)} → {fmtDate(period.endDate)}
+                {fmtDate(period.fromDate)} → {fmtDate(period.toDate)}
               </span>
               <span>·</span>
               <span>{rows.length} nhân viên</span>
@@ -201,12 +201,8 @@ export function PayrollRunsScreen() {
 
         <div className="grid grid-cols-3 gap-4 mb-5">
           <StatCard label="Tổng lương gộp" value={fmtVND(totals.gross)} icon={DollarSign} />
-          <StatCard
-            label="Tổng khấu trừ"
-            value={fmtVND(totals.deductions)}
-            icon={AlertTriangle}
-          />
-          <StatCard label="Thực lĩnh" value={fmtVND(totals.net)} icon={Check} />
+          <StatCard label="Tổng lương SP" value={fmtVND(totals.product)} icon={Package} />
+          <StatCard label="Thực lĩnh" value={fmtVND(totals.net)} icon={Wallet} />
         </div>
 
         <Card>
@@ -221,7 +217,7 @@ export function PayrollRunsScreen() {
             <Tabs<typeof tab>
               tabs={[
                 { value: 'all', label: 'Tất cả' },
-                { value: 'draft', label: 'Bản nháp' },
+                { value: 'draft', label: 'Đã tính' },
                 { value: 'confirmed', label: 'Đã xác nhận' },
               ]}
               value={tab}
@@ -233,11 +229,10 @@ export function PayrollRunsScreen() {
               <THead>
                 <TR>
                   <TH>Nhân viên</TH>
-                  <TH className="text-right">Công</TH>
+                  <TH className="text-right">Lương công</TH>
+                  <TH className="text-right">Lương SP</TH>
                   <TH className="text-right">OT</TH>
-                  <TH className="text-right">Sản phẩm</TH>
-                  <TH className="text-right">Phụ cấp</TH>
-                  <TH className="text-right">Khấu trừ</TH>
+                  <TH className="text-right">Gộp</TH>
                   <TH className="text-right">Thực lĩnh</TH>
                   <TH>Trạng thái</TH>
                 </TR>
@@ -245,42 +240,39 @@ export function PayrollRunsScreen() {
               <tbody>
                 {filteredRows.map((r) => (
                   <TR
-                    key={r.employee.id}
+                    key={r.employeeId}
                     className="cursor-pointer"
                     onClick={() => setSelected(r)}
                   >
                     <TD>
                       <div className="flex items-center gap-2.5">
-                        <Avatar name={r.employee.name} size={30} />
+                        <Avatar name={r.employeeName} size={30} />
                         <div>
                           <div className="font-medium text-sm">
-                            {r.employee.name}
+                            {r.employeeName}
                           </div>
                           <div className="text-[11px] text-muted-foreground">
-                            {r.employee.code} · {r.employee.dept}
+                            {r.employeeCode}
                           </div>
                         </div>
                       </div>
                     </TD>
-                    <TD className="text-right num">{r.workDays}</TD>
-                    <TD className="text-right num">{r.ot}h</TD>
+                    <TD className="text-right num">{fmtVND(r.attendanceSalary)}</TD>
                     <TD className="text-right num text-muted-foreground">
-                      {fmtVND(r.piecework)}
+                      {fmtVND(r.productSalary)}
                     </TD>
                     <TD className="text-right num text-muted-foreground">
-                      {fmtVND(r.allowance)}
+                      {fmtVND(r.overtimeSalary)}
                     </TD>
-                    <TD className="text-right num text-destructive">
-                      - {fmtVND(r.deductions)}
-                    </TD>
+                    <TD className="text-right num">{fmtVND(r.grossSalary)}</TD>
                     <TD className="text-right num font-semibold">
-                      {fmtVND(r.net)}
+                      {fmtVND(r.netSalary)}
                     </TD>
                     <TD>
                       <Badge
                         variant={r.status === 'Confirmed' ? 'success' : 'secondary'}
                       >
-                        {r.status === 'Confirmed' ? 'Đã xác nhận' : 'Bản nháp'}
+                        {r.status === 'Confirmed' ? 'Đã xác nhận' : 'Đã tính'}
                       </Badge>
                     </TD>
                   </TR>
@@ -294,12 +286,8 @@ export function PayrollRunsScreen() {
       <Drawer
         open={!!selected}
         onClose={() => setSelected(null)}
-        title={selected?.employee.name}
-        description={
-          selected
-            ? `${selected.employee.code} · ${selected.employee.role}`
-            : undefined
-        }
+        title={selected?.employeeName}
+        description={selected ? selected.employeeCode : undefined}
         width={520}
         footer={
           <>
@@ -322,7 +310,7 @@ export function PayrollRunsScreen() {
             <div className="rounded-lg border p-4 bg-muted/30">
               <div className="text-xs text-muted-foreground">Thực lĩnh</div>
               <div className="text-3xl font-semibold num tracking-tight mt-1">
-                {fmtVND(selected.net)}
+                {fmtVND(selected.netSalary)}
               </div>
               <div className="text-xs text-muted-foreground mt-1">
                 {period.name}
@@ -332,45 +320,16 @@ export function PayrollRunsScreen() {
             <div>
               <div className="text-sm font-medium mb-2">Chi tiết</div>
               <div className="rounded-lg border divide-y">
-                <PayItem
-                  label="Lương cơ bản (theo công)"
-                  value={
-                    selected.gross -
-                    selected.ot * 120_000 -
-                    selected.piecework -
-                    selected.allowance
-                  }
-                />
-                <PayItem
-                  label={`OT (${selected.ot} giờ × 120.000 ₫)`}
-                  value={selected.ot * 120_000}
-                />
-                <PayItem label="Lương sản phẩm" value={selected.piecework} />
-                <PayItem label="Phụ cấp" value={selected.allowance} />
-                <PayItem label="Tổng gộp" value={selected.gross} bold />
-                <PayItem
-                  label="Bảo hiểm & thuế TNCN"
-                  value={-selected.deductions}
-                  negative
-                />
+                <PayItem label="Lương công" value={selected.attendanceSalary} />
+                <PayItem label="Lương sản phẩm" value={selected.productSalary} />
+                <PayItem label="OT" value={selected.overtimeSalary} />
+                <PayItem label="Tổng gộp" value={selected.grossSalary} bold />
                 <PayItem
                   label="Thực lĩnh"
-                  value={selected.net}
+                  value={selected.netSalary}
                   bold
                   highlight
                 />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm font-medium">Điều chỉnh thủ công</div>
-                <Button variant="outline" size="sm">
-                  <Plus className="size-4" /> Thêm dòng
-                </Button>
-              </div>
-              <div className="rounded-lg border p-3 text-xs text-muted-foreground text-center">
-                Chưa có điều chỉnh. POST /api/payrolls/{'{payrollId}'}/items
               </div>
             </div>
           </div>
