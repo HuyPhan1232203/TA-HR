@@ -90,3 +90,6 @@ export {
   CardDescription,
   CardContent,
 }
+
+// Back-compat aliases for existing screens
+export { CardContent as CardBody, CardDescription as CardDesc }
