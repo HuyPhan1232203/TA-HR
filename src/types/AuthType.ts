@@ -12,6 +12,11 @@ export interface ILoginResponse {
   roles: string[]
 }
 
+export interface IMyPermissions {
+  accountId: string
+  permissions: string[]
+}
+
 export interface IAuthSession {
   accountId: string
   username: string

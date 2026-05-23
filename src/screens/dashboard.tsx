@@ -336,7 +336,7 @@ export function DashboardScreen() {
                   <div className="text-sm">
                     <span className="font-medium">{log.actor}</span>{' '}
                     <span className="text-muted-foreground">
-                      → {log.action.replaceAll('_', ' ').toLowerCase()}
+                      → {log.action?.replaceAll('_', ' ').toLowerCase()}
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
@@ -344,7 +344,7 @@ export function DashboardScreen() {
                   </div>
                 </div>
                 <div className="text-[11px] text-muted-foreground whitespace-nowrap">
-                  {log.at.slice(11, 16)}
+                  {log.at ? log.at.slice(11, 16) : ''}
                 </div>
               </div>
             ))}

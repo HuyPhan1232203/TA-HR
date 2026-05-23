@@ -4,6 +4,7 @@ import type {
   IChangePasswordRequest,
   ILoginRequest,
   ILoginResponse,
+  IMyPermissions,
 } from '@/types/AuthType'
 import type { AxiosResponse } from 'axios'
 
@@ -19,9 +20,9 @@ export const authApi = {
     }
   },
 
-  myPermissions: async (): Promise<ApiResponse<string[]>> => {
+  myPermissions: async (): Promise<ApiResponse<IMyPermissions>> => {
     try {
-      const res: AxiosResponse<ApiResponse<string[]>> =
+      const res: AxiosResponse<ApiResponse<IMyPermissions>> =
         await axiosInstance.get('/auth/my-permissions')
       return res.data
     } catch (error) {

@@ -38,7 +38,7 @@ export function LoginScreen() {
       setToken(login.accessToken)
 
       const permRes = await authApi.myPermissions()
-      const permissions = permRes.data ?? []
+      const permissions = permRes.data?.permissions ?? []
 
       signIn({
         accountId: login.accountId,
