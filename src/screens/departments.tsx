@@ -151,7 +151,7 @@ export function DepartmentsScreen() {
           <div className="flex items-center gap-1 justify-end">
             <Button
               variant="ghost"
-              size="iconsm"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation()
                 openEdit(row.original)
@@ -162,7 +162,7 @@ export function DepartmentsScreen() {
             </Button>
             <Button
               variant="ghost"
-              size="iconsm"
+              size="icon-sm"
               onClick={(e) => {
                 e.stopPropagation()
                 void remove(row.original)

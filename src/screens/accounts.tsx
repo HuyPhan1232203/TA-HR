@@ -236,7 +236,7 @@ export function AccountsScreen() {
                     <TD>
                       <Button
                         variant="ghost"
-                        size="iconsm"
+                        size="icon-sm"
                         aria-label="Sửa"
                         onClick={() => {
                           startEdit(a)

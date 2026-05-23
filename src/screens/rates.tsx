@@ -126,10 +126,10 @@ export function RatesScreen() {
                       <TD className="text-sm">{fmtDate(r.effectiveFrom)}</TD>
                       <TD>
                         <div className="flex gap-1 justify-end">
-                          <Button variant="ghost" size="iconsm" aria-label="Lịch sử">
+                          <Button variant="ghost" size="icon-sm" aria-label="Lịch sử">
                             <History className="size-4" />
                           </Button>
-                          <Button variant="ghost" size="iconsm" aria-label="Xóa">
+                          <Button variant="ghost" size="icon-sm" aria-label="Xóa">
                             <Trash2 className="size-4" />
                           </Button>
                         </div>

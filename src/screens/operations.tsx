@@ -55,10 +55,10 @@ export function OperationsScreen() {
                   </TD>
                   <TD>
                     <div className="flex gap-1 justify-end">
-                      <Button variant="ghost" size="iconsm" aria-label="Sửa">
+                      <Button variant="ghost" size="icon-sm" aria-label="Sửa">
                         <Edit className="size-4" />
                       </Button>
-                      <Button variant="ghost" size="iconsm" aria-label="Xóa">
+                      <Button variant="ghost" size="icon-sm" aria-label="Xóa">
                         <Trash2 className="size-4" />
                       </Button>
                     </div>

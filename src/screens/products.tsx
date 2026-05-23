@@ -86,10 +86,10 @@ export function ProductsScreen() {
                 </div>
                 <div className="mt-3 pt-3 border-t flex items-center justify-end">
                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="iconsm" aria-label="Xem">
+                    <Button variant="ghost" size="icon-sm" aria-label="Xem">
                       <Eye className="size-4" />
                     </Button>
-                    <Button variant="ghost" size="iconsm" aria-label="Sửa">
+                    <Button variant="ghost" size="icon-sm" aria-label="Sửa">
                       <Edit className="size-4" />
                     </Button>
                   </div>

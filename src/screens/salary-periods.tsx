@@ -207,7 +207,7 @@ export function SalaryPeriodsScreen() {
                       {p.status !== 'Locked' && p.status !== 'Paid' && (
                         <Button
                           variant="ghost"
-                          size="iconsm"
+                          size="icon-sm"
                           aria-label="Xóa"
                         >
                           <Trash2 className="size-4" />
