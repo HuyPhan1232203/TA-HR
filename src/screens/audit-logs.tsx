@@ -1,12 +1,22 @@
+import { useState } from 'react'
 import { Download } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
-import { Input } from '../components/ui/input'
-import { Select } from '../components/ui/select'
-import { Badge, type BadgeVariant } from '../components/ui/badge'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
+import { DatePicker } from '@/components/ui/date-picker'
+import { Badge, badgeVariants } from '@/components/ui/badge'
+import type { VariantProps } from 'class-variance-authority'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
 import { useAuditLogs } from '@/hooks/useAuditLogs'
+
+type BadgeVariant = VariantProps<typeof badgeVariants>['variant']
 
 const ACTION_COLOR: Record<string, BadgeVariant> = {
   LOGIN: 'muted',
@@ -21,6 +31,9 @@ const ACTION_COLOR: Record<string, BadgeVariant> = {
 
 export function AuditLogsScreen() {
   const { data: logs = [], isLoading, error } = useAuditLogs()
+  const [fromDate, setFromDate] = useState('2026-05-15')
+  const [toDate, setToDate] = useState('2026-05-22')
+  const [actionFilter, setActionFilter] = useState('all')
 
   return (
     <div>
@@ -36,16 +49,25 @@ export function AuditLogsScreen() {
 
       <Card>
         <div className="p-4 border-b flex items-center gap-3 flex-wrap">
-          <Input type="date" defaultValue="2026-05-15" className="w-[160px]" />
+          <DatePicker
+            value={fromDate}
+            onChange={setFromDate}
+            className="w-[160px]"
+          />
           <span className="text-muted-foreground text-sm">→</span>
-          <Input type="date" defaultValue="2026-05-22" className="w-[160px]" />
-          <Select className="w-[200px]" defaultValue="all">
-            <option value="all">Mọi loại hành động</option>
-            <option>LOGIN</option>
-            <option>EMPLOYEE_*</option>
-            <option>PAYROLL_*</option>
-            <option>ATTENDANCE_*</option>
-            <option>ACCOUNT_*</option>
+          <DatePicker value={toDate} onChange={setToDate} className="w-[160px]" />
+          <Select value={actionFilter} onValueChange={setActionFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Mọi loại hành động" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Mọi loại hành động</SelectItem>
+              <SelectItem value="LOGIN">LOGIN</SelectItem>
+              <SelectItem value="EMPLOYEE_*">EMPLOYEE_*</SelectItem>
+              <SelectItem value="PAYROLL_*">PAYROLL_*</SelectItem>
+              <SelectItem value="ATTENDANCE_*">ATTENDANCE_*</SelectItem>
+              <SelectItem value="ACCOUNT_*">ACCOUNT_*</SelectItem>
+            </SelectContent>
           </Select>
           <div className="flex-1" />
           <div className="text-xs text-muted-foreground num">

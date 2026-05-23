@@ -5,10 +5,23 @@ import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { Select } from '../components/ui/select'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
 import { Badge } from '../components/ui/badge'
 import { Avatar } from '../components/ui/avatar'
-import { Drawer } from '../components/ui/drawer'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet'
 import { DataTable } from '../components/ui/data-table'
 import { QueryState } from '../components/ui/query-state'
 import { FilterBar, PageHeader } from '../components/layout/page-header'
@@ -176,28 +189,31 @@ export function EmployeesScreen() {
               className="pl-8 w-[280px]"
             />
           </div>
-          <Select
-            value={deptFilter}
-            onChange={(e) => setDeptFilter(e.target.value)}
-            className="w-[200px]"
-          >
-            <option value="all">Tất cả phòng ban</option>
-            {departments.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
+          <Select value={deptFilter} onValueChange={setDeptFilter}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Tất cả phòng ban" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả phòng ban</SelectItem>
+              {departments.map((d) => (
+                <SelectItem key={d.id} value={d.id}>
+                  {d.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           <Select
             value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value as 'all' | EmployeeStatus)
-            }
-            className="w-[160px]"
+            onValueChange={(v) => setStatusFilter(v as 'all' | EmployeeStatus)}
           >
-            <option value="all">Mọi trạng thái</option>
-            <option value="Active">Đang làm việc</option>
-            <option value="Inactive">Ngừng</option>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Mọi trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Mọi trạng thái</SelectItem>
+              <SelectItem value="Active">Đang làm việc</SelectItem>
+              <SelectItem value="Inactive">Ngừng</SelectItem>
+            </SelectContent>
           </Select>
           <div className="flex-1" />
           <Button variant="outline" size="sm">
@@ -240,28 +256,28 @@ function EmployeeDrawer({ drawer, onClose, onSave, saving }: EmployeeDrawerProps
   if (!drawer || !form) return null
 
   return (
-    <Drawer
+    <Sheet
       open
-      onClose={onClose}
-      title={drawer.mode === 'create' ? 'Thêm nhân viên' : form.fullName}
-      description={
-        drawer.mode === 'create'
-          ? 'Tạo hồ sơ nhân viên mới'
-          : `Mã NV ${form.code}`
-      }
-      width={560}
-      footer={
-        <>
-          <Button variant="outline" onClick={onClose}>
-            Hủy
-          </Button>
-          <Button onClick={() => onSave(form)} disabled={saving}>
-            Lưu thay đổi
-          </Button>
-        </>
-      }
+      onOpenChange={(o) => {
+        if (!o) onClose()
+      }}
     >
-      <div className="space-y-4">
+      <SheetContent
+        side="right"
+        className="w-[560px] sm:max-w-[560px] flex flex-col p-0"
+      >
+        <SheetHeader>
+          <SheetTitle>
+            {drawer.mode === 'create' ? 'Thêm nhân viên' : form.fullName}
+          </SheetTitle>
+          <SheetDescription>
+            {drawer.mode === 'create'
+              ? 'Tạo hồ sơ nhân viên mới'
+              : `Mã NV ${form.code}`}
+          </SheetDescription>
+        </SheetHeader>
+        <div className="flex-1 overflow-y-auto scrollbar-thin px-4">
+          <div className="space-y-4">
         <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-lg">
           <Avatar name={form.fullName || '?'} size={56} />
           <div className="flex-1">
@@ -289,17 +305,19 @@ function EmployeeDrawer({ drawer, onClose, onSave, saving }: EmployeeDrawerProps
           <div className="space-y-1.5">
             <Label>Phòng ban</Label>
             <Select
-              value={form.departmentId}
-              onChange={(e) =>
-                setForm({ ...form, departmentId: e.target.value })
-              }
+              value={form.departmentId || undefined}
+              onValueChange={(v) => setForm({ ...form, departmentId: v })}
             >
-              <option value="">— Chọn phòng ban —</option>
-              {departments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
+              <SelectTrigger>
+                <SelectValue placeholder="— Chọn phòng ban —" />
+              </SelectTrigger>
+              <SelectContent>
+                {departments.map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
@@ -315,34 +333,54 @@ function EmployeeDrawer({ drawer, onClose, onSave, saving }: EmployeeDrawerProps
             <Label>Hình thức lương</Label>
             <Select
               value={form.salaryCalculationType}
-              onChange={(e) =>
+              onValueChange={(v) =>
                 setForm({
                   ...form,
-                  salaryCalculationType: e.target.value as SalaryCalculationType,
+                  salaryCalculationType: v as SalaryCalculationType,
                 })
               }
             >
-              {SALARY_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {SALARY_TYPES.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Trạng thái</Label>
             <Select
               value={form.status}
-              onChange={(e) =>
-                setForm({ ...form, status: e.target.value as EmployeeStatus })
+              onValueChange={(v) =>
+                setForm({ ...form, status: v as EmployeeStatus })
               }
             >
-              <option value="Active">Đang làm việc</option>
-              <option value="Inactive">Ngừng</option>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Đang làm việc</SelectItem>
+                <SelectItem value="Inactive">Ngừng</SelectItem>
+              </SelectContent>
             </Select>
           </div>
+          </div>
+          </div>
         </div>
-      </div>
-    </Drawer>
+        <SheetFooter>
+          <Button variant="outline" onClick={onClose}>
+            Hủy
+          </Button>
+          <Button onClick={() => onSave(form)} disabled={saving}>
+            Lưu thay đổi
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   )
 }

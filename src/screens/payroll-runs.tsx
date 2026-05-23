@@ -13,17 +13,25 @@ import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
 import { Avatar } from '../components/ui/avatar'
-import { Drawer } from '../components/ui/drawer'
-import { Tabs } from '../components/ui/tabs'
-import { useConfirm } from '../components/ui/confirm'
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from '@/components/ui/sheet'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { ConfirmDialog, type ConfirmState } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
 import {
   Table,
-  THead,
-  TH,
-  TR,
-  TD,
-} from '../components/ui/table'
+  TableHeader,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+} from '@/components/ui/table'
 import { QueryState } from '../components/ui/query-state'
 import { StatCard } from './dashboard'
 import {
@@ -72,15 +80,17 @@ function PayItem({ label, value, bold, highlight }: PayItemProps) {
   )
 }
 
+type PayrollTab = 'all' | 'draft' | 'confirmed'
+
 export function PayrollRunsScreen() {
-  const { confirm, node: confirmNode } = useConfirm()
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
   const { data: periods = [] } = usePayrollPeriods()
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null)
   const periodId = selectedPeriodId ?? periods[0]?.id ?? null
   const period = periods.find((p) => p.id === periodId)
   const { data: rows = [], isLoading, error } = usePayrollRows(periodId)
   const [selected, setSelected] = useState<IPayrollRow | null>(null)
-  const [tab, setTab] = useState<'all' | 'draft' | 'confirmed'>('all')
+  const [tab, setTab] = useState<PayrollTab>('all')
 
   const generateMut = useGeneratePayroll()
 
@@ -97,22 +107,25 @@ export function PayrollRunsScreen() {
     [rows],
   )
 
-  const generate = async () => {
+  const generate = () => {
     if (!period || !periodId) return
-    const ok = await confirm({
+    setConfirmState({
       title: 'Tạo lại bảng lương?',
-      body: `Hệ thống sẽ tính lại toàn bộ bảng lương cho ${period.name} từ chấm công, sản lượng và đơn giá. Mất khoảng vài giây.`,
+      description: `Hệ thống sẽ tính lại toàn bộ bảng lương cho ${period.name} từ chấm công, sản lượng và đơn giá. Mất khoảng vài giây.`,
       confirmText: 'Generate',
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await generateMut.mutateAsync(periodId)
+            toast.success('Đã tạo bảng lương', { description: period.name })
+          } catch (e) {
+            toast.error('Không thể tạo bảng lương', {
+              description: e instanceof Error ? e.message : undefined,
+            })
+          }
+        })()
+      },
     })
-    if (!ok) return
-    try {
-      await generateMut.mutateAsync(periodId)
-      toast.success('Đã tạo bảng lương', { description: period.name })
-    } catch (e) {
-      toast.error('Không thể tạo bảng lương', {
-        description: e instanceof Error ? e.message : undefined,
-      })
-    }
   }
 
   if (!period) return null
@@ -184,7 +197,7 @@ export function PayrollRunsScreen() {
               <Download className="size-4" /> Xuất Excel
             </Button>
             {period.status === 'Open' && (
-              <Button onClick={() => void generate()} disabled={generateMut.isPending}>
+              <Button onClick={generate} disabled={generateMut.isPending}>
                 {generateMut.isPending ? (
                   <>
                     <Sparkles className="size-4 animate-pulse" /> Đang tạo…
@@ -214,37 +227,35 @@ export function PayrollRunsScreen() {
                 className="pl-8 w-[260px]"
               />
             </div>
-            <Tabs<typeof tab>
-              tabs={[
-                { value: 'all', label: 'Tất cả' },
-                { value: 'draft', label: 'Đã tính' },
-                { value: 'confirmed', label: 'Đã xác nhận' },
-              ]}
-              value={tab}
-              onChange={setTab}
-            />
+            <Tabs value={tab} onValueChange={(v) => setTab(v as PayrollTab)}>
+              <TabsList>
+                <TabsTrigger value="all">Tất cả</TabsTrigger>
+                <TabsTrigger value="draft">Đã tính</TabsTrigger>
+                <TabsTrigger value="confirmed">Đã xác nhận</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
           <QueryState isLoading={isLoading} error={error}>
             <Table>
-              <THead>
-                <TR>
-                  <TH>Nhân viên</TH>
-                  <TH className="text-right">Lương công</TH>
-                  <TH className="text-right">Lương SP</TH>
-                  <TH className="text-right">OT</TH>
-                  <TH className="text-right">Gộp</TH>
-                  <TH className="text-right">Thực lĩnh</TH>
-                  <TH>Trạng thái</TH>
-                </TR>
-              </THead>
-              <tbody>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nhân viên</TableHead>
+                  <TableHead className="text-right">Lương công</TableHead>
+                  <TableHead className="text-right">Lương SP</TableHead>
+                  <TableHead className="text-right">OT</TableHead>
+                  <TableHead className="text-right">Gộp</TableHead>
+                  <TableHead className="text-right">Thực lĩnh</TableHead>
+                  <TableHead>Trạng thái</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {filteredRows.map((r) => (
-                  <TR
+                  <TableRow
                     key={r.employeeId}
                     className="cursor-pointer"
                     onClick={() => setSelected(r)}
                   >
-                    <TD>
+                    <TableCell>
                       <div className="flex items-center gap-2.5">
                         <Avatar name={r.employeeName} size={30} />
                         <div>
@@ -256,57 +267,52 @@ export function PayrollRunsScreen() {
                           </div>
                         </div>
                       </div>
-                    </TD>
-                    <TD className="text-right num">{fmtVND(r.attendanceSalary)}</TD>
-                    <TD className="text-right num text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="text-right num">{fmtVND(r.attendanceSalary)}</TableCell>
+                    <TableCell className="text-right num text-muted-foreground">
                       {fmtVND(r.productSalary)}
-                    </TD>
-                    <TD className="text-right num text-muted-foreground">
+                    </TableCell>
+                    <TableCell className="text-right num text-muted-foreground">
                       {fmtVND(r.overtimeSalary)}
-                    </TD>
-                    <TD className="text-right num">{fmtVND(r.grossSalary)}</TD>
-                    <TD className="text-right num font-semibold">
+                    </TableCell>
+                    <TableCell className="text-right num">{fmtVND(r.grossSalary)}</TableCell>
+                    <TableCell className="text-right num font-semibold">
                       {fmtVND(r.netSalary)}
-                    </TD>
-                    <TD>
+                    </TableCell>
+                    <TableCell>
                       <Badge
                         variant={r.status === 'Confirmed' ? 'success' : 'secondary'}
                       >
                         {r.status === 'Confirmed' ? 'Đã xác nhận' : 'Đã tính'}
                       </Badge>
-                    </TD>
-                  </TR>
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
+              </TableBody>
             </Table>
           </QueryState>
         </Card>
       </div>
 
-      <Drawer
+      <Sheet
         open={!!selected}
-        onClose={() => setSelected(null)}
-        title={selected?.employeeName}
-        description={selected ? selected.employeeCode : undefined}
-        width={520}
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setSelected(null)}>
-              Đóng
-            </Button>
-            <Button
-              onClick={() => {
-                toast.success('Đã xác nhận bảng lương')
-                setSelected(null)
-              }}
-            >
-              <Check className="size-4" /> Xác nhận
-            </Button>
-          </>
-        }
+        onOpenChange={(o) => {
+          if (!o) setSelected(null)
+        }}
       >
-        {selected && (
-          <div className="space-y-5">
+        <SheetContent
+          side="right"
+          className="w-[520px] sm:max-w-[520px] flex flex-col p-0"
+        >
+          <SheetHeader>
+            <SheetTitle>{selected?.employeeName}</SheetTitle>
+            <SheetDescription>
+              {selected ? selected.employeeCode : undefined}
+            </SheetDescription>
+          </SheetHeader>
+          <div className="flex-1 overflow-y-auto scrollbar-thin px-4">
+            {selected && (
+              <div className="space-y-5">
             <div className="rounded-lg border p-4 bg-muted/30">
               <div className="text-xs text-muted-foreground">Thực lĩnh</div>
               <div className="text-3xl font-semibold num tracking-tight mt-1">
@@ -332,11 +338,38 @@ export function PayrollRunsScreen() {
                 />
               </div>
             </div>
+              </div>
+            )}
           </div>
-        )}
-      </Drawer>
+          <SheetFooter>
+            <Button variant="outline" onClick={() => setSelected(null)}>
+              Đóng
+            </Button>
+            <Button
+              onClick={() => {
+                toast.success('Đã xác nhận bảng lương')
+                setSelected(null)
+              }}
+            >
+              <Check className="size-4" /> Xác nhận
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
 
-      {confirmNode}
+      <ConfirmDialog
+        open={!!confirmState}
+        onOpenChange={(o) => {
+          if (!o) setConfirmState(null)
+        }}
+        title={confirmState?.title ?? ''}
+        description={confirmState?.description}
+        confirmText={confirmState?.confirmText}
+        onConfirm={() => {
+          confirmState?.onConfirm()
+          setConfirmState(null)
+        }}
+      />
     </div>
   )
 }
