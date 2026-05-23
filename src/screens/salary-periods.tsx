@@ -4,18 +4,33 @@ import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { Select } from '../components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '../components/ui/badge'
-import { Modal } from '../components/ui/modal'
-import { useConfirm } from '../components/ui/confirm'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { DatePicker } from '@/components/ui/date-picker'
+import { ConfirmDialog, type ConfirmState } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
 import {
   Table,
-  THead,
-  TH,
-  TR,
-  TD,
-} from '../components/ui/table'
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
 import {
@@ -72,49 +87,56 @@ function MiniCalendar() {
 }
 
 export function SalaryPeriodsScreen() {
-  const { confirm, node: confirmNode } = useConfirm()
   const { data: list = [], isLoading, error } = usePayrollPeriods()
   const [open, setOpen] = useState(false)
   const [name, setName] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
 
   const lockMut = useLockPeriod()
   const paidMut = useMarkPaid()
   const createMut = useCreatePeriod()
 
-  const lock = async (p: IPayrollPeriod) => {
-    const ok = await confirm({
+  const lock = (p: IPayrollPeriod) => {
+    setConfirmState({
       title: 'Khóa kỳ lương?',
-      body: `Khóa "${p.name}" để chuyển sang trạng thái Locked. Sau khi khóa không thể chỉnh sửa bảng lương.`,
+      description: `Khóa "${p.name}" để chuyển sang trạng thái Locked. Sau khi khóa không thể chỉnh sửa bảng lương.`,
       confirmText: 'Khóa kỳ',
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await lockMut.mutateAsync(p.id)
+            toast.success('Đã khóa kỳ lương', { description: p.name })
+          } catch (e) {
+            toast.error('Không thể khóa kỳ lương', {
+              description: e instanceof Error ? e.message : undefined,
+            })
+          }
+        })()
+      },
     })
-    if (!ok) return
-    try {
-      await lockMut.mutateAsync(p.id)
-      toast.success('Đã khóa kỳ lương', { description: p.name })
-    } catch (e) {
-      toast.error('Không thể khóa kỳ lương', {
-        description: e instanceof Error ? e.message : undefined,
-      })
-    }
   }
 
-  const paid = async (p: IPayrollPeriod) => {
-    const ok = await confirm({
+  const paid = (p: IPayrollPeriod) => {
+    setConfirmState({
       title: 'Đánh dấu đã trả?',
-      body: `Đánh dấu "${p.name}" đã được trả lương. Hành động này không thể hoàn tác.`,
+      description: `Đánh dấu "${p.name}" đã được trả lương. Hành động này không thể hoàn tác.`,
       confirmText: 'Xác nhận đã trả',
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await paidMut.mutateAsync(p.id)
+            toast.success('Đã đánh dấu đã trả', { description: p.name })
+          } catch (e) {
+            toast.error('Không thể cập nhật trạng thái', {
+              description: e instanceof Error ? e.message : undefined,
+            })
+          }
+        })()
+      },
     })
-    if (!ok) return
-    try {
-      await paidMut.mutateAsync(p.id)
-      toast.success('Đã đánh dấu đã trả', { description: p.name })
-    } catch (e) {
-      toast.error('Không thể cập nhật trạng thái', {
-        description: e instanceof Error ? e.message : undefined,
-      })
-    }
   }
 
   const create = async () => {
@@ -151,36 +173,41 @@ export function SalaryPeriodsScreen() {
       <Card>
         <div className="p-4 border-b flex items-center justify-between">
           <div className="text-sm font-medium">Danh sách kỳ lương</div>
-          <Select defaultValue="all" className="w-[160px]">
-            <option value="all">Mọi trạng thái</option>
-            <option value="open">Đang mở</option>
-            <option value="locked">Đã khóa</option>
-            <option value="paid">Đã trả</option>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Mọi trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Mọi trạng thái</SelectItem>
+              <SelectItem value="open">Đang mở</SelectItem>
+              <SelectItem value="locked">Đã khóa</SelectItem>
+              <SelectItem value="paid">Đã trả</SelectItem>
+            </SelectContent>
           </Select>
         </div>
         <QueryState isLoading={isLoading} error={error}>
           <Table>
-            <THead>
-              <TR>
-                <TH>Tên kỳ</TH>
-                <TH>Thời gian</TH>
-                <TH>Trạng thái</TH>
-                <TH className="w-[280px]">Thao tác</TH>
-              </TR>
-            </THead>
-            <tbody>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tên kỳ</TableHead>
+                <TableHead>Thời gian</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="w-[280px]">Thao tác</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {list.map((p) => (
-                <TR key={p.id}>
-                  <TD className="font-medium">{p.name}</TD>
-                  <TD className="text-sm text-muted-foreground">
+                <TableRow key={p.id}>
+                  <TableCell className="font-medium">{p.name}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
                     {fmtDate(p.fromDate)} → {fmtDate(p.toDate)}
-                  </TD>
-                  <TD>
+                  </TableCell>
+                  <TableCell>
                     <Badge variant={statusVariant(p.status)}>
                       {statusLabel(p.status)}
                     </Badge>
-                  </TD>
-                  <TD>
+                  </TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-1">
                       <Button variant="outline" size="sm">
                         <Eye className="size-4" /> Xem
@@ -189,7 +216,7 @@ export function SalaryPeriodsScreen() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => void lock(p)}
+                          onClick={() => lock(p)}
                           disabled={lockMut.isPending}
                         >
                           <Lock className="size-4" /> Khóa
@@ -198,7 +225,7 @@ export function SalaryPeriodsScreen() {
                       {p.status === 'Locked' && (
                         <Button
                           size="sm"
-                          onClick={() => void paid(p)}
+                          onClick={() => paid(p)}
                           disabled={paidMut.isPending}
                         >
                           <Check className="size-4" /> Đã trả
@@ -214,72 +241,77 @@ export function SalaryPeriodsScreen() {
                         </Button>
                       )}
                     </div>
-                  </TD>
-                </TR>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
+            </TableBody>
           </Table>
         </QueryState>
       </Card>
 
-      <Modal
-        open={open}
-        onClose={() => setOpen(false)}
-        title="Tạo kỳ lương mới"
-        description="Chọn khoảng thời gian áp dụng cho kỳ lương."
-        size="lg"
-        footer={
-          <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Tạo kỳ lương mới</DialogTitle>
+            <DialogDescription>
+              Chọn khoảng thời gian áp dụng cho kỳ lương.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-5">
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>Tên kỳ *</Label>
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Kỳ lương tháng 06/2026"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Bắt đầu</Label>
+                  <DatePicker value={fromDate} onChange={setFromDate} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Kết thúc</Label>
+                  <DatePicker value={toDate} onChange={setToDate} />
+                </div>
+              </div>
+            </div>
+            <div>
+              <Label className="mb-2 block">Xem trước</Label>
+              <MiniCalendar />
+              <div className="text-xs text-muted-foreground mt-2">
+                Bao gồm 22 ngày làm việc (T2–T7), 8 ngày nghỉ tuần.{' '}
+                <Clock className="inline size-3" />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Hủy
             </Button>
             <Button onClick={() => void create()} disabled={createMut.isPending}>
               {createMut.isPending ? 'Đang tạo…' : 'Tạo kỳ'}
             </Button>
-          </>
-        }
-      >
-        <div className="grid grid-cols-2 gap-5">
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label>Tên kỳ *</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Kỳ lương tháng 06/2026"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>Bắt đầu</Label>
-                <Input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => setFromDate(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label>Kết thúc</Label>
-                <Input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => setToDate(e.target.value)}
-                />
-              </div>
-            </div>
-          </div>
-          <div>
-            <Label className="mb-2 block">Xem trước</Label>
-            <MiniCalendar />
-            <div className="text-xs text-muted-foreground mt-2">
-              Bao gồm 22 ngày làm việc (T2–T7), 8 ngày nghỉ tuần.{' '}
-              <Clock className="inline size-3" />
-            </div>
-          </div>
-        </div>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {confirmNode}
+      <ConfirmDialog
+        open={!!confirmState}
+        onOpenChange={(o) => {
+          if (!o) setConfirmState(null)
+        }}
+        title={confirmState?.title ?? ''}
+        description={confirmState?.description}
+        danger={confirmState?.danger}
+        confirmText={confirmState?.confirmText}
+        onConfirm={() => {
+          confirmState?.onConfirm()
+          setConfirmState(null)
+        }}
+      />
     </div>
   )
 }

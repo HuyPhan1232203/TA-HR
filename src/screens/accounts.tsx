@@ -4,18 +4,32 @@ import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { Select } from '../components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '../components/ui/badge'
 import { Avatar } from '../components/ui/avatar'
-import { Modal } from '../components/ui/modal'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import {
   Table,
-  THead,
-  TH,
-  TR,
-  TD,
-} from '../components/ui/table'
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
 import {
@@ -63,14 +77,18 @@ export function AccountsScreen() {
   const createAccount = useCreateAccount()
   const updateAccount = useUpdateAccount()
   const [q, setQ] = useState('')
+  const [roleFilter, setRoleFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<EditableAccount>(blank)
 
   const filtered = list.filter(
     (a) =>
-      !q ||
-      a.username.toLowerCase().includes(q.toLowerCase()) ||
-      a.fullName.toLowerCase().includes(q.toLowerCase()),
+      (!q ||
+        a.username.toLowerCase().includes(q.toLowerCase()) ||
+        a.fullName.toLowerCase().includes(q.toLowerCase())) &&
+      (roleFilter === 'all' || a.roles.includes(roleFilter)) &&
+      (statusFilter === 'all' || a.status === statusFilter),
   )
 
   const startEdit = (a: IAccount) =>
@@ -146,37 +164,47 @@ export function AccountsScreen() {
               className="pl-8 w-[280px]"
             />
           </div>
-          <Select className="w-[160px]" defaultValue="all">
-            <option value="all">Mọi vai trò</option>
-            {roles.map((r) => (
-              <option key={r.id} value={r.code}>
-                {r.name}
-              </option>
-            ))}
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Mọi vai trò" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Mọi vai trò</SelectItem>
+              {roles.map((r) => (
+                <SelectItem key={r.id} value={r.code}>
+                  {r.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
-          <Select className="w-[160px]" defaultValue="all">
-            <option value="all">Mọi trạng thái</option>
-            <option value="Active">Đang hoạt động</option>
-            <option value="Inactive">Khóa</option>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Mọi trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Mọi trạng thái</SelectItem>
+              <SelectItem value="Active">Đang hoạt động</SelectItem>
+              <SelectItem value="Inactive">Khóa</SelectItem>
+            </SelectContent>
           </Select>
         </div>
         <QueryState isLoading={isLoading} error={error}>
           <Table>
-            <THead>
-              <TR>
-                <TH>Tài khoản</TH>
-                <TH>Nhân viên liên kết</TH>
-                <TH>Vai trò</TH>
-                <TH>Trạng thái</TH>
-                <TH className="w-[80px]" />
-              </TR>
-            </THead>
-            <tbody>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Tài khoản</TableHead>
+                <TableHead>Nhân viên liên kết</TableHead>
+                <TableHead>Vai trò</TableHead>
+                <TableHead>Trạng thái</TableHead>
+                <TableHead className="w-[80px]" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {filtered.map((a) => {
                 const emp = employees.find((e) => e.id === a.employeeId)
                 return (
-                  <TR key={a.id}>
-                    <TD>
+                  <TableRow key={a.id}>
+                    <TableCell>
                       <div className="flex items-center gap-2.5">
                         <Avatar name={a.fullName} size={32} />
                         <div>
@@ -186,8 +214,8 @@ export function AccountsScreen() {
                           </div>
                         </div>
                       </div>
-                    </TD>
-                    <TD>
+                    </TableCell>
+                    <TableCell>
                       {emp ? (
                         <div className="text-sm">
                           <div>{emp.fullName}</div>
@@ -202,8 +230,8 @@ export function AccountsScreen() {
                           — Không liên kết —
                         </span>
                       )}
-                    </TD>
-                    <TD>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {a.roles.map((rc) => {
                           const r = roles.find((x) => x.code === rc)
@@ -217,8 +245,8 @@ export function AccountsScreen() {
                           )
                         })}
                       </div>
-                    </TD>
-                    <TD>
+                    </TableCell>
+                    <TableCell>
                       <Badge
                         variant={a.status === 'Active' ? 'success' : 'destructive'}
                       >
@@ -232,8 +260,8 @@ export function AccountsScreen() {
                         />
                         {a.status === 'Active' ? 'Hoạt động' : 'Đã khóa'}
                       </Badge>
-                    </TD>
-                    <TD>
+                    </TableCell>
+                    <TableCell>
                       <Button
                         variant="ghost"
                         size="icon-sm"
@@ -245,36 +273,26 @@ export function AccountsScreen() {
                       >
                         <Edit className="size-4" />
                       </Button>
-                    </TD>
-                  </TR>
+                    </TableCell>
+                  </TableRow>
                 )
               })}
-            </tbody>
+            </TableBody>
           </Table>
         </QueryState>
       </Card>
 
-      <Modal
-        open={open}
-        onClose={() => setOpen(false)}
-        title={editing.id ? 'Sửa tài khoản' : 'Tạo tài khoản'}
-        description="Liên kết với nhân viên và gán vai trò."
-        size="lg"
-        footer={
-          <>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Hủy
-            </Button>
-            <Button
-              onClick={save}
-              disabled={createAccount.isPending || updateAccount.isPending}
-            >
-              Lưu
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editing.id ? 'Sửa tài khoản' : 'Tạo tài khoản'}
+            </DialogTitle>
+            <DialogDescription>
+              Liên kết với nhân viên và gán vai trò.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Tên đăng nhập *</Label>
@@ -298,20 +316,25 @@ export function AccountsScreen() {
           <div className="space-y-1.5">
             <Label>Liên kết nhân viên</Label>
             <Select
-              value={editing.employeeId ?? ''}
-              onChange={(e) =>
+              value={editing.employeeId ?? 'none'}
+              onValueChange={(v) =>
                 setEditing({
                   ...editing,
-                  employeeId: e.target.value || null,
+                  employeeId: v === 'none' ? null : v,
                 })
               }
             >
-              <option value="">— Không liên kết —</option>
-              {employees.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.code} — {e.fullName}
-                </option>
-              ))}
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="— Không liên kết —" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">— Không liên kết —</SelectItem>
+                {employees.map((e) => (
+                  <SelectItem key={e.id} value={e.id}>
+                    {e.code} — {e.fullName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
           </div>
           <div className="space-y-1.5">
@@ -378,19 +401,33 @@ export function AccountsScreen() {
             <Label>Trạng thái</Label>
             <Select
               value={editing.status}
-              onChange={(e) =>
-                setEditing({
-                  ...editing,
-                  status: e.target.value as AccountStatus,
-                })
+              onValueChange={(v) =>
+                setEditing({ ...editing, status: v as AccountStatus })
               }
             >
-              <option value="Active">Đang hoạt động</option>
-              <option value="Inactive">Đã khóa</option>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Đang hoạt động</SelectItem>
+                <SelectItem value="Inactive">Đã khóa</SelectItem>
+              </SelectContent>
             </Select>
           </div>
-        </div>
-      </Modal>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Hủy
+            </Button>
+            <Button
+              onClick={save}
+              disabled={createAccount.isPending || updateAccount.isPending}
+            >
+              Lưu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

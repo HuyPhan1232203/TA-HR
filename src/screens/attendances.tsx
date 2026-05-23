@@ -4,10 +4,31 @@ import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
-import { Select } from '../components/ui/select'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Badge } from '../components/ui/badge'
-import { Modal } from '../components/ui/modal'
-import { Table, THead, TH, TR, TD } from '../components/ui/table'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { DatePicker } from '@/components/ui/date-picker'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
 import { toast } from 'sonner'
@@ -91,33 +112,32 @@ export function AttendancesScreen() {
 
       <Card>
         <div className="p-4 border-b flex items-center gap-3 flex-wrap">
-          <Select
-            className="w-[260px]"
-            value={employeeId}
-            onChange={(e) => setEmployeeId(e.target.value)}
-          >
-            <option value="all">Tất cả nhân viên</option>
-            {employees.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.code} — {e.fullName}
-              </option>
-            ))}
+          <Select value={employeeId} onValueChange={setEmployeeId}>
+            <SelectTrigger className="w-[260px]">
+              <SelectValue placeholder="Tất cả nhân viên" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả nhân viên</SelectItem>
+              {employees.map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.code} — {e.fullName}
+                </SelectItem>
+              ))}
+            </SelectContent>
           </Select>
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">Từ ngày</Label>
-            <Input
-              type="date"
+            <DatePicker
               value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
+              onChange={setFromDate}
               className="w-[160px]"
             />
           </div>
           <div className="space-y-1">
             <Label className="text-xs text-muted-foreground">Đến ngày</Label>
-            <Input
-              type="date"
+            <DatePicker
               value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
+              onChange={setToDate}
               className="w-[160px]"
             />
           </div>
@@ -125,24 +145,24 @@ export function AttendancesScreen() {
 
         <QueryState isLoading={isLoading} error={error}>
           <Table>
-            <THead>
-              <TR>
-                <TH>Nhân viên</TH>
-                <TH>Ngày</TH>
-                <TH>Giờ vào</TH>
-                <TH>Giờ ra</TH>
-                <TH className="text-right">Giờ công</TH>
-                <TH className="text-right">Ngày công</TH>
-                <TH className="text-right">OT</TH>
-                <TH>Trạng thái</TH>
-              </TR>
-            </THead>
-            <tbody>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nhân viên</TableHead>
+                <TableHead>Ngày</TableHead>
+                <TableHead>Giờ vào</TableHead>
+                <TableHead>Giờ ra</TableHead>
+                <TableHead className="text-right">Giờ công</TableHead>
+                <TableHead className="text-right">Ngày công</TableHead>
+                <TableHead className="text-right">OT</TableHead>
+                <TableHead>Trạng thái</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {rows.map((a) => {
                 const emp = employeeById.get(a.employeeId)
                 return (
-                  <TR key={a.id}>
-                    <TD>
+                  <TableRow key={a.id}>
+                    <TableCell>
                       {emp ? (
                         <div>
                           <div className="font-medium text-[13px]">
@@ -157,109 +177,111 @@ export function AttendancesScreen() {
                           {a.employeeId}
                         </span>
                       )}
-                    </TD>
-                    <TD>{fmtDate(a.workDate)}</TD>
-                    <TD>{fmtTime(a.checkIn)}</TD>
-                    <TD>{fmtTime(a.checkOut)}</TD>
-                    <TD className="text-right num">{fmtNum(a.workingHours)}</TD>
-                    <TD className="text-right num">
+                    </TableCell>
+                    <TableCell>{fmtDate(a.workDate)}</TableCell>
+                    <TableCell>{fmtTime(a.checkIn)}</TableCell>
+                    <TableCell>{fmtTime(a.checkOut)}</TableCell>
+                    <TableCell className="text-right num">
+                      {fmtNum(a.workingHours)}
+                    </TableCell>
+                    <TableCell className="text-right num">
                       {fmtNum(a.workingDayValue)}
-                    </TD>
-                    <TD className="text-right num">{fmtNum(a.overtimeHours)}</TD>
-                    <TD>
+                    </TableCell>
+                    <TableCell className="text-right num">
+                      {fmtNum(a.overtimeHours)}
+                    </TableCell>
+                    <TableCell>
                       {a.status === 'Confirmed' ? (
                         <Badge variant="success">Đã duyệt</Badge>
                       ) : (
                         <Badge variant="secondary">Nháp</Badge>
                       )}
-                    </TD>
-                  </TR>
+                    </TableCell>
+                  </TableRow>
                 )
               })}
-            </tbody>
+            </TableBody>
           </Table>
         </QueryState>
       </Card>
 
-      <Modal
-        open={open}
-        onClose={() => setOpen(false)}
-        title="Nhập chấm công"
-        description="Ghi nhận giờ vào / giờ ra cho 1 ngày làm việc"
-        footer={
-          <>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Nhập chấm công</DialogTitle>
+            <DialogDescription>
+              Ghi nhận giờ vào / giờ ra cho 1 ngày làm việc
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Nhân viên *</Label>
+              <Select value={formEmployeeId} onValueChange={setFormEmployeeId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="— Chọn nhân viên —" />
+                </SelectTrigger>
+                <SelectContent>
+                  {employees.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>
+                      {e.code} — {e.fullName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label>Ngày *</Label>
+                <DatePicker value={formWorkDate} onChange={setFormWorkDate} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Giờ vào</Label>
+                <Input
+                  type="time"
+                  value={formCheckIn}
+                  onChange={(e) => setFormCheckIn(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Giờ ra</Label>
+                <Input
+                  type="time"
+                  value={formCheckOut}
+                  onChange={(e) => setFormCheckOut(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Giờ công</Label>
+                <Input
+                  type="number"
+                  value={formWorkingHours}
+                  onChange={(e) => setFormWorkingHours(e.target.value)}
+                  className="num"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>OT (giờ)</Label>
+                <Input
+                  type="number"
+                  value={formOvertimeHours}
+                  onChange={(e) => setFormOvertimeHours(e.target.value)}
+                  className="num"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>
               Hủy
             </Button>
             <Button onClick={handleSave} disabled={createAttendance.isPending}>
               Lưu
             </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Nhân viên *</Label>
-            <Select
-              value={formEmployeeId}
-              onChange={(e) => setFormEmployeeId(e.target.value)}
-            >
-              <option value="">— Chọn nhân viên —</option>
-              {employees.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.code} — {e.fullName}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label>Ngày *</Label>
-              <Input
-                type="date"
-                value={formWorkDate}
-                onChange={(e) => setFormWorkDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Giờ vào</Label>
-              <Input
-                type="time"
-                value={formCheckIn}
-                onChange={(e) => setFormCheckIn(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Giờ ra</Label>
-              <Input
-                type="time"
-                value={formCheckOut}
-                onChange={(e) => setFormCheckOut(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Giờ công</Label>
-              <Input
-                type="number"
-                value={formWorkingHours}
-                onChange={(e) => setFormWorkingHours(e.target.value)}
-                className="num"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label>OT (giờ)</Label>
-              <Input
-                type="number"
-                value={formOvertimeHours}
-                onChange={(e) => setFormOvertimeHours(e.target.value)}
-                className="num"
-              />
-            </div>
-          </div>
-        </div>
-      </Modal>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
