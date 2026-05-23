@@ -35,16 +35,15 @@ import {
 import { DataTable } from '../components/ui/data-table'
 import { QueryState } from '../components/ui/query-state'
 import { FilterBar, PageHeader } from '../components/layout/page-header'
-import { useToast } from '../components/ui/toast'
+import { toast } from 'sonner'
 import {
-  QK,
-  employeeMutations,
-  useApiMutation,
-  useDepartments,
   useEmployees,
-  useOperations,
-  useRoles,
-} from '../api/resources'
+  useCreateEmployee,
+  useUpdateEmployee,
+} from '@/hooks/useEmployees'
+import { useDepartments } from '@/hooks/useDepartments'
+import { useOperations } from '@/hooks/useOperations'
+import { useRoles } from '@/hooks/useRoles'
 import type { Employee, EmployeeStatus } from '../types/domain'
 import { fmtDate, fmtVND } from '../lib/format'
 
@@ -71,7 +70,6 @@ const blankEmployee: Employee = {
 type EmployeeTab = 'profile' | 'account' | 'salary'
 
 export function EmployeesScreen() {
-  const toast = useToast()
   const { data: list = [], isLoading, error } = useEmployees()
   const { data: departments = [] } = useDepartments()
   const [q, setQ] = useState('')
@@ -81,15 +79,8 @@ export function EmployeesScreen() {
   )
   const [drawer, setDrawer] = useState<DrawerState | null>(null)
 
-  const createMut = useApiMutation(
-    (payload: Omit<Employee, 'id'>) => employeeMutations.create(payload),
-    { invalidate: [QK.employees] },
-  )
-  const updateMut = useApiMutation(
-    (vars: { id: string; payload: Partial<Employee> }) =>
-      employeeMutations.update(vars.id, vars.payload),
-    { invalidate: [QK.employees] },
-  )
+  const createMut = useCreateEmployee()
+  const updateMut = useUpdateEmployee()
 
   const filtered = useMemo(
     () =>
@@ -111,17 +102,15 @@ export function EmployeesScreen() {
         const { id: _id, ...rest } = emp
         void _id
         await createMut.mutateAsync(rest)
-        toast({ title: 'Đã tạo nhân viên', desc: emp.name })
+        toast.success('Đã tạo nhân viên', { description: emp.name })
       } else {
-        await updateMut.mutateAsync({ id: emp.id, payload: emp })
-        toast({ title: 'Đã cập nhật', desc: emp.name })
+        await updateMut.mutateAsync({ id: emp.id, data: emp })
+        toast.success('Đã cập nhật', { description: emp.name })
       }
       setDrawer(null)
     } catch (err) {
-      toast({
-        kind: 'error',
-        title: 'Lỗi',
-        desc: err instanceof Error ? err.message : 'Không thể lưu',
+      toast.error('Lỗi', {
+        description: err instanceof Error ? err.message : 'Không thể lưu',
       })
     }
   }

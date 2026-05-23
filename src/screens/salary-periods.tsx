@@ -9,7 +9,7 @@ import { Textarea } from '../components/ui/textarea'
 import { Badge } from '../components/ui/badge'
 import { Modal } from '../components/ui/modal'
 import { useConfirm } from '../components/ui/confirm'
-import { useToast } from '../components/ui/toast'
+import { toast } from 'sonner'
 import {
   Table,
   THead,
@@ -21,11 +21,10 @@ import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
 import { StatCard } from './dashboard'
 import {
-  QK,
-  periodMutations,
-  useApiMutation,
   usePayrollPeriods,
-} from '../api/resources'
+  useLockPeriod,
+  useMarkPaid,
+} from '@/hooks/usePayroll'
 import type { PayrollPeriod, PeriodStatus } from '../types/domain'
 import { fmtDate, fmtVND } from '../lib/format'
 
@@ -74,17 +73,12 @@ function MiniCalendar() {
 }
 
 export function SalaryPeriodsScreen() {
-  const toast = useToast()
   const { confirm, node: confirmNode } = useConfirm()
   const { data: list = [], isLoading, error } = usePayrollPeriods()
   const [open, setOpen] = useState(false)
 
-  const lockMut = useApiMutation((id: string) => periodMutations.lock(id), {
-    invalidate: [QK.periods],
-  })
-  const paidMut = useApiMutation((id: string) => periodMutations.paid(id), {
-    invalidate: [QK.periods],
-  })
+  const lockMut = useLockPeriod()
+  const paidMut = useMarkPaid()
 
   const lock = async (p: PayrollPeriod) => {
     const ok = await confirm({
@@ -94,7 +88,7 @@ export function SalaryPeriodsScreen() {
     })
     if (!ok) return
     await lockMut.mutateAsync(p.id)
-    toast({ title: 'Đã khóa kỳ lương', desc: p.name })
+    toast.success('Đã khóa kỳ lương', { description: p.name })
   }
 
   const paid = async (p: PayrollPeriod) => {
@@ -105,7 +99,7 @@ export function SalaryPeriodsScreen() {
     })
     if (!ok) return
     await paidMut.mutateAsync(p.id)
-    toast({ title: 'Đã đánh dấu đã trả', desc: p.name })
+    toast.success('Đã đánh dấu đã trả', { description: p.name })
   }
 
   return (
@@ -231,7 +225,7 @@ export function SalaryPeriodsScreen() {
             </Button>
             <Button
               onClick={() => {
-                toast({ title: 'Đã tạo kỳ lương' })
+                toast.success('Đã tạo kỳ lương')
                 setOpen(false)
               }}
             >

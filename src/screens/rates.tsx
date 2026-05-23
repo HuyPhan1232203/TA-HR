@@ -16,18 +16,15 @@ import {
   TR,
   TD,
 } from '../components/ui/table'
-import { useToast } from '../components/ui/toast'
+import { toast } from 'sonner'
 import { PageHeader } from '../components/layout/page-header'
-import {
-  useOperations,
-  useProducts,
-  useProductRates,
-} from '../api/resources'
+import { useOperations } from '@/hooks/useOperations'
+import { useProducts } from '@/hooks/useProducts'
+import { useProductRates } from '@/hooks/useRates'
 import { fmtDate, fmtVND } from '../lib/format'
 import { cn } from '../lib/utils'
 
 export function RatesScreen() {
-  const toast = useToast()
   const { data: products = [] } = useProducts()
   const { data: operations = [] } = useOperations()
   const [productCode, setProductCode] = useState('SP-A001')
@@ -118,7 +115,7 @@ export function RatesScreen() {
                         <Input
                           className="num text-right h-8 w-[120px] ml-auto"
                           defaultValue={r.rate}
-                          onBlur={() => toast({ title: 'Đã cập nhật đơn giá' })}
+                          onBlur={() => toast.success('Đã cập nhật đơn giá')}
                         />
                       </TD>
                       <TD className="text-sm">{fmtDate(r.effectiveFrom)}</TD>

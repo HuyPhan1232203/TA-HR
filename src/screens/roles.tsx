@@ -12,11 +12,9 @@ import { Input } from '../components/ui/input'
 import { Badge } from '../components/ui/badge'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
-import { useToast } from '../components/ui/toast'
-import {
-  usePermissionGroups,
-  useRoles,
-} from '../api/resources'
+import { toast } from 'sonner'
+import { usePermissionGroups } from '@/hooks/usePermissions'
+import { useRoles } from '@/hooks/useRoles'
 import { cn } from '../lib/utils'
 
 const DEFAULT_GRANTS: Record<string, string[]> = {
@@ -48,7 +46,6 @@ const DEFAULT_GRANTS: Record<string, string[]> = {
 }
 
 export function RolesScreen() {
-  const toast = useToast()
   const { data: roles = [], isLoading, error } = useRoles()
   const { data: permGroups = [] } = usePermissionGroups()
   const allPerms = useMemo(
@@ -228,9 +225,8 @@ export function RolesScreen() {
               <Button variant="outline">Hủy</Button>
               <Button
                 onClick={() =>
-                  toast({
-                    title: 'Đã lưu phân quyền',
-                    desc: selected?.name ?? '',
+                  toast.success('Đã lưu phân quyền', {
+                    description: selected?.name ?? '',
                   })
                 }
               >

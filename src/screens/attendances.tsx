@@ -11,12 +11,10 @@ import { Modal } from '../components/ui/modal'
 import { Tabs } from '../components/ui/tabs'
 import { QueryState } from '../components/ui/query-state'
 import { PageHeader } from '../components/layout/page-header'
-import { useToast } from '../components/ui/toast'
-import {
-  useAttendances,
-  useDepartments,
-  useEmployees,
-} from '../api/resources'
+import { toast } from 'sonner'
+import { useAttendances } from '@/hooks/useAttendances'
+import { useDepartments } from '@/hooks/useDepartments'
+import { useEmployees } from '@/hooks/useEmployees'
 import { cn } from '../lib/utils'
 
 type ViewMode = 'grid' | 'list'
@@ -31,7 +29,6 @@ function Legend({ color, label }: { color: string; label: string }) {
 }
 
 export function AttendancesScreen() {
-  const toast = useToast()
   const [month, setMonth] = useState('2026-05')
   const [view, setView] = useState<ViewMode>('grid')
   const [open, setOpen] = useState(false)
@@ -202,7 +199,7 @@ export function AttendancesScreen() {
             </Button>
             <Button
               onClick={() => {
-                toast({ title: 'Đã lưu chấm công' })
+                toast.success('Đã lưu chấm công')
                 setOpen(false)
               }}
             >

@@ -16,7 +16,7 @@ import {
   TD,
 } from '../components/ui/table'
 import { PageHeader } from '../components/layout/page-header'
-import { useOperations } from '../api/resources'
+import { useOperations } from '@/hooks/useOperations'
 import type { Operation } from '../types/domain'
 import { fmtVND } from '../lib/format'
 

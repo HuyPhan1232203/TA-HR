@@ -15,11 +15,8 @@ import {
 import { ChevronRight } from 'lucide-react'
 import { PageHeader } from '../components/layout/page-header'
 import { StatCard } from './dashboard'
-import {
-  useDepartments,
-  usePayrollPeriods,
-  usePayrollRows,
-} from '../api/resources'
+import { useDepartments } from '@/hooks/useDepartments'
+import { usePayrollPeriods, usePayrollRows } from '@/hooks/usePayroll'
 import { fmtNum, fmtVND } from '../lib/format'
 
 interface CostShare {
