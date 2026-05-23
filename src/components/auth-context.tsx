@@ -2,7 +2,6 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
   useState,
   type ReactNode,
 } from 'react'
@@ -35,12 +34,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearSession()
     setSession(null)
   }, [])
-
-  useEffect(() => {
-    const onUnauthorized = () => signOut()
-    window.addEventListener('auth:unauthorized', onUnauthorized)
-    return () => window.removeEventListener('auth:unauthorized', onUnauthorized)
-  }, [signOut])
 
   return (
     <AuthCtx.Provider value={{ session, signIn, signOut }}>

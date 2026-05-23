@@ -4,6 +4,7 @@ import axios, {
 } from 'axios'
 import Cookies from 'js-cookie'
 import { toast } from 'sonner'
+import { clearSession, clearToken } from '@/lib/auth-storage'
 
 const TOKEN_KEY = import.meta.env.VITE_ACCESS_TOKEN_KEY
 
@@ -39,7 +40,8 @@ axiosInstance.interceptors.response.use(
     }
 
     if (status === 401) {
-      Cookies.remove(TOKEN_KEY)
+      clearToken()
+      clearSession()
       if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
         window.location.href = '/login'
       }
