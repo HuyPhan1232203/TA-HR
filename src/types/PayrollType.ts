@@ -1,35 +1,46 @@
-import type { IEmployee } from './EmployeeType'
-
 export type PeriodStatus = 'Open' | 'Locked' | 'Paid'
-export type PayrollRowStatus = 'Draft' | 'Confirmed'
+export type PayrollRowStatus = 'Calculated' | 'Confirmed'
 
 export interface IPayrollPeriod {
   id: string
   name: string
-  code: string
-  startDate: string
-  endDate: string
+  fromDate: string
+  toDate: string
   status: PeriodStatus
-  employees: number
-  totalAmount: number | null
 }
 
 export interface ICreatePeriod {
   name: string
-  code: string
-  startDate: string
-  endDate: string
-  note?: string
+  fromDate: string
+  toDate: string
 }
 
 export interface IPayrollRow {
-  employee: IEmployee
-  workDays: number
-  ot: number
-  piecework: number
-  allowance: number
-  deductions: number
-  gross: number
-  net: number
+  payrollId: string
+  employeeId: string
+  employeeCode: string
+  employeeName: string
+  attendanceSalary: number
+  productSalary: number
+  overtimeSalary: number
+  grossSalary: number
+  netSalary: number
   status: PayrollRowStatus
+}
+
+export interface IGenerateResult {
+  payrollPeriodId: string
+  employeeCount: number
+  totalNetSalary: number
+}
+
+export interface IPayrollReport {
+  payrollPeriodId: string
+  periodName: string
+  employeeCount: number
+  totalAttendanceSalary: number
+  totalProductSalary: number
+  totalOvertimeSalary: number
+  totalGrossSalary: number
+  totalNetSalary: number
 }

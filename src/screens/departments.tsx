@@ -19,28 +19,24 @@ import {
   useUpdateDepartment,
   useDeleteDepartment,
 } from '@/hooks/useDepartments'
-import { useEmployees } from '@/hooks/useEmployees'
-import type { Department } from '../types/domain'
+import type { IDepartment } from '@/types/DepartmentType'
 
 interface EditableDepartment {
   id?: string
   code: string
   name: string
-  status: 'Active' | 'Inactive'
-  manager: string
+  isActive: boolean
 }
 
 const blankDepartment: EditableDepartment = {
   code: '',
   name: '',
-  status: 'Active',
-  manager: '',
+  isActive: true,
 }
 
 export function DepartmentsScreen() {
   const { confirm, node: confirmNode } = useConfirm()
   const { data: list = [], isLoading, error } = useDepartments()
-  const { data: employees = [] } = useEmployees()
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<EditableDepartment>(blankDepartment)
@@ -64,14 +60,8 @@ export function DepartmentsScreen() {
     setEditing({ ...blankDepartment })
     setOpen(true)
   }
-  const openEdit = (d: Department) => {
-    setEditing({
-      id: d.id,
-      code: d.code,
-      name: d.name,
-      status: d.status,
-      manager: d.manager,
-    })
+  const openEdit = (d: IDepartment) => {
+    setEditing({ id: d.id, code: d.code, name: d.name, isActive: d.isActive })
     setOpen(true)
   }
 
@@ -89,8 +79,7 @@ export function DepartmentsScreen() {
           data: {
             code: editing.code,
             name: editing.name,
-            status: editing.status,
-            manager: editing.manager,
+            isActive: editing.isActive,
           },
         })
         toast.success('Đã cập nhật phòng ban', { description: editing.name })
@@ -98,8 +87,7 @@ export function DepartmentsScreen() {
         await createMut.mutateAsync({
           code: editing.code,
           name: editing.name,
-          status: editing.status,
-          manager: editing.manager,
+          isActive: editing.isActive,
         })
         toast.success('Đã tạo phòng ban', { description: editing.name })
       }
@@ -111,7 +99,7 @@ export function DepartmentsScreen() {
     }
   }
 
-  const remove = async (d: Department) => {
+  const remove = async (d: IDepartment) => {
     const ok = await confirm({
       title: 'Xóa phòng ban?',
       body: `Phòng ban "${d.name}" sẽ bị xóa. Hành động này không thể hoàn tác.`,
@@ -129,7 +117,7 @@ export function DepartmentsScreen() {
     }
   }
 
-  const columns = useMemo<ColumnDef<Department>[]>(
+  const columns = useMemo<ColumnDef<IDepartment>[]>(
     () => [
       {
         accessorKey: 'code',
@@ -148,25 +136,11 @@ export function DepartmentsScreen() {
         ),
       },
       {
-        accessorKey: 'manager',
-        header: 'Quản lý',
-        cell: ({ row }) => (
-          <span className="text-muted-foreground">{row.original.manager}</span>
-        ),
-      },
-      {
-        accessorKey: 'headcount',
-        header: () => <div className="text-right">Nhân sự</div>,
-        cell: ({ row }) => (
-          <div className="text-right num">{row.original.headcount}</div>
-        ),
-      },
-      {
-        accessorKey: 'status',
+        accessorKey: 'isActive',
         header: 'Trạng thái',
         cell: ({ row }) => (
-          <Badge variant={row.original.status === 'Active' ? 'success' : 'muted'}>
-            {row.original.status === 'Active' ? 'Đang hoạt động' : 'Ngừng'}
+          <Badge variant={row.original.isActive ? 'success' : 'muted'}>
+            {row.original.isActive ? 'Đang hoạt động' : 'Ngừng'}
           </Badge>
         ),
       },
@@ -239,7 +213,7 @@ export function DepartmentsScreen() {
         </div>
 
         <QueryState isLoading={isLoading} error={error}>
-          <DataTable<Department>
+          <DataTable<IDepartment>
             columns={columns}
             data={filtered}
             emptyMessage="Chưa có phòng ban nào"
@@ -281,16 +255,16 @@ export function DepartmentsScreen() {
             <div className="space-y-1.5">
               <Label>Trạng thái</Label>
               <Select
-                value={editing.status}
+                value={editing.isActive ? 'active' : 'inactive'}
                 onChange={(e) =>
                   setEditing({
                     ...editing,
-                    status: e.target.value as 'Active' | 'Inactive',
+                    isActive: e.target.value === 'active',
                   })
                 }
               >
-                <option value="Active">Đang hoạt động</option>
-                <option value="Inactive">Ngừng</option>
+                <option value="active">Đang hoạt động</option>
+                <option value="inactive">Ngừng</option>
               </Select>
             </div>
           </div>
@@ -301,22 +275,6 @@ export function DepartmentsScreen() {
               onChange={(e) => setEditing({ ...editing, name: e.target.value })}
               placeholder="Tên đầy đủ"
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Quản lý</Label>
-            <Select
-              value={editing.manager}
-              onChange={(e) =>
-                setEditing({ ...editing, manager: e.target.value })
-              }
-            >
-              <option value="">— Chưa gán —</option>
-              {employees.map((e) => (
-                <option key={e.id} value={e.name}>
-                  {e.name}
-                </option>
-              ))}
-            </Select>
           </div>
         </div>
       </Modal>

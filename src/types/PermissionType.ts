@@ -1,12 +1,12 @@
 export interface IPermission {
   id: string
-  code: string
   module: string
-  label: string
+  code: string
+  name: string
+  isActive: boolean
 }
 
 export interface IPermissionGroup {
   module: string
-  label: string
-  perms: string[]
+  permissions: IPermission[]
 }

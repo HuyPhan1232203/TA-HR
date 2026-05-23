@@ -1,12 +1,12 @@
 import axiosInstance from '@/config/axios.config'
 import type { ApiResponse } from '@/types'
-import type { IPermissionGroup } from '@/types/PermissionType'
+import type { IPermission } from '@/types/PermissionType'
 import type { AxiosResponse } from 'axios'
 
 export const permissionApi = {
-  getPermissions: async (): Promise<ApiResponse<IPermissionGroup[]>> => {
+  getPermissions: async (): Promise<ApiResponse<IPermission[]>> => {
     try {
-      const res: AxiosResponse<ApiResponse<IPermissionGroup[]>> =
+      const res: AxiosResponse<ApiResponse<IPermission[]>> =
         await axiosInstance.get('/permissions')
       return res.data
     } catch (error) {

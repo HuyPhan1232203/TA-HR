@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { permissionApi } from '@/api/permission.api'
-import type { IPermissionGroup } from '@/types/PermissionType'
+import type { IPermission } from '@/types/PermissionType'
 
-export function usePermissionGroups() {
-  return useQuery<IPermissionGroup[]>({
+export function usePermissions() {
+  return useQuery<IPermission[]>({
     queryKey: ['permissions'],
     queryFn: async () => {
       const res = await permissionApi.getPermissions()

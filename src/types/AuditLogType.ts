@@ -1,8 +1,9 @@
 export interface IAuditLog {
   id: string
-  at: string
-  actor: string
+  module: string
   action: string
-  target: string
-  ip: string
+  entityName: string
+  entityId: string
+  description: string
+  performedAtUtc: string
 }

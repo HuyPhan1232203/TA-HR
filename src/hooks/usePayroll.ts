@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { payrollApi } from '@/api/payroll.api'
-import type { IPayrollPeriod, IPayrollRow } from '@/types/PayrollType'
+import type {
+  IPayrollPeriod,
+  IPayrollReport,
+  IPayrollRow,
+} from '@/types/PayrollType'
 
 const PERIODS_KEY = ['payroll-periods'] as const
 
@@ -49,5 +53,17 @@ export function useGeneratePayroll() {
     mutationFn: (periodId: string) => payrollApi.generate(periodId),
     onSuccess: (_data, periodId) =>
       qc.invalidateQueries({ queryKey: ['payroll', periodId] }),
+  })
+}
+
+export function usePayrollReport(periodId: string | null) {
+  return useQuery<IPayrollReport | null>({
+    queryKey: ['payroll-report', periodId],
+    enabled: !!periodId,
+    queryFn: async () => {
+      const res = await payrollApi.getReport(periodId as string)
+      if (!res.success) throw new Error(res.message)
+      return res.data
+    },
   })
 }

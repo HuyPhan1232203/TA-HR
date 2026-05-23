@@ -1,5 +1,5 @@
 import axiosInstance from '@/config/axios.config'
-import type { ApiResponse, PagingResponse } from '@/types'
+import type { ApiResponse } from '@/types'
 import type {
   IAccount,
   IAccountFilter,
@@ -12,9 +12,9 @@ import type { AxiosResponse } from 'axios'
 export const accountApi = {
   getAccounts: async (
     params?: IAccountFilter,
-  ): Promise<ApiResponse<PagingResponse<IAccount>>> => {
+  ): Promise<ApiResponse<IAccount[]>> => {
     try {
-      const res: AxiosResponse<ApiResponse<PagingResponse<IAccount>>> =
+      const res: AxiosResponse<ApiResponse<IAccount[]>> =
         await axiosInstance.get('/accounts', { params })
       return res.data
     } catch (error) {

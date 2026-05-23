@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query'
 import { rateApi } from '@/api/rate.api'
 import type { IProductOperationRate } from '@/types/RateType'
 
-export function useProductRates(productCode: string) {
+export function useRates() {
   return useQuery<IProductOperationRate[]>({
-    queryKey: ['rates', productCode],
+    queryKey: ['rates'],
     queryFn: async () => {
-      const res = await rateApi.getRates(productCode)
+      const res = await rateApi.getRates()
       if (!res.success) throw new Error(res.message)
       return res.data ?? []
     },
