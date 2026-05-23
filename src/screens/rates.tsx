@@ -11,11 +11,12 @@ import { Input } from '../components/ui/input'
 import { QueryState } from '../components/ui/query-state'
 import {
   Table,
-  THead,
-  TH,
-  TR,
-  TD,
-} from '../components/ui/table'
+  TableHeader,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+} from '@/components/ui/table'
 import { toast } from 'sonner'
 import { PageHeader } from '../components/layout/page-header'
 import { useOperations } from '@/hooks/useOperations'
@@ -95,36 +96,36 @@ export function RatesScreen() {
           </CardHeader>
           <QueryState isLoading={isLoading} error={error}>
             <Table>
-              <THead>
-                <TR>
-                  <TH>Công đoạn</TH>
-                  <TH>Loại giờ</TH>
-                  <TH className="text-right">Đơn giá</TH>
-                  <TH>Hiệu lực từ</TH>
-                  <TH className="w-[80px]" />
-                </TR>
-              </THead>
-              <tbody>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Công đoạn</TableHead>
+                  <TableHead>Loại giờ</TableHead>
+                  <TableHead className="text-right">Đơn giá</TableHead>
+                  <TableHead>Hiệu lực từ</TableHead>
+                  <TableHead className="w-[80px]" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {rates.map((r) => {
                   const op = operations.find((o) => o.id === r.operationId)
                   return (
-                    <TR key={r.id}>
-                      <TD>
+                    <TableRow key={r.id}>
+                      <TableCell>
                         <div className="font-medium text-sm">{op?.name}</div>
                         <code className="text-xs font-mono text-muted-foreground">
                           {op?.code}
                         </code>
-                      </TD>
-                      <TD className="text-sm">{r.workTimeType}</TD>
-                      <TD className="text-right">
+                      </TableCell>
+                      <TableCell className="text-sm">{r.workTimeType}</TableCell>
+                      <TableCell className="text-right">
                         <Input
                           className="num text-right h-8 w-[120px] ml-auto"
                           defaultValue={r.unitPrice}
                           onBlur={() => toast.success('Đã cập nhật đơn giá')}
                         />
-                      </TD>
-                      <TD className="text-sm">{fmtDate(r.effectiveFrom)}</TD>
-                      <TD>
+                      </TableCell>
+                      <TableCell className="text-sm">{fmtDate(r.effectiveFrom)}</TableCell>
+                      <TableCell>
                         <div className="flex gap-1 justify-end">
                           <Button variant="ghost" size="icon-sm" aria-label="Lịch sử">
                             <History className="size-4" />
@@ -133,11 +134,11 @@ export function RatesScreen() {
                             <Trash2 className="size-4" />
                           </Button>
                         </div>
-                      </TD>
-                    </TR>
+                      </TableCell>
+                    </TableRow>
                   )
                 })}
-              </tbody>
+              </TableBody>
             </Table>
           </QueryState>
         </Card>

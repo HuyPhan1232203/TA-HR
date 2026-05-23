@@ -2,15 +2,22 @@ import { useMemo, useState } from 'react'
 import { Check, Clock, DollarSign, Download, Users } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardBody, CardDesc, CardHeader, CardTitle } from '../components/ui/card'
-import { Select } from '../components/ui/select'
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from '@/components/ui/select'
 import { Avatar } from '../components/ui/avatar'
 import {
   Table,
-  THead,
-  TH,
-  TR,
-  TD,
-} from '../components/ui/table'
+  TableHeader,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+} from '@/components/ui/table'
 import { ChevronRight } from 'lucide-react'
 import { PageHeader } from '../components/layout/page-header'
 import { QueryState } from '../components/ui/query-state'
@@ -73,15 +80,19 @@ export function ReportsScreen() {
         actions={
           <>
             <Select
-              value={periodId ?? ''}
-              onChange={(e) => setSelectedPeriodId(e.target.value)}
-              className="w-[260px]"
+              value={periodId ?? undefined}
+              onValueChange={setSelectedPeriodId}
             >
-              {periods.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
+              <SelectTrigger className="w-[260px]">
+                <SelectValue placeholder="Chọn kỳ lương" />
+              </SelectTrigger>
+              <SelectContent>
+                {periods.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
             <Button variant="outline">
               <Download className="size-4" /> Xuất PDF
@@ -166,39 +177,39 @@ export function ReportsScreen() {
             </Button>
           </CardHeader>
           <Table>
-            <THead>
-              <TR>
-                <TH>Hạng</TH>
-                <TH>Nhân viên</TH>
-                <TH>Mã NV</TH>
-                <TH className="text-right">Lương SP</TH>
-                <TH className="text-right">Thực lĩnh</TH>
-              </TR>
-            </THead>
-            <tbody>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Hạng</TableHead>
+                <TableHead>Nhân viên</TableHead>
+                <TableHead>Mã NV</TableHead>
+                <TableHead className="text-right">Lương SP</TableHead>
+                <TableHead className="text-right">Thực lĩnh</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
               {topRows.map((r, i) => (
-                <TR key={r.employeeId}>
-                  <TD className="num text-muted-foreground">#{i + 1}</TD>
-                  <TD>
+                <TableRow key={r.employeeId}>
+                  <TableCell className="num text-muted-foreground">#{i + 1}</TableCell>
+                  <TableCell>
                     <div className="flex items-center gap-2.5">
                       <Avatar name={r.employeeName} size={28} />
                       <div className="font-medium text-sm">
                         {r.employeeName}
                       </div>
                     </div>
-                  </TD>
-                  <TD className="text-muted-foreground text-sm">
+                  </TableCell>
+                  <TableCell className="text-muted-foreground text-sm">
                     {r.employeeCode}
-                  </TD>
-                  <TD className="text-right num text-muted-foreground">
+                  </TableCell>
+                  <TableCell className="text-right num text-muted-foreground">
                     {fmtVND(r.productSalary)}
-                  </TD>
-                  <TD className="text-right num font-semibold">
+                  </TableCell>
+                  <TableCell className="text-right num font-semibold">
                     {fmtVND(r.netSalary)}
-                  </TD>
-                </TR>
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
+            </TableBody>
           </Table>
         </Card>
       </div>
