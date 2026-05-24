@@ -57,7 +57,7 @@ export function DataTable<TData>({
   const rows = table.getRowModel().rows
 
   return (
-    <div className="border border-white/10">
+    <div className="border border-black/10 dark:border-white/10">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((hg) => (
@@ -116,7 +116,7 @@ export function DataTable<TData>({
         </TableBody>
       </Table>
 
-      <div className="flex items-center justify-between border-t border-white/10 px-4 py-3 text-xs text-muted-foreground">
+      <div className="flex items-center justify-between border-t border-black/10 dark:border-white/10 px-4 py-3 text-xs text-muted-foreground">
         <span>
           Hiển thị {rows.length} / {data.length}
         </span>

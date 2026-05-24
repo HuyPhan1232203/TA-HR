@@ -7,35 +7,35 @@
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  /* Ferrari dark canvas — global default */
-  --color-background: #181818;
-  --color-foreground: #ffffff;
-  --color-card: #303030;
-  --color-card-foreground: #ffffff;
-  --color-popover: #303030;
-  --color-popover-foreground: #ffffff;
-  --color-primary: #da291c; /* Rosso Corsa */
+  /* Light canvas — default (:root). Dark overrides live in .dark below. */
+  --color-background: #ffffff;
+  --color-foreground: #181818;
+  --color-card: #f7f7f7;
+  --color-card-foreground: #181818;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #181818;
+  --color-primary: #186DB0;
   --color-primary-foreground: #ffffff;
-  --color-secondary: #303030;
-  --color-secondary-foreground: #ffffff;
-  --color-muted: #303030;
-  --color-muted-foreground: #969696;
-  --color-accent: #303030;
-  --color-accent-foreground: #ffffff;
+  --color-secondary: #ebebeb;
+  --color-secondary-foreground: #181818;
+  --color-muted: #ebebeb;
+  --color-muted-foreground: #666666;
+  --color-accent: #ebebeb;
+  --color-accent-foreground: #181818;
   --color-destructive: #da291c; /* rendered as outline; see button.tsx */
   --color-destructive-foreground: #ffffff;
   --color-success: #03904a;
   --color-success-foreground: #ffffff;
   --color-warning: #f13a2c;
-  --color-warning-foreground: #181818;
-  --color-border: #303030; /* hairline on dark */
-  --color-input: #303030;
-  --color-ring: #fff200; /* Hypersail yellow focus ring */
-  --color-sidebar: #181818;
-  --color-sidebar-foreground: #ffffff;
-  --color-sidebar-border: #303030;
-  --color-sidebar-accent: #303030;
-  --color-sidebar-accent-foreground: #ffffff;
+  --color-warning-foreground: #ffffff;
+  --color-border: #d2d2d2; /* hairline on light */
+  --color-input: #d2d2d2;
+  --color-ring: #186DB0; /* focus ring */
+  --color-sidebar: #ffffff;
+  --color-sidebar-foreground: #181818;
+  --color-sidebar-border: #d2d2d2;
+  --color-sidebar-accent: #ebebeb;
+  --color-sidebar-accent-foreground: #181818;
 
   /* Sharp by default — the brand signature */
   --radius: 0rem;
@@ -69,6 +69,38 @@
   *::after {
     border-color: var(--color-border);
   }
+}
+
+/* Dark theme — applied when <html class="dark"> (see theme toggle). */
+.dark {
+  --color-background: #181818;
+  --color-foreground: #ffffff;
+  --color-card: #303030;
+  --color-card-foreground: #ffffff;
+  --color-popover: #303030;
+  --color-popover-foreground: #ffffff;
+  --color-primary: #186db0;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #303030;
+  --color-secondary-foreground: #ffffff;
+  --color-muted: #303030;
+  --color-muted-foreground: #969696;
+  --color-accent: #303030;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #da291c;
+  --color-destructive-foreground: #ffffff;
+  --color-success: #03904a;
+  --color-success-foreground: #ffffff;
+  --color-warning: #f13a2c;
+  --color-warning-foreground: #181818;
+  --color-border: #303030; /* hairline on dark */
+  --color-input: #303030;
+  --color-ring: #fff200; /* Hypersail yellow focus ring */
+  --color-sidebar: #181818;
+  --color-sidebar-foreground: #ffffff;
+  --color-sidebar-border: #303030;
+  --color-sidebar-accent: #303030;
+  --color-sidebar-accent-foreground: #ffffff;
 }
 
 .scrollbar-thin::-webkit-scrollbar {

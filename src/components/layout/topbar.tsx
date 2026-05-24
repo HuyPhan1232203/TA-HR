@@ -1,6 +1,7 @@
 import { Bell, Search } from 'lucide-react'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
+import { ThemeToggle } from './theme-toggle'
 
 export interface TopbarProps {
   title: string
@@ -23,6 +24,7 @@ export function Topbar({ title, subtitle }: TopbarProps) {
           <Search className="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input className="w-[260px] pl-8 h-9" placeholder="Tìm kiếm nhanh…" />
         </div>
+        <ThemeToggle />
         <Button variant="ghost" size="icon" className="relative" aria-label="Thông báo">
           <Bell className="size-4" />
           <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-destructive ring-2 ring-background" />

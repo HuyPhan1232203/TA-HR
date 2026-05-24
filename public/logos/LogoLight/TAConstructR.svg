@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1975.48 500">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #166daf;
+        font-family: MyriadPro-Regular, 'Myriad Pro';
+        font-size: 340px;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #186fb3;
+        stroke-miterlimit: 10;
+        stroke-width: 3px;
+      }
+
+      .cls-3 {
+        fill: #00aeef;
+      }
+
+      .cls-3, .cls-4, .cls-5, .cls-6, .cls-7, .cls-8 {
+        stroke-width: 0px;
+      }
+
+      .cls-9 {
+        opacity: .99;
+      }
+
+      .cls-4 {
+        fill: #1f2b5b;
+      }
+
+      .cls-5 {
+        fill: #293c8e;
+      }
+
+      .cls-6 {
+        fill: #ee2c33;
+      }
+
+      .cls-7 {
+        fill: #176db3;
+      }
+
+      .cls-10 {
+        letter-spacing: -.01em;
+      }
+
+      .cls-11 {
+        letter-spacing: .01em;
+      }
+
+      .cls-8 {
+        fill: #166fb1;
+      }
+    </style>
+  </defs>
+  <text class="cls-1" transform="translate(564.63 365.22)"><tspan class="cls-10" x="0" y="0">C</tspan><tspan x="193.46" y="0">onstru</tspan><tspan class="cls-11" x="1114.51" y="0">c</tspan><tspan x="1271.24" y="0">t</tspan></text>
+  <g class="cls-9">
+    <g>
+      <g>
+        <path class="cls-3" d="m187.01,17.94S89.89,53.27,46.7,135.32c0,0-78.6,141.81,31.18,272.38,0,0-32.81-264.06,147.46-370.27l-38.33-19.49Z"/>
+        <path class="cls-4" d="m98.01,383.02s75.6,29.76,139.18,27.93c0,0,113.52,16.08,255.78-99.88,0,0-32.64,156.39-209.5,179.29,0,0-104.75,10.96-182.7-59.08l-2.76-48.27Z"/>
+      </g>
+      <path class="cls-8" d="m212.34,12.1s99.06,33.78,166.95,113.68c0,0,65.2,65.93,82.5,190.17l37.51-30.21s19.33-110.27-55.7-194.07c0,0-91.92-107.18-231.26-79.58Z"/>
+    </g>
+    <g>
+      <polygon class="cls-5" points="230.7 209.25 233.17 209.25 216 196.22 239.38 196.22 239.38 191.71 208.2 191.71 230.7 209.25"/>
+      <polygon class="cls-7" points="125.13 191.71 125.13 209.25 173.37 209.25 173.21 323.74 192.21 323.74 192.21 209.58 230.7 209.25 211.21 193.82 238 194.31 238 191.71 125.13 191.71"/>
+      <polygon class="cls-6" points="225.34 198.29 241.09 198.29 245.47 183.43 250.83 198.29 265.21 198.29 254 207.55 258.43 221.92 246.2 212.82 234.27 221.92 238 207.3 225.34 198.29"/>
+    </g>
+    <g>
+      <path class="cls-2" d="m267.62,204.07s59.1,41.19,80.83,68.49"/>
+      <path class="cls-2" d="m263.99,216.27s71.64,42.25,92,71.58"/>
+    </g>
+    <polygon class="cls-7" points="260.58 323.13 297.85 247.74 311 258.86 278.12 323.13 260.58 323.13"/>
+    <polygon class="cls-7" points="325.62 228.5 320.75 238.24 308.81 225.08 325.62 191.71 390.9 323.74 372.63 323.74 325.62 228.5"/>
+  </g>
+</svg>

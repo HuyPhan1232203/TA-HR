@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1102.46 1066.67">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #186fb3;
+        stroke-miterlimit: 10;
+        stroke-width: 3px;
+      }
+
+      .cls-2 {
+        fill: #00aeef;
+      }
+
+      .cls-2, .cls-3, .cls-4, .cls-5, .cls-6, .cls-7 {
+        stroke-width: 0px;
+      }
+
+      .cls-8 {
+        fill: #166daf;
+        font-family: MyriadPro-Regular, 'Myriad Pro';
+        font-size: 300px;
+      }
+
+      .cls-9 {
+        letter-spacing: 0em;
+      }
+
+      .cls-10 {
+        opacity: .99;
+      }
+
+      .cls-3 {
+        fill: #1f2b5b;
+      }
+
+      .cls-4 {
+        fill: #293c8e;
+      }
+
+      .cls-5 {
+        fill: #ee2c33;
+      }
+
+      .cls-11 {
+        letter-spacing: 0em;
+      }
+
+      .cls-12 {
+        letter-spacing: 0em;
+      }
+
+      .cls-6 {
+        fill: #176db3;
+      }
+
+      .cls-13 {
+        letter-spacing: .01em;
+      }
+
+      .cls-14 {
+        letter-spacing: 0em;
+      }
+
+      .cls-7 {
+        fill: #166fb1;
+      }
+    </style>
+  </defs>
+  <text class="cls-8" transform="translate(-9.94 1051.34)"><tspan class="cls-9" x="0" y="0">S</tspan><tspan x="149.7" y="0">o</tspan><tspan class="cls-13" x="314.4" y="0">f</tspan><tspan class="cls-11" x="405.29" y="0">t</tspan><tspan class="cls-14" x="507.28" y="0">w</tspan><tspan x="726.88" y="0">a</tspan><tspan class="cls-12" x="871.48" y="0">r</tspan><tspan x="966.58" y="0">e</tspan></text>
+  <g class="cls-10">
+    <g>
+      <g>
+        <path class="cls-2" d="m430.73,27.23s-164.89,59.98-238.23,199.29c0,0-133.46,240.78,52.94,462.47,0,0-55.7-448.34,250.37-628.67l-65.07-33.09Z"/>
+        <path class="cls-3" d="m279.63,647.08s128.35,50.53,236.3,47.43c0,0,192.74,27.3,434.28-169.58,0,0-55.42,265.53-355.7,304.41,0,0-177.85,18.6-310.2-100.3l-4.69-81.96Z"/>
+      </g>
+      <path class="cls-7" d="m473.75,17.3s168.2,57.35,283.46,193.01c0,0,110.71,111.95,140.07,322.89l63.69-51.29s32.81-187.22-94.58-329.5c0,0-156.07-181.98-392.65-135.11Z"/>
+    </g>
+    <g>
+      <polygon class="cls-4" points="504.9 352.04 509.11 352.04 479.95 329.91 519.66 329.91 519.66 322.26 466.71 322.26 504.9 352.04"/>
+      <polygon class="cls-6" points="325.68 322.26 325.68 352.04 407.57 352.04 407.29 546.43 439.55 546.43 439.55 352.59 504.9 352.04 471.82 325.85 517.31 326.67 517.31 322.26 325.68 322.26"/>
+      <polygon class="cls-5" points="495.8 333.43 522.55 333.43 530 308.2 539.09 333.43 563.5 333.43 544.47 349.15 551.99 373.55 531.24 358.11 510.97 373.55 517.31 348.73 495.8 333.43"/>
+    </g>
+    <g>
+      <path class="cls-1" d="m567.59,343.25s100.35,69.93,137.24,116.29"/>
+      <path class="cls-1" d="m561.43,363.97s121.64,71.74,156.21,121.53"/>
+    </g>
+    <polygon class="cls-6" points="555.64 545.4 618.92 417.39 641.25 436.26 585.42 545.4 555.64 545.4"/>
+    <polygon class="cls-6" points="666.07 384.72 657.8 401.26 637.53 378.93 666.07 322.26 776.92 546.43 745.9 546.43 666.07 384.72"/>
+  </g>
+</svg>
