@@ -8,7 +8,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { cn } from '@/lib/utils'
 
 export interface ConfirmState {
   title: string
@@ -49,10 +48,7 @@ export function ConfirmDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>Hủy</AlertDialogCancel>
           <AlertDialogAction
-            className={cn(
-              danger &&
-                'bg-destructive text-destructive-foreground hover:bg-destructive/90',
-            )}
+            variant={danger ? 'destructive' : 'default'}
             onClick={onConfirm}
           >
             {confirmText}
