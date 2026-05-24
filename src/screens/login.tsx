@@ -164,7 +164,7 @@ export function LoginScreen() {
             </div>
 
             {error && (
-              <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md px-3 py-2 flex items-center gap-2">
+              <div className="text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-none px-3 py-2 flex items-center gap-2">
                 <AlertTriangle className="size-4" /> {error}
               </div>
             )}

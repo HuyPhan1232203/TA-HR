@@ -56,7 +56,7 @@ function statusLabel(status: PeriodStatus) {
 
 function MiniCalendar() {
   return (
-    <div className="border rounded-lg p-3 bg-muted/20">
+    <div className="border rounded-none p-3 bg-muted/20">
       <div className="text-sm font-medium mb-2">Tháng 6 / 2026</div>
       <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-muted-foreground mb-1">
         {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((d) => (

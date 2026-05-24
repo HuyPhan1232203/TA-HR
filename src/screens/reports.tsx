@@ -56,17 +56,17 @@ export function ReportsScreen() {
         {
           label: 'Lương công',
           value: report.totalAttendanceSalary,
-          color: 'oklch(0.5635 0.2408 260.8178)',
+          color: 'var(--color-chart-1)',
         },
         {
           label: 'Lương SP',
           value: report.totalProductSalary,
-          color: 'oklch(0.62 0.19 260)',
+          color: 'var(--color-chart-2)',
         },
         {
           label: 'OT',
           value: report.totalOvertimeSalary,
-          color: 'oklch(0.7 0.16 260)',
+          color: 'var(--color-chart-3)',
         },
       ]
     : []

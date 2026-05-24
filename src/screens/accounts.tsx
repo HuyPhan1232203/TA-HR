@@ -254,7 +254,7 @@ export function AccountsScreen() {
                           className={cn(
                             'size-1.5 rounded-full',
                             a.status === 'Active'
-                              ? 'bg-[oklch(0.55_0.18_145)]'
+                              ? 'bg-success'
                               : 'bg-destructive',
                           )}
                         />
@@ -339,14 +339,14 @@ export function AccountsScreen() {
           </div>
           <div className="space-y-1.5">
             <Label>Vai trò</Label>
-            <div className="flex flex-wrap gap-2 p-3 border rounded-md">
+            <div className="flex flex-wrap gap-2 p-3 border rounded-none">
               {roles.map((r) => {
                 const checked = editing.roleIds.includes(r.id)
                 return (
                   <label
                     key={r.id}
                     className={cn(
-                      'flex items-center gap-2 px-2.5 py-1 rounded-md border cursor-pointer text-sm',
+                      'flex items-center gap-2 px-2.5 py-1 rounded-none border cursor-pointer text-sm',
                       checked
                         ? 'bg-primary/10 border-primary/30 text-primary'
                         : 'hover:bg-muted',

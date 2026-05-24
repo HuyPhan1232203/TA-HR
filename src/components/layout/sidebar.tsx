@@ -57,7 +57,7 @@ export function Sidebar() {
       </nav>
 
       <div className="p-3 border-t border-sidebar-border">
-        <div className="flex items-center gap-2.5 p-2 rounded-md hover:bg-sidebar-accent">
+        <div className="flex items-center gap-2.5 p-2 rounded-none hover:bg-sidebar-accent">
           <Avatar name={displayName} size={32} />
           <div className="flex-1 min-w-0">
             <div className="text-[13px] font-medium truncate">{displayName}</div>
@@ -67,7 +67,7 @@ export function Sidebar() {
           </div>
           <button
             type="button"
-            className="rounded-md p-1 hover:bg-background"
+            className="rounded-none p-1 hover:bg-background"
             onClick={signOut}
             title="Đăng xuất"
             aria-label="Đăng xuất"

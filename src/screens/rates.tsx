@@ -66,7 +66,7 @@ export function RatesScreen() {
                 type="button"
                 onClick={() => setSelectedId(p.id)}
                 className={cn(
-                  'w-full text-left p-3 rounded-md transition-colors',
+                  'w-full text-left p-3 rounded-none transition-colors',
                   productId === p.id
                     ? 'bg-primary/10 text-primary'
                     : 'hover:bg-muted',

@@ -155,7 +155,7 @@ export function PayrollRunsScreen() {
                   setSelected(null)
                 }}
                 className={cn(
-                  'w-full text-left p-3 rounded-lg border transition-colors',
+                  'w-full text-left p-3 rounded-none border transition-colors',
                   periodId === p.id
                     ? 'bg-background border-primary/40 ring-1 ring-primary/30 shadow-sm'
                     : 'bg-background/40 border-transparent hover:bg-background',
@@ -313,7 +313,7 @@ export function PayrollRunsScreen() {
           <div className="flex-1 overflow-y-auto scrollbar-thin px-4">
             {selected && (
               <div className="space-y-5">
-            <div className="rounded-lg border p-4 bg-muted/30">
+            <div className="rounded-none border p-4 bg-muted/30">
               <div className="text-xs text-muted-foreground">Thực lĩnh</div>
               <div className="text-3xl font-semibold num tracking-tight mt-1">
                 {fmtVND(selected.netSalary)}
@@ -325,7 +325,7 @@ export function PayrollRunsScreen() {
 
             <div>
               <div className="text-sm font-medium mb-2">Chi tiết</div>
-              <div className="rounded-lg border divide-y">
+              <div className="rounded-none border divide-y">
                 <PayItem label="Lương công" value={selected.attendanceSalary} />
                 <PayItem label="Lương sản phẩm" value={selected.productSalary} />
                 <PayItem label="OT" value={selected.overtimeSalary} />

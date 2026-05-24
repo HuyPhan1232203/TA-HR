@@ -60,13 +60,13 @@ export function ProductsScreen() {
             {filtered.map((p) => (
               <div
                 key={p.id}
-                className="rounded-lg border bg-card p-4 hover:shadow-md transition-shadow group"
+                className="rounded-none border bg-card p-4 hover:brightness-110 transition-[filter] group"
               >
                 <div
-                  className="aspect-[4/3] rounded-md bg-muted mb-3 grid place-items-center text-muted-foreground"
+                  className="aspect-[4/3] rounded-none bg-muted mb-3 grid place-items-center text-muted-foreground"
                   style={{
                     backgroundImage:
-                      'repeating-linear-gradient(45deg, oklch(0.95 0 0) 0 8px, oklch(0.92 0 0) 8px 16px)',
+                      'repeating-linear-gradient(45deg, #3a3a3a 0 8px, #2e2e2e 8px 16px)',
                   }}
                 >
                   <div className="font-mono text-xs px-2 py-1 bg-background/80 rounded border">

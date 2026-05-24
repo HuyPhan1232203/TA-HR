@@ -278,7 +278,7 @@ function EmployeeDrawer({ drawer, onClose, onSave, saving }: EmployeeDrawerProps
         </SheetHeader>
         <div className="flex-1 overflow-y-auto scrollbar-thin px-4">
           <div className="space-y-4">
-        <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-lg">
+        <div className="flex items-center gap-4 p-4 bg-muted/40 rounded-none">
           <Avatar name={form.fullName || '?'} size={56} />
           <div className="flex-1">
             <div className="font-medium">{form.fullName || 'Nhân viên mới'}</div>

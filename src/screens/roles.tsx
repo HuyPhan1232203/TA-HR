@@ -63,7 +63,7 @@ export function RolesScreen() {
                   type="button"
                   onClick={() => setSelectedId(r.id)}
                   className={cn(
-                    'w-full text-left p-3 rounded-lg transition-colors',
+                    'w-full text-left p-3 rounded-none transition-colors',
                     selected?.id === r.id
                       ? 'bg-primary/10 text-primary'
                       : 'hover:bg-muted',
@@ -189,7 +189,7 @@ function PermissionEditor({ role, groups, permissions }: PermissionEditorProps) 
             const granted = perms.filter((p) => grants.has(p.code)).length
             const all = granted === perms.length && granted > 0
             return (
-              <div key={module} className="border rounded-lg">
+              <div key={module} className="border rounded-none">
                 <div className="flex items-center justify-between gap-3 px-4 py-3 bg-muted/30 border-b">
                   <div>
                     <div className="font-medium text-sm">{module}</div>
@@ -228,7 +228,7 @@ function PermissionEditor({ role, groups, permissions }: PermissionEditorProps) 
                       <label
                         key={p.id}
                         className={cn(
-                          'flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer text-sm transition-colors',
+                          'flex items-center gap-2 px-3 py-2 rounded-none cursor-pointer text-sm transition-colors',
                           checked ? 'bg-primary/5' : 'hover:bg-muted',
                         )}
                       >
@@ -236,11 +236,14 @@ function PermissionEditor({ role, groups, permissions }: PermissionEditorProps) 
                           type="checkbox"
                           checked={checked}
                           onChange={() => toggle(p.code)}
-                          className="rounded"
+                          className="rounded shrink-0"
                         />
-                        <code className="font-mono text-xs truncate">
-                          {p.code}
-                        </code>
+                        <span className="min-w-0">
+                          <span className="block truncate">{p.name}</span>
+                          <code className="block font-mono text-[11px] text-muted-foreground truncate">
+                            {p.code}
+                          </code>
+                        </span>
                       </label>
                     )
                   })}
