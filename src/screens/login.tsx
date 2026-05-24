@@ -17,8 +17,8 @@ export function LoginScreen() {
   const navigate = useNavigate()
   const location = useLocation()
   const { signIn } = useAuth()
-  const [username, setUsername] = useState('huong.tt')
-  const [password, setPassword] = useState('password')
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
