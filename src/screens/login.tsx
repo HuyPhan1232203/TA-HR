@@ -120,7 +120,7 @@ export function LoginScreen() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-8 band-light bg-background text-foreground">
+      <div className="flex-1 flex items-center justify-center p-8 bg-background text-foreground">
         <div className="w-full max-w-sm">
           <div className="lg:hidden mb-6 flex items-center gap-2.5">
             <div className="size-9 rounded-none bg-primary text-primary-foreground grid place-items-center font-bold">

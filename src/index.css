@@ -71,27 +71,6 @@
   }
 }
 
-/* White editorial band — Ferrari preowned/pricing surface. */
-.band-light {
-  --color-background: #ffffff;
-  --color-foreground: #181818;
-  --color-card: #f7f7f7;
-  --color-card-foreground: #181818;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #181818;
-  --color-secondary: #ebebeb;
-  --color-secondary-foreground: #181818;
-  --color-muted: #ebebeb;
-  --color-muted-foreground: #666666;
-  --color-accent: #ebebeb;
-  --color-accent-foreground: #181818;
-  --color-border: #d2d2d2;
-  --color-input: #d2d2d2;
-  --color-ring: #da291c;
-  background-color: var(--color-background);
-  color: var(--color-foreground);
-}
-
 .scrollbar-thin::-webkit-scrollbar {
   width: 8px;
   height: 8px;
