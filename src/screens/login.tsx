@@ -64,20 +64,16 @@ export function LoginScreen() {
         className="hidden lg:flex flex-col justify-between w-[44%] p-12 text-primary-foreground relative overflow-hidden"
         style={{
           background:
-            'linear-gradient(135deg, oklch(0.5635 0.2408 260.8178) 0%, oklch(0.45 0.22 280) 100%)',
+            'linear-gradient(180deg, #3c3c3c 0%, #030303 64%)',
         }}
       >
         <div
-          className="absolute inset-0 opacity-[0.12]"
-          style={{
-            backgroundImage:
-              'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
-            backgroundSize: '18px 18px',
-          }}
+          className="absolute inset-y-0 left-0 w-1"
+          style={{ background: 'linear-gradient(180deg, #a00c01, #da291c 64%)' }}
         />
         <div className="relative">
           <div className="flex items-center gap-3">
-            <div className="size-10 rounded-xl bg-white/20 backdrop-blur grid place-items-center font-bold">
+            <div className="size-10 rounded-none bg-white/15 backdrop-blur grid place-items-center font-bold">
               TA
             </div>
             <div className="text-lg font-semibold tracking-tight">TA-HR</div>
@@ -111,7 +107,7 @@ export function LoginScreen() {
             ].map((t) => (
               <div
                 key={t}
-                className="px-3 py-2 rounded-md bg-white/10 border border-white/15 text-xs font-medium backdrop-blur"
+                className="px-3 py-2 rounded-none bg-white/10 border border-white/15 text-xs font-medium backdrop-blur"
               >
                 {t}
               </div>
@@ -124,10 +120,10 @@ export function LoginScreen() {
         </div>
       </div>
 
-      <div className="flex-1 flex items-center justify-center p-8 bg-background">
+      <div className="flex-1 flex items-center justify-center p-8 band-light bg-background text-foreground">
         <div className="w-full max-w-sm">
           <div className="lg:hidden mb-6 flex items-center gap-2.5">
-            <div className="size-9 rounded-lg bg-primary text-primary-foreground grid place-items-center font-bold">
+            <div className="size-9 rounded-none bg-primary text-primary-foreground grid place-items-center font-bold">
               TA
             </div>
             <div className="text-lg font-semibold">TA-HR</div>
