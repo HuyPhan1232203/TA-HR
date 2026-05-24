@@ -7,46 +7,49 @@
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.145 0 0);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.145 0 0);
-  --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.145 0 0);
-  --color-primary: oklch(0.5635 0.2408 260.8178);
-  --color-primary-foreground: oklch(0.985 0 0);
-  --color-secondary: oklch(0.97 0 0);
-  --color-secondary-foreground: oklch(0.205 0 0);
-  --color-muted: oklch(0.97 0 0);
-  --color-muted-foreground: oklch(0.556 0 0);
-  --color-accent: oklch(0.97 0 0);
-  --color-accent-foreground: oklch(0.205 0 0);
-  --color-destructive: oklch(0.577 0.245 27.325);
-  --color-destructive-foreground: oklch(1 0 0);
-  --color-success: oklch(0.62 0.16 145);
-  --color-success-foreground: oklch(1 0 0);
-  --color-warning: oklch(0.78 0.16 80);
-  --color-warning-foreground: oklch(0.2 0 0);
-  --color-border: oklch(0.922 0 0);
-  --color-input: oklch(0.922 0 0);
-  --color-ring: oklch(0.5635 0.2408 260.8178);
-  --color-sidebar: oklch(0.985 0 0);
-  --color-sidebar-foreground: oklch(0.145 0 0);
-  --color-sidebar-border: oklch(0.922 0 0);
-  --color-sidebar-accent: oklch(0.97 0 0);
-  --color-sidebar-accent-foreground: oklch(0.205 0 0);
+  /* Ferrari dark canvas — global default */
+  --color-background: #181818;
+  --color-foreground: #ffffff;
+  --color-card: #303030;
+  --color-card-foreground: #ffffff;
+  --color-popover: #303030;
+  --color-popover-foreground: #ffffff;
+  --color-primary: #da291c; /* Rosso Corsa */
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #303030;
+  --color-secondary-foreground: #ffffff;
+  --color-muted: #303030;
+  --color-muted-foreground: #969696;
+  --color-accent: #303030;
+  --color-accent-foreground: #ffffff;
+  --color-destructive: #da291c; /* rendered as outline; see button.tsx */
+  --color-destructive-foreground: #ffffff;
+  --color-success: #03904a;
+  --color-success-foreground: #ffffff;
+  --color-warning: #f13a2c;
+  --color-warning-foreground: #181818;
+  --color-border: #303030; /* hairline on dark */
+  --color-input: #303030;
+  --color-ring: #fff200; /* Hypersail yellow focus ring */
+  --color-sidebar: #181818;
+  --color-sidebar-foreground: #ffffff;
+  --color-sidebar-border: #303030;
+  --color-sidebar-accent: #303030;
+  --color-sidebar-accent-foreground: #ffffff;
 
-  --radius: 0.625rem;
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  /* Sharp by default — the brand signature */
+  --radius: 0rem;
+  --radius-sm: 0rem;
+  --radius-md: 0rem;
+  --radius-lg: 0rem;
+  --radius-xl: 0rem;
 
-  --color-chart-1: oklch(0.5635 0.2408 260.8178);
-  --color-chart-2: oklch(0.62 0.19 260);
-  --color-chart-3: oklch(0.7 0.16 260);
-  --color-chart-4: oklch(0.78 0.12 260);
-  --color-chart-5: oklch(0.85 0.08 260);
+  /* Rosso ramp for charts */
+  --color-chart-1: #da291c;
+  --color-chart-2: #b01e0a;
+  --color-chart-3: #9d2211;
+  --color-chart-4: #f13a2c;
+  --color-chart-5: #969696;
 }
 
 @layer base {
@@ -68,12 +71,32 @@
   }
 }
 
+/* White editorial band — Ferrari preowned/pricing surface. */
+.band-light {
+  --color-background: #ffffff;
+  --color-foreground: #181818;
+  --color-card: #f7f7f7;
+  --color-card-foreground: #181818;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #181818;
+  --color-secondary: #ebebeb;
+  --color-secondary-foreground: #181818;
+  --color-muted: #ebebeb;
+  --color-muted-foreground: #666666;
+  --color-accent: #ebebeb;
+  --color-accent-foreground: #181818;
+  --color-border: #d2d2d2;
+  --color-input: #d2d2d2;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}
+
 .scrollbar-thin::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: oklch(0.85 0 0);
+  background: #4a4a4a;
   border-radius: 999px;
 }
 .scrollbar-thin::-webkit-scrollbar-track {
