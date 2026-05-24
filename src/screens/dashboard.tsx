@@ -44,7 +44,7 @@ export function StatCard({
       <CardBody className="p-5">
         <div className="flex items-start justify-between">
           <div className="text-sm text-muted-foreground">{label}</div>
-          <div className="size-8 rounded-lg bg-primary/10 text-primary grid place-items-center">
+          <div className="size-8 rounded-none bg-primary/15 text-primary grid place-items-center">
             <Icon className="size-4" />
           </div>
         </div>
@@ -56,7 +56,7 @@ export function StatCard({
             <span
               className={
                 deltaKind === 'up'
-                  ? 'text-xs font-medium text-[oklch(0.55_0.18_145)]'
+                  ? 'text-xs font-medium text-success'
                   : 'text-xs font-medium text-destructive'
               }
             >
