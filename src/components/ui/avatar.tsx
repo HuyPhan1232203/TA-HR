@@ -19,8 +19,8 @@ export function Avatar({ name, size = 32, className }: AvatarProps) {
       <Facehash
         name={name}
         size={size}
-        intensity3d="subtle"
-        showInitial={false}
+        // intensity3d="subtle"
+        // showInitial={false}
         enableBlink
       />
     </span>

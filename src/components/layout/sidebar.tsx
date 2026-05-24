@@ -13,9 +13,11 @@ export function Sidebar() {
   return (
     <aside className="w-[244px] shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col">
       <div className="h-14 flex items-center gap-2.5 px-5 border-b border-sidebar-border">
-        <div className="size-8 rounded-none bg-primary text-primary-foreground grid place-items-center font-bold text-sm">
-          TA
-        </div>
+        <img
+          src="/logos/LogoTA.svg"
+          alt="TA-HR"
+          className="h-8 w-auto shrink-0"
+        />
         <div>
           <div className="text-[13.5px] font-semibold tracking-tight leading-none">
             TA-HR
