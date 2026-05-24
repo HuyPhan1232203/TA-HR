@@ -93,8 +93,8 @@
   --color-success-foreground: #ffffff;
   --color-warning: #f13a2c;
   --color-warning-foreground: #181818;
-  --color-border: #303030; /* hairline on dark */
-  --color-input: #303030;
+  --color-border: #414040; /* hairline on dark */
+  --color-input: #ffffff;
   --color-ring: #fff200; /* Hypersail yellow focus ring */
   --color-sidebar: #181818;
   --color-sidebar-foreground: #ffffff;
