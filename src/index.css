@@ -87,6 +87,7 @@
   --color-accent-foreground: #181818;
   --color-border: #d2d2d2;
   --color-input: #d2d2d2;
+  --color-ring: #da291c;
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
