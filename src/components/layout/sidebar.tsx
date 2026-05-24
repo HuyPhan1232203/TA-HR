@@ -13,7 +13,7 @@ export function Sidebar() {
   return (
     <aside className="w-[244px] shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col">
       <div className="h-14 flex items-center gap-2.5 px-5 border-b border-sidebar-border">
-        <div className="size-8 rounded-lg bg-primary text-primary-foreground grid place-items-center font-bold text-sm shadow-sm">
+        <div className="size-8 rounded-none bg-primary text-primary-foreground grid place-items-center font-bold text-sm">
           TA
         </div>
         <div>
@@ -40,10 +40,10 @@ export function Sidebar() {
                   to={item.to}
                   className={({ isActive }) =>
                     cn(
-                      'w-full flex items-center gap-2.5 px-2.5 h-8 rounded-md text-[13.5px] transition-colors',
+                      'w-full flex items-center gap-2.5 px-2.5 h-8 rounded-none text-[13.5px] transition-colors',
                       isActive
-                        ? 'bg-primary text-primary-foreground font-medium shadow-sm'
-                        : 'text-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                        ? 'bg-sidebar-accent text-primary font-medium border-l-2 border-primary'
+                        : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
                     )
                   }
                 >
