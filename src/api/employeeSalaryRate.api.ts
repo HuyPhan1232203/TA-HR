@@ -5,7 +5,12 @@ import type {
   IEmployeeSalaryRate,
   IUpdateEmployeeSalaryRate,
 } from '@/types/EmployeeSalaryRateType'
+import { SALARY_CALC_TYPES, enumName, enumNum } from '@/lib/enums'
 import type { AxiosResponse } from 'axios'
+
+function hydrate(r: IEmployeeSalaryRate): IEmployeeSalaryRate {
+  return { ...r, calculationType: enumName(SALARY_CALC_TYPES, r.calculationType) }
+}
 
 export const employeeSalaryRateApi = {
   getByEmployee: async (
@@ -14,7 +19,7 @@ export const employeeSalaryRateApi = {
     try {
       const res: AxiosResponse<ApiResponse<IEmployeeSalaryRate[]>> =
         await axiosInstance.get(`/employee-salary-rates/${employeeId}`)
-      return res.data
+      return { ...res.data, data: (res.data.data ?? []).map(hydrate) }
     } catch (error) {
       console.error(error)
       throw error
@@ -25,9 +30,13 @@ export const employeeSalaryRateApi = {
     data: ICreateEmployeeSalaryRate,
   ): Promise<ApiResponse<IEmployeeSalaryRate>> => {
     try {
+      const body = {
+        ...data,
+        calculationType: enumNum(SALARY_CALC_TYPES, data.calculationType),
+      }
       const res: AxiosResponse<ApiResponse<IEmployeeSalaryRate>> =
-        await axiosInstance.post('/employee-salary-rates', data)
-      return res.data
+        await axiosInstance.post('/employee-salary-rates', body)
+      return { ...res.data, data: res.data.data && hydrate(res.data.data) }
     } catch (error) {
       console.error(error)
       throw error
@@ -39,9 +48,12 @@ export const employeeSalaryRateApi = {
     data: IUpdateEmployeeSalaryRate,
   ): Promise<ApiResponse<IEmployeeSalaryRate>> => {
     try {
+      const body: Record<string, unknown> = { ...data }
+      if (data.calculationType != null)
+        body.calculationType = enumNum(SALARY_CALC_TYPES, data.calculationType)
       const res: AxiosResponse<ApiResponse<IEmployeeSalaryRate>> =
-        await axiosInstance.put(`/employee-salary-rates/${id}`, data)
-      return res.data
+        await axiosInstance.put(`/employee-salary-rates/${id}`, body)
+      return { ...res.data, data: res.data.data && hydrate(res.data.data) }
     } catch (error) {
       console.error(error)
       throw error

@@ -5,7 +5,12 @@ import type {
   IAttendanceFilter,
   ICreateAttendance,
 } from '@/types/AttendanceType'
+import { ATTENDANCE_STATUSES, enumName } from '@/lib/enums'
 import type { AxiosResponse } from 'axios'
+
+function hydrate(a: IAttendance): IAttendance {
+  return { ...a, status: enumName(ATTENDANCE_STATUSES, a.status) }
+}
 
 export const attendanceApi = {
   getAttendances: async (
@@ -14,7 +19,7 @@ export const attendanceApi = {
     try {
       const res: AxiosResponse<ApiResponse<IAttendance[]>> =
         await axiosInstance.get('/attendances', { params })
-      return res.data
+      return { ...res.data, data: (res.data.data ?? []).map(hydrate) }
     } catch (error) {
       console.error(error)
       throw error
@@ -27,7 +32,7 @@ export const attendanceApi = {
     try {
       const res: AxiosResponse<ApiResponse<IAttendance>> =
         await axiosInstance.post('/attendances', data)
-      return res.data
+      return { ...res.data, data: res.data.data && hydrate(res.data.data) }
     } catch (error) {
       console.error(error)
       throw error
