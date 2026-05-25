@@ -7,6 +7,7 @@ import {
   Wallet,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import { Button } from '../components/ui/button'
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
@@ -67,6 +68,7 @@ export function StatCard({
 }
 
 export function DashboardScreen() {
+  const navigate = useNavigate()
   const { data: employees = [] } = useEmployees()
   const { data: departments = [] } = useDepartments()
   const { data: periods = [] } = usePayrollPeriods()
@@ -85,7 +87,7 @@ export function DashboardScreen() {
             <Button variant="outline">
               <Download className="size-4" /> Xuất báo cáo
             </Button>
-            <Button>
+            <Button onClick={() => navigate('/salary-periods')}>
               <Plus className="size-4" /> Tạo kỳ lương
             </Button>
           </>

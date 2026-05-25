@@ -1,4 +1,14 @@
 import { useState } from 'react'
+import {
+  eachDayOfInterval,
+  eachMonthOfInterval,
+  endOfMonth,
+  getDay,
+  isValid,
+  isWithinInterval,
+  parse,
+  startOfMonth,
+} from 'date-fns'
 import { Check, Clock, Eye, Lock, Plus, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
@@ -54,33 +64,91 @@ function statusLabel(status: PeriodStatus) {
   return 'Đã trả'
 }
 
-function MiniCalendar() {
-  return (
-    <div className="border rounded-none p-3 bg-muted/20">
-      <div className="text-sm font-medium mb-2">Tháng 6 / 2026</div>
-      <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-muted-foreground mb-1">
-        {['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'].map((d) => (
-          <div key={d}>{d}</div>
-        ))}
+const WEEKDAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
+
+function parseDay(s: string): Date | null {
+  if (!s) return null
+  const d = parse(s, 'yyyy-MM-dd', new Date())
+  return isValid(d) ? d : null
+}
+
+// Preview of the selected payroll period: real calendar(s) for the range,
+// working days = Mon–Sat (T2–T7), rest = Sunday (CN).
+function MiniCalendar({
+  fromDate,
+  toDate,
+}: {
+  fromDate: string
+  toDate: string
+}) {
+  const from = parseDay(fromDate)
+  const to = parseDay(toDate)
+
+  if (!from || !to || from > to) {
+    return (
+      <div className="border rounded-none p-3 bg-muted/20 text-xs text-muted-foreground">
+        Chọn khoảng thời gian hợp lệ để xem trước.
       </div>
-      <div className="grid grid-cols-7 gap-1">
-        {Array.from({ length: 30 }, (_, i) => {
-          const day = i + 1
-          const weekday = day % 7
-          const isWeekend = weekday === 0 || weekday === 6
+    )
+  }
+
+  const days = eachDayOfInterval({ start: from, end: to })
+  const restDays = days.filter((d) => getDay(d) === 0).length
+  const workingDays = days.length - restDays
+  const months = eachMonthOfInterval({ start: from, end: to })
+
+  return (
+    <div className="space-y-3">
+      <div className="space-y-3 max-h-[260px] overflow-y-auto scrollbar-thin pr-1">
+        {months.map((m) => {
+          const monthStart = startOfMonth(m)
+          const lead = getDay(monthStart)
+          const cells = eachDayOfInterval({
+            start: monthStart,
+            end: endOfMonth(m),
+          })
           return (
             <div
-              key={i}
-              className={
-                isWeekend
-                  ? 'aspect-square grid place-items-center rounded text-xs bg-muted text-muted-foreground'
-                  : 'aspect-square grid place-items-center rounded text-xs bg-primary/15 text-primary font-medium'
-              }
+              key={m.toISOString()}
+              className="border rounded-none p-3 bg-muted/20"
             >
-              {day}
+              <div className="text-sm font-medium mb-2">
+                Tháng {m.getMonth() + 1} / {m.getFullYear()}
+              </div>
+              <div className="grid grid-cols-7 gap-1 text-center text-[11px] text-muted-foreground mb-1">
+                {WEEKDAY_LABELS.map((d) => (
+                  <div key={d}>{d}</div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {Array.from({ length: lead }, (_, i) => (
+                  <div key={`pad-${i}`} />
+                ))}
+                {cells.map((d) => {
+                  const inRange = isWithinInterval(d, { start: from, end: to })
+                  const isSunday = getDay(d) === 0
+                  const cls = !inRange
+                    ? 'text-muted-foreground/40'
+                    : isSunday
+                      ? 'bg-muted text-muted-foreground'
+                      : 'bg-primary/15 text-primary font-medium'
+                  return (
+                    <div
+                      key={d.toISOString()}
+                      className={`aspect-square grid place-items-center rounded text-xs ${cls}`}
+                    >
+                      {d.getDate()}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )
         })}
+      </div>
+      <div className="text-xs text-muted-foreground">
+        Bao gồm {workingDays} ngày làm việc (T2–T7), {restDays} ngày nghỉ (CN).{' '}
+        <Clock className="inline size-3" />
       </div>
     </div>
   )
@@ -280,11 +348,7 @@ export function SalaryPeriodsScreen() {
             </div>
             <div>
               <Label className="mb-2 block">Xem trước</Label>
-              <MiniCalendar />
-              <div className="text-xs text-muted-foreground mt-2">
-                Bao gồm 22 ngày làm việc (T2–T7), 8 ngày nghỉ tuần.{' '}
-                <Clock className="inline size-3" />
-              </div>
+              <MiniCalendar fromDate={fromDate} toDate={toDate} />
             </div>
           </div>
           <DialogFooter>
