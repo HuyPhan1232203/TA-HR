@@ -55,10 +55,10 @@ const SALARY_TYPES: SalaryCalculationType[] = [
 
 const SALARY_LABELS: Record<SalaryCalculationType, string> = {
   FixedMonthly: 'Lương tháng cố định',
-  DailyWage: 'Lương theo ngày',
+  DailyWage: 'Lương theo công',
   HourlyWage: 'Lương theo giờ',
   ProductBased: 'Lương sản phẩm',
-  Mixed: 'Hỗn hợp',
+  Mixed: 'Lương hỗn hợp',
 }
 
 const blankEmployee: IEmployee = {

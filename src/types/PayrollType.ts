@@ -55,7 +55,7 @@ export interface IPayrollReport {
   totalNetSalary: number
 }
 
-// One line on an employee payroll (GET /api/payrolls/{periodId}/employees/{employeeId})
+// A single line in an employee payroll
 export interface IPayrollItem {
   id: string
   type: PayrollItemType
@@ -63,11 +63,26 @@ export interface IPayrollItem {
   quantity: number
   unitPrice: number
   amount: number
+  sourceType?: string | null
+  sourceId?: string | null
 }
 
-// Employee payroll detail with line items
-export interface IPayrollDetail extends IPayrollRow {
-  periodId: string
+// Employee payroll detail (GET /api/payrolls/{periodId}/employees/{employeeId})
+export interface IPayrollDetail {
+  id: string
+  payrollPeriodId: string
+  employeeId: string
+  employeeCode: string
+  employeeFullName: string
+  attendanceSalary: number
+  productSalary: number
+  overtimeSalary: number
+  allowanceAmount: number
+  bonusAmount: number
+  deductionAmount: number
+  grossSalary: number
+  netSalary: number
+  status: PayrollRowStatus
   items: IPayrollItem[]
 }
 

@@ -77,13 +77,18 @@ export function AttendancesScreen() {
   const [formWorkingDayValue, setFormWorkingDayValue] = useState('1')
   const [formOvertimeHours, setFormOvertimeHours] = useState('0')
 
+  // Combine workDate + "HH:mm" into a UTC ISO string with Z (backend expects
+  // DateTime in ISO UTC, e.g. 2026-05-13T08:00:00Z — guide §8.6/§11.4).
+  const toUtcIso = (date: string, time: string) =>
+    date && time ? `${date}T${time}:00Z` : ''
+
   const handleSave = async () => {
     const data: ICreateAttendance = {
       employeeId: formEmployeeId || employees[0]?.id || '',
       workDate: formWorkDate,
       ...(formShiftCode ? { shiftCode: formShiftCode } : {}),
-      checkIn: formCheckIn,
-      checkOut: formCheckOut,
+      checkIn: toUtcIso(formWorkDate, formCheckIn),
+      checkOut: toUtcIso(formWorkDate, formCheckOut),
       workingHours: Number(formWorkingHours) || 0,
       workingDayValue: Number(formWorkingDayValue) || 0,
       overtimeHours: Number(formOvertimeHours) || 0,
