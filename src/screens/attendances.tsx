@@ -55,7 +55,7 @@ import {
   useDeleteAttendance,
 } from '@/hooks/useAttendances'
 import { useEmployees } from '@/hooks/useEmployees'
-import { useShiftConfigs } from '@/hooks/useShifts'
+import { useEmployeeShiftAssignments } from '@/hooks/useShifts'
 import type { IAttendance, ICreateAttendance } from '@/types/AttendanceType'
 import { cn } from '../lib/utils'
 
@@ -111,7 +111,10 @@ export function AttendancesScreen() {
 
   const { data: rows = [], isFetching, refetch } = useAttendances(filter)
   const { data: employees = [] } = useEmployees()
-  const { data: shiftConfigs = [] } = useShiftConfigs()
+  // Shifts assigned to the employee being entered (guide §7)
+  const { data: shiftAssignments = [] } = useEmployeeShiftAssignments(
+    form.employeeId || undefined,
+  )
   const createMut = useCreateAttendance()
   const deleteMut = useDeleteAttendance()
 
@@ -199,6 +202,14 @@ export function AttendancesScreen() {
   }
 
   const selectedRecs = selectedDay ? (byDay.get(selectedDay) ?? []) : []
+
+  // Assignments effective on the entry's work date
+  const activeAssignments = shiftAssignments.filter(
+    (a) =>
+      !form.workDate ||
+      (a.effectiveFrom <= form.workDate &&
+        (!a.effectiveTo || a.effectiveTo >= form.workDate)),
+  )
 
   return (
     <div>
@@ -473,24 +484,24 @@ export function AttendancesScreen() {
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>Ca làm việc</Label>
-                {shiftConfigs.length > 0 ? (
+                {activeAssignments.length > 0 ? (
                   <Select
                     value={form.shiftCode || undefined}
                     onValueChange={(code) => {
-                      const cfg = shiftConfigs.find((c) => c.shiftCode === code)
-                      if (!cfg) {
+                      const a = activeAssignments.find((x) => x.shiftCode === code)
+                      if (!a) {
                         setForm({ ...form, shiftCode: code })
                         return
                       }
-                      const first = cfg.sessions[0]
-                      const last = cfg.sessions[cfg.sessions.length - 1]
-                      // Auto-fill times + computed hours from the shift config
+                      const first = a.sessions[0]
+                      const last = a.sessions[a.sessions.length - 1]
+                      // Auto-fill times + computed hours from the assigned shift
                       setForm({
                         ...form,
-                        shiftCode: cfg.shiftCode,
+                        shiftCode: a.shiftCode,
                         checkIn: first?.checkIn ?? form.checkIn,
                         checkOut: last?.checkOut ?? form.checkOut,
-                        workingHours: String(cfg.totalHours),
+                        workingHours: String(a.totalHours),
                       })
                     }}
                   >
@@ -498,9 +509,9 @@ export function AttendancesScreen() {
                       <SelectValue placeholder="— Chọn ca —" />
                     </SelectTrigger>
                     <SelectContent>
-                      {shiftConfigs.map((c) => (
-                        <SelectItem key={c.id} value={c.shiftCode}>
-                          {c.shiftCode} — {c.name} ({c.totalHours}h)
+                      {activeAssignments.map((a) => (
+                        <SelectItem key={a.id} value={a.shiftCode}>
+                          {a.shiftCode} — {a.name} ({a.totalHours}h)
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -511,7 +522,9 @@ export function AttendancesScreen() {
                     onChange={(e) =>
                       setForm({ ...form, shiftCode: e.target.value })
                     }
-                    placeholder="VD: A"
+                    placeholder={
+                      form.employeeId ? 'Chưa gán ca' : 'Chọn nhân viên trước'
+                    }
                   />
                 )}
               </div>
