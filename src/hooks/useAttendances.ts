@@ -25,3 +25,11 @@ export function useCreateAttendance() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['attendances'] }),
   })
 }
+
+export function useDeleteAttendance() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => attendanceApi.deleteAttendance(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['attendances'] }),
+  })
+}
