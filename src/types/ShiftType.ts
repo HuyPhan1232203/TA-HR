@@ -27,9 +27,10 @@ export interface ICreateShiftConfig {
 // GET /api/employees/{employeeId}/shift-assignments
 export interface IEmployeeShiftAssignment {
   id: string
+  employeeId: string
   attendanceShiftConfigId: string
   shiftCode: string
-  name: string
+  shiftName: string
   totalHours: number
   effectiveFrom: string
   effectiveTo: string | null

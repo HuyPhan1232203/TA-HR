@@ -511,7 +511,7 @@ export function AttendancesScreen() {
                     <SelectContent>
                       {activeAssignments.map((a) => (
                         <SelectItem key={a.id} value={a.shiftCode}>
-                          {a.shiftCode} — {a.name} ({a.totalHours}h)
+                          {a.shiftCode} — {a.shiftName} ({a.totalHours}h)
                         </SelectItem>
                       ))}
                     </SelectContent>

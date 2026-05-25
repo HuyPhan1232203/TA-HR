@@ -373,7 +373,7 @@ export function EmployeeDetailScreen() {
                   {assignments.map((a) => (
                     <TableRow key={a.id}>
                       <TableCell className="font-medium">
-                        {a.shiftCode} — {a.name}
+                        {a.shiftCode} — {a.shiftName}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
