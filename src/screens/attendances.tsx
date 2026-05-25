@@ -57,7 +57,38 @@ import {
 import { useEmployees } from '@/hooks/useEmployees'
 import { useEmployeeShiftAssignments } from '@/hooks/useShifts'
 import type { IAttendance, ICreateAttendance } from '@/types/AttendanceType'
+import type { IShiftSession } from '@/types/ShiftType'
 import { cn } from '../lib/utils'
+
+const toMinutes = (t: string) => {
+  const [h, m] = t.split(':').map(Number)
+  return (h || 0) * 60 + (m || 0)
+}
+
+// Working hours = overlap of [checkIn,checkOut] with the shift sessions
+// (breaks excluded, so it's naturally capped at the shift total). OT = time
+// worked after the last session's checkOut.
+function computeShiftHours(
+  checkIn: string,
+  checkOut: string,
+  sessions: IShiftSession[],
+) {
+  const inM = toMinutes(checkIn)
+  const outM = toMinutes(checkOut)
+  if (!sessions.length || outM <= inM)
+    return { workingHours: 0, overtimeHours: 0 }
+  let work = 0
+  let lastOut = 0
+  for (const s of sessions) {
+    const sI = toMinutes(s.checkIn)
+    const sO = toMinutes(s.checkOut)
+    work += Math.max(0, Math.min(outM, sO) - Math.max(inM, sI))
+    if (sO > lastOut) lastOut = sO
+  }
+  const ot = Math.max(0, outM - lastOut)
+  const round = (min: number) => Math.round((min / 60) * 100) / 100
+  return { workingHours: round(work), overtimeHours: round(ot) }
+}
 
 const WEEKDAYS = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN']
 const MONTHS = Array.from({ length: 12 }, (_, i) => i)
@@ -210,6 +241,20 @@ export function AttendancesScreen() {
       (a.effectiveFrom <= form.workDate &&
         (!a.effectiveTo || a.effectiveTo >= form.workDate)),
   )
+
+  // Update check-in/out and, if a shift is selected, recompute giờ công + OT
+  const setTimes = (patch: { checkIn?: string; checkOut?: string }) =>
+    setForm((f) => {
+      const next = { ...f, ...patch }
+      const shift = activeAssignments.find((a) => a.shiftCode === next.shiftCode)
+      if (!shift) return next
+      const c = computeShiftHours(next.checkIn, next.checkOut, shift.sessions)
+      return {
+        ...next,
+        workingHours: String(c.workingHours),
+        overtimeHours: String(c.overtimeHours),
+      }
+    })
 
   return (
     <div>
@@ -493,15 +538,19 @@ export function AttendancesScreen() {
                         setForm({ ...form, shiftCode: code })
                         return
                       }
-                      const first = a.sessions[0]
-                      const last = a.sessions[a.sessions.length - 1]
-                      // Auto-fill times + computed hours from the assigned shift
+                      const checkIn = a.sessions[0]?.checkIn ?? form.checkIn
+                      const checkOut =
+                        a.sessions[a.sessions.length - 1]?.checkOut ??
+                        form.checkOut
+                      // Default times to the shift, then compute giờ công + OT
+                      const c = computeShiftHours(checkIn, checkOut, a.sessions)
                       setForm({
                         ...form,
                         shiftCode: a.shiftCode,
-                        checkIn: first?.checkIn ?? form.checkIn,
-                        checkOut: last?.checkOut ?? form.checkOut,
-                        workingHours: String(a.totalHours),
+                        checkIn,
+                        checkOut,
+                        workingHours: String(c.workingHours),
+                        overtimeHours: String(c.overtimeHours),
                       })
                     }}
                   >
@@ -533,7 +582,7 @@ export function AttendancesScreen() {
                 <Input
                   type="time"
                   value={form.checkIn}
-                  onChange={(e) => setForm({ ...form, checkIn: e.target.value })}
+                  onChange={(e) => setTimes({ checkIn: e.target.value })}
                 />
               </div>
               <div className="space-y-1.5">
@@ -541,7 +590,7 @@ export function AttendancesScreen() {
                 <Input
                   type="time"
                   value={form.checkOut}
-                  onChange={(e) => setForm({ ...form, checkOut: e.target.value })}
+                  onChange={(e) => setTimes({ checkOut: e.target.value })}
                 />
               </div>
             </div>
