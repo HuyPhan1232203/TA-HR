@@ -14,9 +14,6 @@ import { AttendancesScreen } from '@/screens/attendances'
 import { SalaryPeriodsScreen } from '@/screens/salary-periods'
 import { PayrollRunsScreen } from '@/screens/payroll-runs'
 import { ReportsScreen } from '@/screens/reports'
-import { ProductsScreen } from '@/screens/products'
-import { OperationsScreen } from '@/screens/operations'
-import { RatesScreen } from '@/screens/rates'
 import { AccountsScreen } from '@/screens/accounts'
 import { RolesScreen } from '@/screens/roles'
 import { AuditLogsScreen } from '@/screens/audit-logs'
@@ -87,9 +84,6 @@ function App() {
                   </ProtectedRoute>
                 }
               />
-              <Route path="/products" element={<ProductsScreen />} />
-              <Route path="/operations" element={<OperationsScreen />} />
-              <Route path="/rates" element={<RatesScreen />} />
               <Route
                 path="/system/accounts"
                 element={

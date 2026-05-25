@@ -7,9 +7,6 @@ import {
   Clock,
   Wallet,
   BarChart3,
-  Package,
-  Play,
-  FileText,
   ShieldCheck,
   KeyRound,
   History,
@@ -48,14 +45,6 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: 'Sản xuất',
-    items: [
-      { to: '/products', label: 'Sản phẩm', icon: Package },
-      { to: '/operations', label: 'Công đoạn', icon: Play },
-      { to: '/rates', label: 'Đơn giá', icon: FileText },
-    ],
-  },
-  {
     label: 'Hệ thống',
     items: [
       { to: '/system/accounts', label: 'Tài khoản', icon: ShieldCheck },
@@ -78,9 +67,6 @@ export const SCREEN_META: Record<string, ScreenMeta> = {
   '/salary-periods': { title: 'Kỳ lương', subtitle: 'Chu kỳ tính lương' },
   '/payroll-runs': { title: 'Bảng lương', subtitle: 'Generate & xác nhận' },
   '/reports': { title: 'Báo cáo', subtitle: 'Thống kê tài chính & nhân sự' },
-  '/products': { title: 'Sản phẩm', subtitle: 'Catalog sản xuất' },
-  '/operations': { title: 'Công đoạn', subtitle: 'Quy trình chuẩn' },
-  '/rates': { title: 'Đơn giá', subtitle: 'Đơn giá theo sản phẩm × công đoạn' },
   '/system/accounts': { title: 'Tài khoản', subtitle: 'Người dùng hệ thống' },
   '/system/roles': { title: 'Vai trò & quyền', subtitle: 'Phân quyền theo module' },
   '/system/audit-logs': { title: 'Nhật ký hoạt động', subtitle: 'Lịch sử thao tác' },
