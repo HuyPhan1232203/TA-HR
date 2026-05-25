@@ -5,14 +5,25 @@ import {
   CalendarDays,
   Coins,
   ExternalLink,
+  Plus,
   Wallet,
 } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '../components/ui/button'
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Avatar } from '../components/ui/avatar'
 import { Empty } from '../components/ui/empty'
+import { Label } from '../components/ui/label'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import { DatePicker } from '@/components/ui/date-picker'
 import {
   Table,
   TableHeader,
@@ -26,6 +37,11 @@ import { useDepartments } from '@/hooks/useDepartments'
 import { useEmployeeSalaryRates } from '@/hooks/useEmployeeSalaryRates'
 import { useAttendances } from '@/hooks/useAttendances'
 import { usePayrollPeriods } from '@/hooks/usePayroll'
+import {
+  useAssignShift,
+  useEmployeeShiftAssignments,
+  useShiftConfigs,
+} from '@/hooks/useShifts'
 import type { SalaryCalculationType, EmployeeStatus } from '@/types/EmployeeType'
 import { fmtDate, fmtVND } from '../lib/format'
 
@@ -43,12 +59,44 @@ const STATUS_LABELS: Record<EmployeeStatus, string> = {
   Resigned: 'Đã nghỉ việc',
 }
 
-type Tab = 'overview' | 'rates' | 'attendance' | 'payroll'
+type Tab = 'overview' | 'rates' | 'attendance' | 'shifts' | 'payroll'
 
 export function EmployeeDetailScreen() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('overview')
+
+  const { data: shiftConfigs = [] } = useShiftConfigs()
+  const { data: assignments = [] } = useEmployeeShiftAssignments(id || undefined)
+  const assignMut = useAssignShift()
+  const [assignConfigId, setAssignConfigId] = useState('')
+  const [assignFrom, setAssignFrom] = useState('')
+  const [assignTo, setAssignTo] = useState('')
+
+  const assignShift = async () => {
+    if (!assignConfigId || !assignFrom) {
+      toast.error('Chọn ca và ngày áp dụng')
+      return
+    }
+    try {
+      await assignMut.mutateAsync({
+        employeeId: id,
+        data: {
+          attendanceShiftConfigId: assignConfigId,
+          effectiveFrom: assignFrom,
+          effectiveTo: assignTo || null,
+        },
+      })
+      toast.success('Đã gắn ca cho nhân viên')
+      setAssignConfigId('')
+      setAssignFrom('')
+      setAssignTo('')
+    } catch (e) {
+      toast.error('Không thể gắn ca', {
+        description: e instanceof Error ? e.message : undefined,
+      })
+    }
+  }
 
   const { data: employees = [], isLoading } = useEmployees()
   const { data: departments = [] } = useDepartments()
@@ -135,6 +183,7 @@ export function EmployeeDetailScreen() {
           <TabsTrigger value="overview">Tổng quan</TabsTrigger>
           <TabsTrigger value="rates">Định mức lương</TabsTrigger>
           <TabsTrigger value="attendance">Chấm công</TabsTrigger>
+          <TabsTrigger value="shifts">Ca làm việc</TabsTrigger>
           <TabsTrigger value="payroll">Bảng lương</TabsTrigger>
         </TabsList>
       </Tabs>
@@ -273,6 +322,87 @@ export function EmployeeDetailScreen() {
                 )}
               </TableBody>
             </Table>
+          </Card>
+        )}
+
+        {tab === 'shifts' && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Gắn ca theo thời gian</CardTitle>
+            </CardHeader>
+            <CardBody className="space-y-4">
+              <div className="grid grid-cols-4 gap-3 items-end">
+                <div className="col-span-2 space-y-1.5">
+                  <Label>Ca làm việc</Label>
+                  <Select value={assignConfigId} onValueChange={setAssignConfigId}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="— Chọn ca —" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {shiftConfigs.map((c) => (
+                        <SelectItem key={c.id} value={c.id}>
+                          {c.shiftCode} — {c.name} ({c.totalHours}h)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Áp dụng từ</Label>
+                  <DatePicker value={assignFrom} onChange={setAssignFrom} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Đến (tùy chọn)</Label>
+                  <DatePicker value={assignTo} onChange={setAssignTo} />
+                </div>
+              </div>
+              <Button onClick={assignShift} disabled={assignMut.isPending}>
+                <Plus className="size-4" /> Gắn ca
+              </Button>
+
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Ca</TableHead>
+                    <TableHead>Phiên</TableHead>
+                    <TableHead className="text-right">Tổng giờ</TableHead>
+                    <TableHead>Hiệu lực</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {assignments.map((a) => (
+                    <TableRow key={a.id}>
+                      <TableCell className="font-medium">
+                        {a.shiftCode} — {a.name}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                          {a.sessions.map((s) => (
+                            <Badge key={s.sessionOrder} variant="secondary">
+                              {s.checkIn}–{s.checkOut}
+                            </Badge>
+                          ))}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right num">{a.totalHours}h</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {fmtDate(a.effectiveFrom)} → {fmtDate(a.effectiveTo)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {assignments.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center text-sm text-muted-foreground py-6"
+                      >
+                        Chưa gắn ca nào.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardBody>
           </Card>
         )}
 

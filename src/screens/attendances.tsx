@@ -55,6 +55,7 @@ import {
   useDeleteAttendance,
 } from '@/hooks/useAttendances'
 import { useEmployees } from '@/hooks/useEmployees'
+import { useShiftConfigs } from '@/hooks/useShifts'
 import type { IAttendance, ICreateAttendance } from '@/types/AttendanceType'
 import { cn } from '../lib/utils'
 
@@ -110,6 +111,7 @@ export function AttendancesScreen() {
 
   const { data: rows = [], isFetching, refetch } = useAttendances(filter)
   const { data: employees = [] } = useEmployees()
+  const { data: shiftConfigs = [] } = useShiftConfigs()
   const createMut = useCreateAttendance()
   const deleteMut = useDeleteAttendance()
 
@@ -471,11 +473,47 @@ export function AttendancesScreen() {
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>Ca làm việc</Label>
-                <Input
-                  value={form.shiftCode}
-                  onChange={(e) => setForm({ ...form, shiftCode: e.target.value })}
-                  placeholder="VD: A"
-                />
+                {shiftConfigs.length > 0 ? (
+                  <Select
+                    value={form.shiftCode || undefined}
+                    onValueChange={(code) => {
+                      const cfg = shiftConfigs.find((c) => c.shiftCode === code)
+                      if (!cfg) {
+                        setForm({ ...form, shiftCode: code })
+                        return
+                      }
+                      const first = cfg.sessions[0]
+                      const last = cfg.sessions[cfg.sessions.length - 1]
+                      // Auto-fill times + computed hours from the shift config
+                      setForm({
+                        ...form,
+                        shiftCode: cfg.shiftCode,
+                        checkIn: first?.checkIn ?? form.checkIn,
+                        checkOut: last?.checkOut ?? form.checkOut,
+                        workingHours: String(cfg.totalHours),
+                      })
+                    }}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="— Chọn ca —" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {shiftConfigs.map((c) => (
+                        <SelectItem key={c.id} value={c.shiftCode}>
+                          {c.shiftCode} — {c.name} ({c.totalHours}h)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    value={form.shiftCode}
+                    onChange={(e) =>
+                      setForm({ ...form, shiftCode: e.target.value })
+                    }
+                    placeholder="VD: A"
+                  />
+                )}
               </div>
               <div className="space-y-1.5">
                 <Label>Giờ vào</Label>

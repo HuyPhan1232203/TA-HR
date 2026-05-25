@@ -8,6 +8,7 @@ import {
   Clock,
   Wallet,
   BarChart3,
+  Timer,
   ShieldCheck,
   KeyRound,
   History,
@@ -36,6 +37,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { to: '/employees', label: 'Nhân viên', icon: Users },
       { to: '/salary-rates', label: 'Định mức lương', icon: Coins },
       { to: '/attendances', label: 'Chấm công', icon: CalendarDays },
+      { to: '/shift-configs', label: 'Cấu hình ca', icon: Timer },
     ],
   },
   {
@@ -67,6 +69,7 @@ export const SCREEN_META: Record<string, ScreenMeta> = {
   '/employees': { title: 'Nhân viên', subtitle: 'Hồ sơ & tài khoản' },
   '/salary-rates': { title: 'Định mức lương', subtitle: 'Định mức theo nhân viên' },
   '/attendances': { title: 'Chấm công', subtitle: 'Bảng công tháng' },
+  '/shift-configs': { title: 'Cấu hình ca', subtitle: 'Ca làm việc & phiên' },
   '/salary-periods': { title: 'Kỳ lương', subtitle: 'Chu kỳ tính lương' },
   '/payroll-runs': { title: 'Bảng lương', subtitle: 'Generate & xác nhận' },
   '/reports': { title: 'Báo cáo', subtitle: 'Thống kê tài chính & nhân sự' },
