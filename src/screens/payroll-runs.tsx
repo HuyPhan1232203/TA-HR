@@ -4,6 +4,7 @@ import {
   DollarSign,
   Download,
   Package,
+  Plus,
   Search,
   Sparkles,
   Wallet,
@@ -11,8 +12,16 @@ import {
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
+import { Label } from '../components/ui/label'
 import { Badge } from '../components/ui/badge'
 import { Avatar } from '../components/ui/avatar'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   Sheet,
   SheetContent,
@@ -38,8 +47,15 @@ import {
   usePayrollPeriods,
   usePayrollRows,
   useGeneratePayroll,
+  useEmployeePayroll,
+  useConfirmPayroll,
+  useAddPayrollItem,
 } from '@/hooks/usePayroll'
-import type { IPayrollRow, PeriodStatus } from '../types/PayrollType'
+import type {
+  IPayrollRow,
+  PayrollItemType,
+  PeriodStatus,
+} from '../types/PayrollType'
 import { fmtDate, fmtVND } from '../lib/format'
 import { cn } from '../lib/utils'
 
@@ -48,6 +64,26 @@ function statusBadge(status: PeriodStatus) {
   if (status === 'Locked') return { variant: 'warning' as const, label: 'Đã khóa', short: 'Khóa' }
   return { variant: 'success' as const, label: 'Đã trả', short: 'Trả' }
 }
+
+const PAYROLL_ITEM_LABELS: Record<PayrollItemType, string> = {
+  AttendanceSalary: 'Lương công',
+  ProductSalary: 'Lương sản phẩm',
+  OvertimeSalary: 'Lương OT',
+  Allowance: 'Phụ cấp',
+  Bonus: 'Thưởng',
+  Deduction: 'Khấu trừ',
+  Insurance: 'Bảo hiểm',
+  Tax: 'Thuế',
+}
+
+// Item types a user may add as a manual adjustment
+const ADJUST_TYPES: PayrollItemType[] = [
+  'Allowance',
+  'Bonus',
+  'Deduction',
+  'Insurance',
+  'Tax',
+]
 
 interface PayItemProps {
   label: string
@@ -93,6 +129,60 @@ export function PayrollRunsScreen() {
   const [tab, setTab] = useState<PayrollTab>('all')
 
   const generateMut = useGeneratePayroll()
+  const detailQuery = useEmployeePayroll(periodId, selected?.employeeId ?? null)
+  const detail = detailQuery.data
+  const confirmMut = useConfirmPayroll()
+  const addItemMut = useAddPayrollItem()
+
+  const blankAdjust = {
+    type: 'Allowance' as PayrollItemType,
+    name: '',
+    quantity: '1',
+    unitPrice: '',
+    amount: '',
+  }
+  const [adjust, setAdjust] = useState(blankAdjust)
+
+  const confirmPayroll = async () => {
+    if (!detail) return
+    try {
+      await confirmMut.mutateAsync(detail.id)
+      toast.success('Đã xác nhận bảng lương', {
+        description: detail.employeeFullName,
+      })
+      setSelected(null)
+    } catch (e) {
+      toast.error('Không thể xác nhận', {
+        description: e instanceof Error ? e.message : undefined,
+      })
+    }
+  }
+
+  const addAdjustment = async () => {
+    if (!detail) return
+    if (!adjust.name) {
+      toast.error('Nhập diễn giải dòng điều chỉnh')
+      return
+    }
+    const quantity = Number(adjust.quantity) || 0
+    const unitPrice = Number(adjust.unitPrice) || 0
+    const amount =
+      adjust.amount.trim() === ''
+        ? quantity * unitPrice
+        : Number(adjust.amount) || 0
+    try {
+      await addItemMut.mutateAsync({
+        payrollId: detail.id,
+        data: { type: adjust.type, name: adjust.name, quantity, unitPrice, amount },
+      })
+      toast.success('Đã thêm dòng điều chỉnh')
+      setAdjust(blankAdjust)
+    } catch (e) {
+      toast.error('Không thể thêm dòng', {
+        description: e instanceof Error ? e.message : undefined,
+      })
+    }
+  }
 
   const totals = useMemo(
     () =>
@@ -311,45 +401,187 @@ export function PayrollRunsScreen() {
             </SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto scrollbar-thin px-4">
-            {selected && (
-              <div className="space-y-5">
-            <div className="rounded-none border p-4 bg-muted/30">
-              <div className="text-xs text-muted-foreground">Thực lĩnh</div>
-              <div className="text-3xl font-semibold num tracking-tight mt-1">
-                {fmtVND(selected.netSalary)}
-              </div>
-              <div className="text-xs text-muted-foreground mt-1">
-                {period.name}
-              </div>
-            </div>
+            <QueryState isLoading={detailQuery.isLoading} error={detailQuery.error}>
+              {detail && (
+                <div className="space-y-5">
+                  <div className="rounded-none border p-4 bg-muted/30">
+                    <div className="text-xs text-muted-foreground">Thực lĩnh</div>
+                    <div className="text-3xl font-semibold num tracking-tight mt-1">
+                      {fmtVND(detail.netSalary)}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {period.name}
+                    </div>
+                  </div>
 
-            <div>
-              <div className="text-sm font-medium mb-2">Chi tiết</div>
-              <div className="rounded-none border divide-y">
-                <PayItem label="Lương công" value={selected.attendanceSalary} />
-                <PayItem label="Lương sản phẩm" value={selected.productSalary} />
-                <PayItem label="OT" value={selected.overtimeSalary} />
-                <PayItem label="Tổng gộp" value={selected.grossSalary} bold />
-                <PayItem
-                  label="Thực lĩnh"
-                  value={selected.netSalary}
-                  bold
-                  highlight
-                />
-              </div>
-            </div>
-              </div>
-            )}
+                  <div>
+                    <div className="text-sm font-medium mb-2">Tổng hợp tiền</div>
+                    <div className="rounded-none border divide-y">
+                      <PayItem label="Lương công" value={detail.attendanceSalary} />
+                      <PayItem label="Lương sản phẩm" value={detail.productSalary} />
+                      <PayItem label="Lương OT" value={detail.overtimeSalary} />
+                      <PayItem label="Phụ cấp" value={detail.allowanceAmount} />
+                      <PayItem label="Thưởng" value={detail.bonusAmount} />
+                      <PayItem label="Khấu trừ" value={detail.deductionAmount} />
+                      <PayItem label="Tổng gộp" value={detail.grossSalary} bold />
+                      <PayItem
+                        label="Thực lĩnh"
+                        value={detail.netSalary}
+                        bold
+                        highlight
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="text-sm font-medium mb-2">
+                      Các dòng lương ({detail.items.length})
+                    </div>
+                    <div className="rounded-none border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Loại</TableHead>
+                            <TableHead>Diễn giải</TableHead>
+                            <TableHead className="text-right">SL</TableHead>
+                            <TableHead className="text-right">Đơn giá</TableHead>
+                            <TableHead className="text-right">Thành tiền</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {detail.items.map((it) => (
+                            <TableRow key={it.id}>
+                              <TableCell className="text-xs">
+                                {PAYROLL_ITEM_LABELS[it.type]}
+                              </TableCell>
+                              <TableCell className="text-sm">{it.name}</TableCell>
+                              <TableCell className="text-right num text-muted-foreground">
+                                {it.quantity}
+                              </TableCell>
+                              <TableCell className="text-right num text-muted-foreground">
+                                {fmtVND(it.unitPrice)}
+                              </TableCell>
+                              <TableCell className="text-right num">
+                                {fmtVND(it.amount)}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                          {detail.items.length === 0 && (
+                            <TableRow>
+                              <TableCell
+                                colSpan={5}
+                                className="text-center text-sm text-muted-foreground py-6"
+                              >
+                                Chưa có dòng lương nào
+                              </TableCell>
+                            </TableRow>
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+
+                  {detail.status === 'Calculated' && (
+                    <div>
+                      <div className="text-sm font-medium mb-2">
+                        Thêm dòng điều chỉnh
+                      </div>
+                      <div className="rounded-none border p-3 space-y-3 bg-muted/20">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1.5">
+                            <Label>Loại</Label>
+                            <Select
+                              value={adjust.type}
+                              onValueChange={(v) =>
+                                setAdjust({ ...adjust, type: v as PayrollItemType })
+                              }
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {ADJUST_TYPES.map((t) => (
+                                  <SelectItem key={t} value={t}>
+                                    {PAYROLL_ITEM_LABELS[t]}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label>Diễn giải</Label>
+                            <Input
+                              value={adjust.name}
+                              onChange={(e) =>
+                                setAdjust({ ...adjust, name: e.target.value })
+                              }
+                              placeholder="VD: Phụ cấp cơm"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="space-y-1.5">
+                            <Label>Số lượng</Label>
+                            <Input
+                              type="number"
+                              className="num"
+                              value={adjust.quantity}
+                              onChange={(e) =>
+                                setAdjust({ ...adjust, quantity: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label>Đơn giá</Label>
+                            <Input
+                              type="number"
+                              className="num"
+                              value={adjust.unitPrice}
+                              onChange={(e) =>
+                                setAdjust({ ...adjust, unitPrice: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-1.5">
+                            <Label>Thành tiền</Label>
+                            <Input
+                              type="number"
+                              className="num"
+                              value={adjust.amount}
+                              onChange={(e) =>
+                                setAdjust({ ...adjust, amount: e.target.value })
+                              }
+                              placeholder="= SL × đơn giá"
+                            />
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={addAdjustment}
+                          disabled={addItemMut.isPending}
+                        >
+                          <Plus className="size-4" /> Thêm dòng
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </QueryState>
           </div>
           <SheetFooter>
             <Button variant="outline" onClick={() => setSelected(null)}>
               Đóng
             </Button>
             <Button
-              onClick={() => {
-                toast.success('Đã xác nhận bảng lương')
-                setSelected(null)
-              }}
+              onClick={confirmPayroll}
+              disabled={
+                confirmMut.isPending ||
+                !detail ||
+                detail.status !== 'Calculated' ||
+                period.status !== 'Open'
+              }
             >
               <Check className="size-4" /> Xác nhận
             </Button>

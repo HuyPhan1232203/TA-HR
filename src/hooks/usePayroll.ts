@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { payrollApi } from '@/api/payroll.api'
 import type {
+  IAddPayrollItem,
   ICreatePeriod,
+  IPayrollDetail,
   IPayrollPeriod,
   IPayrollReport,
   IPayrollRow,
@@ -62,6 +64,47 @@ export function useGeneratePayroll() {
     mutationFn: (periodId: string) => payrollApi.generate(periodId),
     onSuccess: (_data, periodId) =>
       qc.invalidateQueries({ queryKey: ['payroll', periodId] }),
+  })
+}
+
+export function useEmployeePayroll(
+  periodId: string | null,
+  employeeId: string | null,
+) {
+  return useQuery<IPayrollDetail | null>({
+    queryKey: ['payroll-detail', periodId, employeeId],
+    enabled: !!periodId && !!employeeId,
+    queryFn: async () => {
+      const res = await payrollApi.getEmployeePayroll(
+        periodId as string,
+        employeeId as string,
+      )
+      if (!res.success) throw new Error(res.message)
+      return res.data
+    },
+  })
+}
+
+export function useConfirmPayroll() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payrollId: string) => payrollApi.confirmPayroll(payrollId),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['payroll'] })
+      qc.invalidateQueries({ queryKey: ['payroll-detail'] })
+    },
+  })
+}
+
+export function useAddPayrollItem() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (vars: { payrollId: string; data: IAddPayrollItem }) =>
+      payrollApi.addPayrollItem(vars.payrollId, vars.data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['payroll'] })
+      qc.invalidateQueries({ queryKey: ['payroll-detail'] })
+    },
   })
 }
 
