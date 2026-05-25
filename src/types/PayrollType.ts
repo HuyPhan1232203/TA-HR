@@ -77,11 +77,11 @@ export interface IPayrollItem {
 
 // Employee payroll detail (GET /api/payrolls/{periodId}/employees/{employeeId})
 export interface IPayrollDetail {
-  id: string
+  payrollId: string
   payrollPeriodId: string
   employeeId: string
   employeeCode: string
-  employeeFullName: string
+  employeeName: string
   attendanceSalary: number
   productSalary: number
   overtimeSalary: number

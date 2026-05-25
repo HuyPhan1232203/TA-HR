@@ -165,9 +165,9 @@ export function PayrollRunsScreen() {
   const confirmPayroll = async () => {
     if (!detail) return
     try {
-      await confirmMut.mutateAsync(detail.id)
+      await confirmMut.mutateAsync(detail.payrollId)
       toast.success('Đã xác nhận bảng lương', {
-        description: detail.employeeFullName,
+        description: detail.employeeName,
       })
       setSelected(null)
     } catch (e) {
@@ -191,7 +191,7 @@ export function PayrollRunsScreen() {
         : Number(adjust.amount) || 0
     try {
       await addItemMut.mutateAsync({
-        payrollId: detail.id,
+        payrollId: detail.payrollId,
         data: { type: adjust.type, name: adjust.name, quantity, unitPrice, amount },
       })
       toast.success('Đã thêm dòng điều chỉnh')
