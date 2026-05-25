@@ -56,13 +56,15 @@ import { fmtDate } from '../lib/format'
 function statusVariant(status: PeriodStatus) {
   if (status === 'Open') return 'default' as const
   if (status === 'Locked') return 'warning' as const
-  return 'success' as const
+  if (status === 'Paid') return 'success' as const
+  return 'secondary' as const // Draft
 }
 
 function statusLabel(status: PeriodStatus) {
   if (status === 'Open') return 'Đang mở'
   if (status === 'Locked') return 'Đã khóa'
-  return 'Đã trả'
+  if (status === 'Paid') return 'Đã trả'
+  return 'Nháp' // Draft
 }
 
 const WEEKDAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']

@@ -1,5 +1,13 @@
-export type PeriodStatus = 'Open' | 'Locked' | 'Paid'
-export type PayrollRowStatus = 'Calculated' | 'Confirmed'
+// Backend PayrollPeriodStatus
+export type PeriodStatus = 'Draft' | 'Open' | 'Locked' | 'Paid'
+// Backend PayrollStatus
+export type PayrollStatus =
+  | 'Draft'
+  | 'Calculated'
+  | 'Confirmed'
+  | 'Locked'
+  | 'Paid'
+  | 'Cancelled'
 
 export type PayrollItemType =
   | 'AttendanceSalary'
@@ -35,7 +43,7 @@ export interface IPayrollRow {
   overtimeSalary: number
   grossSalary: number
   netSalary: number
-  status: PayrollRowStatus
+  status: PayrollStatus
 }
 
 export interface IGenerateResult {
@@ -82,7 +90,7 @@ export interface IPayrollDetail {
   deductionAmount: number
   grossSalary: number
   netSalary: number
-  status: PayrollRowStatus
+  status: PayrollStatus
   items: IPayrollItem[]
 }
 

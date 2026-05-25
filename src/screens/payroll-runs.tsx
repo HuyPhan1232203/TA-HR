@@ -54,6 +54,7 @@ import {
 import type {
   IPayrollRow,
   PayrollItemType,
+  PayrollStatus,
   PeriodStatus,
 } from '../types/PayrollType'
 import { fmtDate, fmtVND } from '../lib/format'
@@ -62,7 +63,21 @@ import { cn } from '../lib/utils'
 function statusBadge(status: PeriodStatus) {
   if (status === 'Open') return { variant: 'default' as const, label: 'Đang mở', short: 'Mở' }
   if (status === 'Locked') return { variant: 'warning' as const, label: 'Đã khóa', short: 'Khóa' }
-  return { variant: 'success' as const, label: 'Đã trả', short: 'Trả' }
+  if (status === 'Paid') return { variant: 'success' as const, label: 'Đã trả', short: 'Trả' }
+  return { variant: 'secondary' as const, label: 'Nháp', short: 'Nháp' } // Draft
+}
+
+// Backend PayrollStatus → badge label/variant
+const PAYROLL_STATUS_BADGE: Record<
+  PayrollStatus,
+  { variant: 'default' | 'secondary' | 'success' | 'warning' | 'muted'; label: string }
+> = {
+  Draft: { variant: 'muted', label: 'Nháp' },
+  Calculated: { variant: 'secondary', label: 'Đã tính' },
+  Confirmed: { variant: 'success', label: 'Đã xác nhận' },
+  Locked: { variant: 'warning', label: 'Đã khóa' },
+  Paid: { variant: 'success', label: 'Đã trả' },
+  Cancelled: { variant: 'muted', label: 'Đã hủy' },
 }
 
 const PAYROLL_ITEM_LABELS: Record<PayrollItemType, string> = {
@@ -286,7 +301,7 @@ export function PayrollRunsScreen() {
             <Button variant="outline">
               <Download className="size-4" /> Xuất Excel
             </Button>
-            {period.status === 'Open' && (
+            {(period.status === 'Open' || period.status === 'Draft') && (
               <Button onClick={generate} disabled={generateMut.isPending}>
                 {generateMut.isPending ? (
                   <>
@@ -370,10 +385,8 @@ export function PayrollRunsScreen() {
                       {fmtVND(r.netSalary)}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant={r.status === 'Confirmed' ? 'success' : 'secondary'}
-                      >
-                        {r.status === 'Confirmed' ? 'Đã xác nhận' : 'Đã tính'}
+                      <Badge variant={PAYROLL_STATUS_BADGE[r.status].variant}>
+                        {PAYROLL_STATUS_BADGE[r.status].label}
                       </Badge>
                     </TableCell>
                   </TableRow>
