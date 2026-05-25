@@ -45,7 +45,7 @@
   --radius-xl: 0rem;
 
   /* Rosso ramp for charts */
-  --color-chart-1: #da291c;
+  --color-chart-1: #0066FF;
   --color-chart-2: #b01e0a;
   --color-chart-3: #9d2211;
   --color-chart-4: #f13a2c;
@@ -79,7 +79,8 @@
   --color-card-foreground: #ffffff;
   --color-popover: #303030;
   --color-popover-foreground: #ffffff;
-  --color-primary: #186db0;
+  --color-primary: #da291c;
+    --color-chart-1: #da291c;
   --color-primary-foreground: #ffffff;
   --color-secondary: #303030;
   --color-secondary-foreground: #ffffff;

@@ -144,12 +144,12 @@ export function ReportsScreen() {
                         <div className="w-24 text-sm shrink-0 truncate">
                           {b.label}
                         </div>
-                        <div className="flex-1 h-7 rounded bg-muted relative overflow-hidden">
+                        <div className="flex-1 h-7 rounded  bg-muted relative overflow-hidden">
                           <div
                             className="absolute inset-y-0 left-0 transition-all"
                             style={{ width: `${w}%`, background: b.color }}
                           />
-                          <div className="absolute inset-0 px-2 flex items-center text-xs font-medium num text-foreground/90">
+                          <div className="absolute inset-0 px-2 flex items-center text-xs font-medium num text-white">
                             {fmtVND(b.value)}
                           </div>
                         </div>
