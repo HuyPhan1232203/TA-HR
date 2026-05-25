@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Download, Plus, Search } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Button } from '../components/ui/button'
@@ -74,8 +75,11 @@ const blankEmployee: IEmployee = {
 export function EmployeesScreen() {
   const { data: list = [], isLoading, error } = useEmployees()
   const { data: departments = [] } = useDepartments()
+  const [searchParams] = useSearchParams()
   const [q, setQ] = useState('')
-  const [deptFilter, setDeptFilter] = useState('all')
+  const [deptFilter, setDeptFilter] = useState(
+    searchParams.get('departmentId') ?? 'all',
+  )
   const [statusFilter, setStatusFilter] = useState<'all' | EmployeeStatus>(
     'all',
   )

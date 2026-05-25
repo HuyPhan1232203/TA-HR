@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Check, Clock, DollarSign, Download, Users } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardBody, CardDesc, CardHeader, CardTitle } from '../components/ui/card'
@@ -37,7 +38,10 @@ interface CostBar {
 
 export function ReportsScreen() {
   const { data: periods = [] } = usePayrollPeriods()
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null)
+  const [searchParams] = useSearchParams()
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(
+    searchParams.get('periodId'),
+  )
   const periodId = selectedPeriodId ?? periods[0]?.id ?? null
   const {
     data: report,

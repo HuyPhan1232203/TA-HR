@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   Check,
   DollarSign,
@@ -136,7 +137,10 @@ type PayrollTab = 'all' | 'draft' | 'confirmed'
 export function PayrollRunsScreen() {
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
   const { data: periods = [] } = usePayrollPeriods()
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null)
+  const [searchParams] = useSearchParams()
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(
+    searchParams.get('periodId'),
+  )
   const periodId = selectedPeriodId ?? periods[0]?.id ?? null
   const period = periods.find((p) => p.id === periodId)
   const { data: rows = [], isLoading, error } = usePayrollRows(periodId)

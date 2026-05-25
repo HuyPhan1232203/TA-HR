@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import {
   CalendarDays,
   ChevronLeft,
@@ -86,7 +87,10 @@ const blankForm = (workDate: string, employeeId: string): AddForm => ({
 export function AttendancesScreen() {
   const today = new Date()
   const [viewDate, setViewDate] = useState(startOfMonth(today))
-  const [employeeId, setEmployeeId] = useState('') // '' = all
+  const [searchParams] = useSearchParams()
+  const [employeeId, setEmployeeId] = useState(
+    searchParams.get('employeeId') ?? '',
+  ) // '' = all
   const [selectedDay, setSelectedDay] = useState<string | null>(null)
   const [addOpen, setAddOpen] = useState(false)
   const [form, setForm] = useState<AddForm>(blankForm(dayKey(today), ''))

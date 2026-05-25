@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Edit, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '../components/ui/button'
@@ -96,7 +97,10 @@ const numOrNull = (s: string) => (s.trim() === '' ? null : Number(s) || 0)
 
 export function SalaryRatesScreen() {
   const { data: employees = [] } = useEmployees()
-  const [employeeId, setEmployeeId] = useState('')
+  const [searchParams] = useSearchParams()
+  const [employeeId, setEmployeeId] = useState(
+    searchParams.get('employeeId') ?? '',
+  )
   const {
     data: rates = [],
     isLoading,
