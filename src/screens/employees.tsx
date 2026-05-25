@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Download, Plus, Search } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Download, Eye, Plus, Search } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
@@ -75,13 +75,14 @@ const blankEmployee: IEmployee = {
 export function EmployeesScreen() {
   const { data: list = [], isLoading, error } = useEmployees()
   const { data: departments = [] } = useDepartments()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [q, setQ] = useState('')
   const [deptFilter, setDeptFilter] = useState(
     searchParams.get('departmentId') ?? 'all',
   )
   const [statusFilter, setStatusFilter] = useState<'all' | EmployeeStatus>(
-    'all',
+    (searchParams.get('status') as EmployeeStatus | null) ?? 'all',
   )
   const [drawer, setDrawer] = useState<DrawerState | null>(null)
 
@@ -172,6 +173,25 @@ export function EmployeesScreen() {
           <Badge variant={row.original.status === 'Active' ? 'success' : 'muted'}>
             {row.original.status === 'Active' ? 'Đang làm' : 'Ngừng'}
           </Badge>
+        ),
+      },
+      {
+        id: 'actions',
+        header: '',
+        cell: ({ row }) => (
+          <div className="flex justify-end">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Xem hồ sơ"
+              onClick={(e) => {
+                e.stopPropagation()
+                navigate(`/employees/${row.original.id}`)
+              }}
+            >
+              <Eye className="size-4" />
+            </Button>
+          </div>
         ),
       },
     ],

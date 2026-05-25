@@ -10,6 +10,7 @@ import { ForbiddenScreen } from '@/screens/forbidden'
 import { DashboardScreen } from '@/screens/dashboard'
 import { DepartmentsScreen } from '@/screens/departments'
 import { EmployeesScreen } from '@/screens/employees'
+import { EmployeeDetailScreen } from '@/screens/employee-detail'
 import { AttendancesScreen } from '@/screens/attendances'
 import { SalaryPeriodsScreen } from '@/screens/salary-periods'
 import { PayrollRunsScreen } from '@/screens/payroll-runs'
@@ -50,6 +51,14 @@ function App() {
                 element={
                   <ProtectedRoute perms={['hr.employees.manage', 'hr.employees.read']}>
                     <EmployeesScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/employees/:id"
+                element={
+                  <ProtectedRoute perms={['hr.employees.manage', 'hr.employees.read']}>
+                    <EmployeeDetailScreen />
                   </ProtectedRoute>
                 }
               />

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Check, Clock, DollarSign, Download, Users } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Check, Clock, DollarSign, Download, Users, Wallet } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card, CardBody, CardDesc, CardHeader, CardTitle } from '../components/ui/card'
 import {
@@ -37,6 +37,7 @@ interface CostBar {
 }
 
 export function ReportsScreen() {
+  const navigate = useNavigate()
   const { data: periods = [] } = usePayrollPeriods()
   const [searchParams] = useSearchParams()
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(
@@ -98,6 +99,15 @@ export function ReportsScreen() {
                 ))}
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              disabled={!periodId}
+              onClick={() =>
+                periodId && navigate(`/payroll-runs?periodId=${periodId}`)
+              }
+            >
+              <Wallet className="size-4" /> Xem bảng lương
+            </Button>
             <Button variant="outline">
               <Download className="size-4" /> Xuất PDF
             </Button>

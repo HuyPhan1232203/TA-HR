@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Download, Edit, Filter, Plus, Search, Trash2 } from 'lucide-react'
+import { Download, Edit, Filter, Plus, Search, Trash2, Users } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
@@ -48,6 +49,7 @@ const blankDepartment: EditableDepartment = {
 }
 
 export function DepartmentsScreen() {
+  const navigate = useNavigate()
   const { data: list = [], isLoading, error } = useDepartments()
   const [q, setQ] = useState('')
   const [open, setOpen] = useState(false)
@@ -164,6 +166,17 @@ export function DepartmentsScreen() {
         header: '',
         cell: ({ row }) => (
           <div className="flex items-center gap-1 justify-end">
+            <Button
+              variant="ghost"
+              size="icon-sm"
+              onClick={(e) => {
+                e.stopPropagation()
+                navigate(`/employees?departmentId=${row.original.id}`)
+              }}
+              aria-label="Xem nhân viên"
+            >
+              <Users className="size-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon-sm"

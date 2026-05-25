@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Edit, Plus, Search } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
@@ -218,14 +219,17 @@ export function AccountsScreen() {
                     </TableCell>
                     <TableCell>
                       {emp ? (
-                        <div className="text-sm">
+                        <Link
+                          to={`/employees/${emp.id}`}
+                          className="text-sm block hover:text-primary"
+                        >
                           <div>{emp.fullName}</div>
                           <div className="text-xs text-muted-foreground">
                             {emp.code} ·{' '}
                             {departments.find((d) => d.id === emp.departmentId)
                               ?.name}
                           </div>
-                        </div>
+                        </Link>
                       ) : (
                         <span className="text-xs text-muted-foreground">
                           — Không liên kết —

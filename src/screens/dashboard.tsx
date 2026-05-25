@@ -24,6 +24,7 @@ interface StatCardProps {
   deltaKind?: 'up' | 'down'
   icon: LucideIcon
   hint?: string
+  onClick?: () => void
 }
 
 export function StatCard({
@@ -33,9 +34,13 @@ export function StatCard({
   deltaKind = 'up',
   icon: Icon,
   hint,
+  onClick,
 }: StatCardProps) {
   return (
-    <Card>
+    <Card
+      onClick={onClick}
+      className={onClick ? 'cursor-pointer hover:border-primary/40 transition-colors' : undefined}
+    >
       <CardBody className="p-5">
         <div className="flex items-start justify-between">
           <div className="text-sm text-muted-foreground">{label}</div>
@@ -99,22 +104,26 @@ export function DashboardScreen() {
           label="Tổng nhân viên"
           value={String(employees.length)}
           icon={Users}
+          onClick={() => navigate('/employees')}
         />
         <StatCard
           label="Phòng ban"
           value={String(departments.length)}
           icon={Building2}
+          onClick={() => navigate('/departments')}
         />
         <StatCard
           label="Kỳ lương"
           value={String(periods.length)}
           icon={Wallet}
+          onClick={() => navigate('/salary-periods')}
         />
         <StatCard
           label="Đang làm việc"
           value={String(activeCount)}
           icon={Check}
           hint="Nhân viên trạng thái Active"
+          onClick={() => navigate('/employees?status=Active')}
         />
       </div>
 

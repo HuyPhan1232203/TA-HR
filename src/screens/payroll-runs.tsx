@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   Check,
   DollarSign,
@@ -414,7 +414,14 @@ export function PayrollRunsScreen() {
           <SheetHeader>
             <SheetTitle>{selected?.employeeName}</SheetTitle>
             <SheetDescription>
-              {selected ? selected.employeeCode : undefined}
+              {selected ? (
+                <Link
+                  to={`/employees/${selected.employeeId}`}
+                  className="hover:text-primary"
+                >
+                  {selected.employeeCode} · Xem hồ sơ
+                </Link>
+              ) : undefined}
             </SheetDescription>
           </SheetHeader>
           <div className="flex-1 overflow-y-auto scrollbar-thin px-4">
