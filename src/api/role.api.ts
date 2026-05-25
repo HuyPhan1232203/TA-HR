@@ -39,15 +39,4 @@ export const roleApi = {
       throw error
     }
   },
-
-  deleteRole: async (id: string): Promise<ApiResponse<{ message: string }>> => {
-    try {
-      const res: AxiosResponse<ApiResponse<{ message: string }>> =
-        await axiosInstance.delete(`/roles/${id}`)
-      return res.data
-    } catch (error) {
-      console.error(error)
-      throw error
-    }
-  },
 }

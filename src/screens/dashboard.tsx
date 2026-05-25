@@ -8,13 +8,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Button } from '../components/ui/button'
-import {
-  Card,
-  CardBody,
-  CardDesc,
-  CardHeader,
-  CardTitle,
-} from '../components/ui/card'
+import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { PageHeader } from '../components/layout/page-header'
 import { useDepartments } from '@/hooks/useDepartments'
@@ -126,7 +120,6 @@ export function DashboardScreen() {
         <Card className="col-span-3">
           <CardHeader>
             <CardTitle>Hoạt động gần đây</CardTitle>
-            <CardDesc>/api/audit-logs</CardDesc>
           </CardHeader>
           <CardBody className="space-y-3">
             {recent.map((log) => (

@@ -46,7 +46,7 @@ export function RatesScreen() {
     <div>
       <PageHeader
         title="Đơn giá công đoạn"
-        description="Đơn giá theo sản phẩm × công đoạn. /api/product-operation-rates"
+        description="Đơn giá theo sản phẩm × công đoạn."
         actions={
           <Button>
             <Plus className="size-4" /> Thêm đơn giá

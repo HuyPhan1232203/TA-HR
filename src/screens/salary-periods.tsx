@@ -162,7 +162,7 @@ export function SalaryPeriodsScreen() {
     <div>
       <PageHeader
         title="Kỳ lương"
-        description="Quản lý chu kỳ tính lương — mở, khóa, đánh dấu đã trả. /api/payroll-periods"
+        description="Quản lý chu kỳ tính lương — mở, khóa, đánh dấu đã trả."
         actions={
           <Button onClick={() => setOpen(true)}>
             <Plus className="size-4" /> Tạo kỳ mới

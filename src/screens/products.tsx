@@ -30,7 +30,7 @@ export function ProductsScreen() {
     <div>
       <PageHeader
         title="Sản phẩm"
-        description="Danh mục sản phẩm dùng cho lương sản phẩm. /api/products"
+        description="Danh mục sản phẩm dùng cho lương sản phẩm."
         actions={
           <Button>
             <Plus className="size-4" /> Thêm sản phẩm

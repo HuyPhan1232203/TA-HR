@@ -179,7 +179,7 @@ export function EmployeesScreen() {
     <div>
       <PageHeader
         title="Nhân viên"
-        description="Hồ sơ nhân viên. /api/employees"
+        description="Hồ sơ nhân viên."
         actions={
           <Button
             onClick={() =>

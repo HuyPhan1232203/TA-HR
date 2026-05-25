@@ -141,7 +141,7 @@ export function AccountsScreen() {
     <div>
       <PageHeader
         title="Tài khoản"
-        description="Quản lý tài khoản đăng nhập và liên kết với nhân viên. /api/accounts"
+        description="Quản lý tài khoản đăng nhập và liên kết với nhân viên."
         actions={
           <Button
             onClick={() => {

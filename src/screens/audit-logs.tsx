@@ -39,7 +39,7 @@ export function AuditLogsScreen() {
     <div>
       <PageHeader
         title="Nhật ký hoạt động"
-        description="Lịch sử thao tác trên toàn hệ thống. /api/audit-logs"
+        description="Lịch sử thao tác trên toàn hệ thống."
         actions={
           <Button variant="outline">
             <Download className="size-4" /> Xuất Log

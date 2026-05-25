@@ -198,7 +198,7 @@ export function DepartmentsScreen() {
     <div>
       <PageHeader
         title="Phòng ban"
-        description="Quản lý cơ cấu phòng ban. /api/departments"
+        description="Quản lý cơ cấu phòng ban."
         actions={
           <Button onClick={openCreate}>
             <Plus className="size-4" /> Thêm phòng ban

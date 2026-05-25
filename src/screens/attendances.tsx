@@ -101,7 +101,7 @@ export function AttendancesScreen() {
     <div>
       <PageHeader
         title="Chấm công"
-        description="Nhập, theo dõi giờ công và OT theo ngày. /api/attendances"
+        description="Nhập, theo dõi giờ công và OT theo ngày."
         actions={
           <>
             <Button variant="outline">

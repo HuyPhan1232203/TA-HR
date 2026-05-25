@@ -76,7 +76,7 @@ export function ReportsScreen() {
     <div>
       <PageHeader
         title="Báo cáo"
-        description="Thống kê chi tiết theo kỳ lương. /api/payroll-reports"
+        description="Thống kê chi tiết theo kỳ lương."
         actions={
           <>
             <Select

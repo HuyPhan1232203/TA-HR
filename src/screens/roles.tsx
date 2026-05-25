@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Edit, Plus, Trash2 } from 'lucide-react'
+import { Edit, Plus } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import {
   Card,
@@ -41,7 +41,7 @@ export function RolesScreen() {
     <div>
       <PageHeader
         title="Vai trò & quyền"
-        description="Phân quyền theo module. /api/roles · /api/permissions"
+        description="Phân quyền theo module."
         actions={
           <Button>
             <Plus className="size-4" /> Tạo vai trò
@@ -165,13 +165,6 @@ function PermissionEditor({ role, groups, permissions }: PermissionEditorProps) 
           <div className="flex gap-2">
             <Button variant="outline" size="sm">
               <Edit className="size-4" /> Sửa
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-destructive hover:text-destructive"
-            >
-              <Trash2 className="size-4" /> Xóa
             </Button>
           </div>
         </div>

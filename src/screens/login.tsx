@@ -82,9 +82,6 @@ export function LoginScreen() {
 
         <div className="relative space-y-6">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.2em] opacity-70">
-              Module backend
-            </div>
             <h1 className="text-4xl font-semibold tracking-tight leading-tight mt-2">
               Quản trị nhân sự
               <br />
@@ -172,11 +169,6 @@ export function LoginScreen() {
             <Button type="submit" className="w-full" size="lg" disabled={loading}>
               {loading ? 'Đang đăng nhập…' : 'Đăng nhập'}
             </Button>
-
-            <div className="text-[11px] text-muted-foreground text-center pt-2">
-              POST <code className="font-mono">/api/auth/login</code> → GET{' '}
-              <code className="font-mono">/api/auth/my-permissions</code>
-            </div>
           </form>
         </div>
       </div>

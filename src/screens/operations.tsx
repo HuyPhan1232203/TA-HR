@@ -21,7 +21,7 @@ export function OperationsScreen() {
     <div>
       <PageHeader
         title="Công đoạn"
-        description="Danh mục công đoạn sản xuất chuẩn. /api/operations"
+        description="Danh mục công đoạn sản xuất chuẩn."
         actions={
           <Button>
             <Plus className="size-4" /> Thêm công đoạn
