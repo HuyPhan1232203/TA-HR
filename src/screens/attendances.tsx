@@ -376,7 +376,7 @@ export function AttendancesScreen() {
           if (!o) setSelectedDay(null)
         }}
       >
-        <SheetContent side="right" className="w-[460px] sm:max-w-[460px] flex flex-col p-0">
+        <SheetContent side="right" className="flex flex-col p-0">
           <SheetHeader>
             <SheetTitle>
               {selectedDay ? format(new Date(selectedDay), 'dd/MM/yyyy') : ''}

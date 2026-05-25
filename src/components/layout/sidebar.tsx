@@ -15,12 +15,12 @@ export function Sidebar() {
       <div className="h-14 flex items-center gap-2.5 px-5 border-b border-sidebar-border">
         <img
           src="/logos/LogoTA.svg"
-          alt="TA-HR"
+          alt="TA-CONSULTANT"
           className="h-8 w-auto shrink-0"
         />
         <div>
           <div className="text-[13.5px] font-semibold tracking-tight leading-none">
-            TA-HR
+            TA CONSULTANT
           </div>
           <div className="text-[11px] text-muted-foreground mt-0.5">
             Nhân sự & tính lương

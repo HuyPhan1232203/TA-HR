@@ -76,7 +76,7 @@ export function LoginScreen() {
             <div className="size-10 rounded-none bg-white/15 backdrop-blur grid place-items-center font-bold">
               TA
             </div>
-            <div className="text-lg font-semibold tracking-tight">TA-HR</div>
+            <div className="text-lg font-semibold tracking-tight">TA CONSULTANT</div>
           </div>
         </div>
 
@@ -111,10 +111,6 @@ export function LoginScreen() {
             ))}
           </div>
         </div>
-
-        <div className="relative text-xs opacity-60">
-          © 2026 TA-HR · API {import.meta.env.VITE_API_URL}
-        </div>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-8 bg-background text-foreground">
@@ -123,7 +119,7 @@ export function LoginScreen() {
             <div className="size-9 rounded-none bg-primary text-primary-foreground grid place-items-center font-bold">
               TA
             </div>
-            <div className="text-lg font-semibold">TA-HR</div>
+            <div className="text-lg font-semibold">TA CONSULTANT</div>
           </div>
 
           <h2 className="text-2xl font-semibold tracking-tight">Đăng nhập</h2>

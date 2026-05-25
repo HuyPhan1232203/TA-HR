@@ -62,7 +62,7 @@ export interface ScreenMeta {
 }
 
 export const SCREEN_META: Record<string, ScreenMeta> = {
-  '/dashboard': { title: 'Bảng điều khiển', subtitle: 'Tổng quan TA-HR' },
+  '/dashboard': { title: 'Bảng điều khiển', subtitle: 'Tổng quan TA CONSULTANT' },
   '/departments': { title: 'Phòng ban', subtitle: 'Cơ cấu tổ chức' },
   '/employees': { title: 'Nhân viên', subtitle: 'Hồ sơ & tài khoản' },
   '/salary-rates': { title: 'Định mức lương', subtitle: 'Định mức theo nhân viên' },

@@ -6,7 +6,7 @@ import { cn } from '../../lib/utils'
 
 export function AppShell() {
   const { pathname } = useLocation()
-  const meta = SCREEN_META[pathname] ?? { title: 'TA-HR', subtitle: '' }
+  const meta = SCREEN_META[pathname] ?? { title: 'TA-CONSULTANT', subtitle: '' }
   const fullBleed = pathname === '/payroll-runs'
 
   return (

@@ -301,7 +301,7 @@ function EmployeeDrawer({ drawer, onClose, onSave, saving }: EmployeeDrawerProps
     >
       <SheetContent
         side="right"
-        className="w-[560px] sm:max-w-[560px] flex flex-col p-0"
+        className="flex flex-col p-0"
       >
         <SheetHeader>
           <SheetTitle>

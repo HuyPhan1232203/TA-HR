@@ -409,7 +409,7 @@ export function PayrollRunsScreen() {
       >
         <SheetContent
           side="right"
-          className="w-[520px] sm:max-w-[520px] flex flex-col p-0"
+          className="flex flex-col p-0"
         >
           <SheetHeader>
             <SheetTitle>{selected?.employeeName}</SheetTitle>
