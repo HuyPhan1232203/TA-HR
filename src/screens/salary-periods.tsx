@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   eachDayOfInterval,
   eachMonthOfInterval,
@@ -166,6 +167,7 @@ export function SalaryPeriodsScreen() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
 
+  const navigate = useNavigate()
   const lockMut = useLockPeriod()
   const paidMut = useMarkPaid()
   const createMut = useCreatePeriod()
@@ -302,8 +304,12 @@ export function SalaryPeriodsScreen() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      <Button variant="outline" size="sm">
-                        <Eye className="size-4" /> Xem
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => navigate(`/payroll-runs?periodId=${p.id}`)}
+                      >
+                        <Eye className="size-4" /> Xem bảng lương
                       </Button>
                       {p.status === 'Open' && (
                         <Button

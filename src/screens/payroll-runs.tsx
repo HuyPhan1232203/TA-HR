@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
+  BarChart3,
   Check,
   DollarSign,
   Download,
+  Lock,
   Package,
   Plus,
   Search,
@@ -51,6 +53,8 @@ import {
   useEmployeePayroll,
   useConfirmPayroll,
   useAddPayrollItem,
+  useLockPeriod,
+  useMarkPaid,
 } from '@/hooks/usePayroll'
 import type {
   IPayrollRow,
@@ -147,7 +151,10 @@ export function PayrollRunsScreen() {
   const [selected, setSelected] = useState<IPayrollRow | null>(null)
   const [tab, setTab] = useState<PayrollTab>('all')
 
+  const navigate = useNavigate()
   const generateMut = useGeneratePayroll()
+  const lockMut = useLockPeriod()
+  const paidMut = useMarkPaid()
   const detailQuery = useEmployeePayroll(periodId, selected?.employeeId ?? null)
   const detail = detailQuery.data
   const confirmMut = useConfirmPayroll()
@@ -237,6 +244,48 @@ export function PayrollRunsScreen() {
     })
   }
 
+  const lockPeriod = () => {
+    if (!period || !periodId) return
+    setConfirmState({
+      title: 'Khóa kỳ lương?',
+      description: `Khóa "${period.name}". Sau khi khóa không thể chỉnh sửa bảng lương.`,
+      confirmText: 'Khóa kỳ',
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await lockMut.mutateAsync(periodId)
+            toast.success('Đã khóa kỳ lương', { description: period.name })
+          } catch (e) {
+            toast.error('Không thể khóa kỳ lương', {
+              description: e instanceof Error ? e.message : undefined,
+            })
+          }
+        })()
+      },
+    })
+  }
+
+  const markPaid = () => {
+    if (!period || !periodId) return
+    setConfirmState({
+      title: 'Đánh dấu đã trả?',
+      description: `Đánh dấu "${period.name}" đã được trả lương. Hành động này không thể hoàn tác.`,
+      confirmText: 'Xác nhận đã trả',
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await paidMut.mutateAsync(periodId)
+            toast.success('Đã đánh dấu đã trả', { description: period.name })
+          } catch (e) {
+            toast.error('Không thể cập nhật trạng thái', {
+              description: e instanceof Error ? e.message : undefined,
+            })
+          }
+        })()
+      },
+    })
+  }
+
   if (!period) return null
   const badge = statusBadge(period.status)
 
@@ -302,6 +351,14 @@ export function PayrollRunsScreen() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() =>
+                periodId && navigate(`/reports?periodId=${periodId}`)
+              }
+            >
+              <BarChart3 className="size-4" /> Báo cáo
+            </Button>
             <Button variant="outline">
               <Download className="size-4" /> Xuất Excel
             </Button>
@@ -316,6 +373,20 @@ export function PayrollRunsScreen() {
                     <Sparkles className="size-4" /> Generate bảng lương
                   </>
                 )}
+              </Button>
+            )}
+            {period.status === 'Open' && rows.length > 0 && (
+              <Button
+                variant="outline"
+                onClick={lockPeriod}
+                disabled={lockMut.isPending}
+              >
+                <Lock className="size-4" /> Khóa kỳ
+              </Button>
+            )}
+            {period.status === 'Locked' && (
+              <Button onClick={markPaid} disabled={paidMut.isPending}>
+                <Check className="size-4" /> Đánh dấu đã trả
               </Button>
             )}
           </div>
