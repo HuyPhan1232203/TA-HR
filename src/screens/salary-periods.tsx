@@ -48,6 +48,7 @@ import {
   useLockPeriod,
   useMarkPaid,
   useCreatePeriod,
+  useDeletePeriod,
 } from '@/hooks/usePayroll'
 import type { IPayrollPeriod, PeriodStatus } from '../types/PayrollType'
 import { fmtDate } from '../lib/format'
@@ -166,6 +167,7 @@ export function SalaryPeriodsScreen() {
   const lockMut = useLockPeriod()
   const paidMut = useMarkPaid()
   const createMut = useCreatePeriod()
+  const removeMut = useDeletePeriod()
 
   const lock = (p: IPayrollPeriod) => {
     setConfirmState({
@@ -199,6 +201,27 @@ export function SalaryPeriodsScreen() {
             toast.success('Đã đánh dấu đã trả', { description: p.name })
           } catch (e) {
             toast.error('Không thể cập nhật trạng thái', {
+              description: e instanceof Error ? e.message : undefined,
+            })
+          }
+        })()
+      },
+    })
+  }
+
+  const remove = (p: IPayrollPeriod) => {
+    setConfirmState({
+      title: 'Xóa kỳ lương?',
+      description: `Xóa "${p.name}". Không thể xóa nếu kỳ đã phát sinh bảng lương.`,
+      danger: true,
+      confirmText: 'Xóa',
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await removeMut.mutateAsync(p.id)
+            toast.success('Đã xóa kỳ lương', { description: p.name })
+          } catch (e) {
+            toast.error('Không thể xóa kỳ lương', {
               description: e instanceof Error ? e.message : undefined,
             })
           }
@@ -304,6 +327,8 @@ export function SalaryPeriodsScreen() {
                           variant="ghost"
                           size="icon-sm"
                           aria-label="Xóa"
+                          onClick={() => remove(p)}
+                          disabled={removeMut.isPending}
                         >
                           <Trash2 className="size-4" />
                         </Button>

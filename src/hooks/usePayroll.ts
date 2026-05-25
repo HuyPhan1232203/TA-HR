@@ -42,6 +42,14 @@ export function useCreatePeriod() {
   })
 }
 
+export function useDeletePeriod() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (id: string) => payrollApi.deletePeriod(id),
+    onSuccess: () => qc.invalidateQueries({ queryKey: PERIODS_KEY }),
+  })
+}
+
 export function useLockPeriod() {
   const qc = useQueryClient()
   return useMutation({
