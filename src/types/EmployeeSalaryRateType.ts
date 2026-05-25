@@ -14,12 +14,13 @@ export interface IEmployeeSalaryRate {
 }
 
 // POST /api/employee-salary-rates
+// Rate fields may be null depending on calculationType (guide §8.5).
 export interface ICreateEmployeeSalaryRate {
   employeeId: string
   calculationType: SalaryCalculationType
-  monthlySalary: number
-  dailyRate: number
-  hourlyRate: number
+  monthlySalary: number | null
+  dailyRate: number | null
+  hourlyRate: number | null
   effectiveFrom: string
   effectiveTo?: string | null
 }
@@ -28,9 +29,9 @@ export interface ICreateEmployeeSalaryRate {
 export interface IUpdateEmployeeSalaryRate {
   employeeId?: string
   calculationType?: SalaryCalculationType
-  monthlySalary?: number
-  dailyRate?: number
-  hourlyRate?: number
+  monthlySalary?: number | null
+  dailyRate?: number | null
+  hourlyRate?: number | null
   effectiveFrom?: string
   effectiveTo?: string | null
   isActive?: boolean

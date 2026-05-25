@@ -14,6 +14,7 @@ import { AttendancesScreen } from '@/screens/attendances'
 import { SalaryPeriodsScreen } from '@/screens/salary-periods'
 import { PayrollRunsScreen } from '@/screens/payroll-runs'
 import { ReportsScreen } from '@/screens/reports'
+import { SalaryRatesScreen } from '@/screens/salary-rates'
 import { AccountsScreen } from '@/screens/accounts'
 import { RolesScreen } from '@/screens/roles'
 import { AuditLogsScreen } from '@/screens/audit-logs'
@@ -57,6 +58,14 @@ function App() {
                 element={
                   <ProtectedRoute perms={['attendance.read']}>
                     <AttendancesScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/salary-rates"
+                element={
+                  <ProtectedRoute perms={['hr.employees.manage', 'hr.employees.read']}>
+                    <SalaryRatesScreen />
                   </ProtectedRoute>
                 }
               />

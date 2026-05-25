@@ -4,6 +4,7 @@ import {
   Users,
   Building2,
   CalendarDays,
+  Coins,
   Clock,
   Wallet,
   BarChart3,
@@ -33,6 +34,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { to: '/departments', label: 'Phòng ban', icon: Building2 },
       { to: '/employees', label: 'Nhân viên', icon: Users },
+      { to: '/salary-rates', label: 'Định mức lương', icon: Coins },
       { to: '/attendances', label: 'Chấm công', icon: CalendarDays },
     ],
   },
@@ -63,6 +65,7 @@ export const SCREEN_META: Record<string, ScreenMeta> = {
   '/dashboard': { title: 'Bảng điều khiển', subtitle: 'Tổng quan TA-HR' },
   '/departments': { title: 'Phòng ban', subtitle: 'Cơ cấu tổ chức' },
   '/employees': { title: 'Nhân viên', subtitle: 'Hồ sơ & tài khoản' },
+  '/salary-rates': { title: 'Định mức lương', subtitle: 'Định mức theo nhân viên' },
   '/attendances': { title: 'Chấm công', subtitle: 'Bảng công tháng' },
   '/salary-periods': { title: 'Kỳ lương', subtitle: 'Chu kỳ tính lương' },
   '/payroll-runs': { title: 'Bảng lương', subtitle: 'Generate & xác nhận' },
