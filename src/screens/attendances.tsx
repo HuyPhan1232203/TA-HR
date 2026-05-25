@@ -70,18 +70,22 @@ export function AttendancesScreen() {
   // Modal form state
   const [formEmployeeId, setFormEmployeeId] = useState('')
   const [formWorkDate, setFormWorkDate] = useState('')
+  const [formShiftCode, setFormShiftCode] = useState('')
   const [formCheckIn, setFormCheckIn] = useState('08:00')
   const [formCheckOut, setFormCheckOut] = useState('17:00')
   const [formWorkingHours, setFormWorkingHours] = useState('8')
+  const [formWorkingDayValue, setFormWorkingDayValue] = useState('1')
   const [formOvertimeHours, setFormOvertimeHours] = useState('0')
 
   const handleSave = async () => {
     const data: ICreateAttendance = {
       employeeId: formEmployeeId || employees[0]?.id || '',
       workDate: formWorkDate,
+      ...(formShiftCode ? { shiftCode: formShiftCode } : {}),
       checkIn: formCheckIn,
       checkOut: formCheckOut,
       workingHours: Number(formWorkingHours) || 0,
+      workingDayValue: Number(formWorkingDayValue) || 0,
       overtimeHours: Number(formOvertimeHours) || 0,
     }
     try {
@@ -229,11 +233,21 @@ export function AttendancesScreen() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Ngày *</Label>
                 <DatePicker value={formWorkDate} onChange={setFormWorkDate} />
               </div>
+              <div className="space-y-1.5">
+                <Label>Ca làm việc</Label>
+                <Input
+                  value={formShiftCode}
+                  onChange={(e) => setFormShiftCode(e.target.value)}
+                  placeholder="VD: CA1"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Giờ vào</Label>
                 <Input
@@ -251,13 +265,23 @@ export function AttendancesScreen() {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>Giờ công</Label>
                 <Input
                   type="number"
                   value={formWorkingHours}
                   onChange={(e) => setFormWorkingHours(e.target.value)}
+                  className="num"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Ngày công</Label>
+                <Input
+                  type="number"
+                  step="0.5"
+                  value={formWorkingDayValue}
+                  onChange={(e) => setFormWorkingDayValue(e.target.value)}
                   className="num"
                 />
               </div>

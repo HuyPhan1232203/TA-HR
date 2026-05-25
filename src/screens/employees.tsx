@@ -46,11 +46,20 @@ interface DrawerState {
 }
 
 const SALARY_TYPES: SalaryCalculationType[] = [
-  'Monthly',
-  'Daily',
-  'Hourly',
+  'FixedMonthly',
+  'DailyWage',
+  'HourlyWage',
+  'ProductBased',
   'Mixed',
 ]
+
+const SALARY_LABELS: Record<SalaryCalculationType, string> = {
+  FixedMonthly: 'Lương tháng cố định',
+  DailyWage: 'Lương theo ngày',
+  HourlyWage: 'Lương theo giờ',
+  ProductBased: 'Lương sản phẩm',
+  Mixed: 'Hỗn hợp',
+}
 
 const blankEmployee: IEmployee = {
   id: '',
@@ -58,7 +67,7 @@ const blankEmployee: IEmployee = {
   fullName: '',
   departmentId: '',
   positionName: '',
-  salaryCalculationType: 'Monthly',
+  salaryCalculationType: 'FixedMonthly',
   status: 'Active',
 }
 
@@ -94,8 +103,10 @@ export function EmployeesScreen() {
   const onSave = async (emp: IEmployee) => {
     try {
       if (drawer?.mode === 'create') {
-        const { id: _id, ...rest } = emp
+        // POST /api/employees has no status — strip id + status
+        const { id: _id, status: _status, ...rest } = emp
         void _id
+        void _status
         await createMut.mutateAsync(rest)
         toast.success('Đã tạo nhân viên', { description: emp.fullName })
       } else {
@@ -145,7 +156,9 @@ export function EmployeesScreen() {
         accessorKey: 'salaryCalculationType',
         header: 'Hình thức lương',
         cell: ({ row }) => (
-          <Badge variant="secondary">{row.original.salaryCalculationType}</Badge>
+          <Badge variant="secondary">
+            {SALARY_LABELS[row.original.salaryCalculationType]}
+          </Badge>
         ),
       },
       {
@@ -346,7 +359,7 @@ function EmployeeDrawer({ drawer, onClose, onSave, saving }: EmployeeDrawerProps
               <SelectContent>
                 {SALARY_TYPES.map((t) => (
                   <SelectItem key={t} value={t}>
-                    {t}
+                    {SALARY_LABELS[t]}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -366,6 +379,7 @@ function EmployeeDrawer({ drawer, onClose, onSave, saving }: EmployeeDrawerProps
               <SelectContent>
                 <SelectItem value="Active">Đang làm việc</SelectItem>
                 <SelectItem value="Inactive">Ngừng</SelectItem>
+                <SelectItem value="Resigned">Đã nghỉ việc</SelectItem>
               </SelectContent>
             </Select>
           </div>

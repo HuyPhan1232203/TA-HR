@@ -5,10 +5,15 @@ export interface IDepartment {
   isActive: boolean
 }
 
+// POST /api/departments — {code, name} only
 export interface ICreateDepartment {
   code: string
   name: string
-  isActive: boolean
 }
 
-export type IUpdateDepartment = Partial<ICreateDepartment>
+// PUT /api/departments/{id} — adds isActive
+export interface IUpdateDepartment {
+  code?: string
+  name?: string
+  isActive?: boolean
+}

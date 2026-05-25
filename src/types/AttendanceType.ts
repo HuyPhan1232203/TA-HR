@@ -16,9 +16,11 @@ export interface IAttendance {
 export interface ICreateAttendance {
   employeeId: string
   workDate: string
+  shiftCode?: string
   checkIn: string
   checkOut: string
   workingHours: number
+  workingDayValue: number
   overtimeHours: number
 }
 

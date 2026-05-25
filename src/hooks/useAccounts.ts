@@ -36,11 +36,3 @@ export function useUpdateAccount() {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   })
 }
-
-export function useDeleteAccount() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: (id: string) => accountApi.deleteAccount(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
-  })
-}

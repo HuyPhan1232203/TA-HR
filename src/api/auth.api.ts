@@ -1,6 +1,7 @@
 import axiosInstance from '@/config/axios.config'
 import type { ApiResponse } from '@/types'
 import type {
+  IAuthSession,
   IChangePasswordRequest,
   ILoginRequest,
   ILoginResponse,
@@ -13,6 +14,17 @@ export const authApi = {
     try {
       const res: AxiosResponse<ApiResponse<ILoginResponse>> =
         await axiosInstance.post('/auth/login', data)
+      return res.data
+    } catch (error) {
+      console.error(error)
+      throw error
+    }
+  },
+
+  me: async (): Promise<ApiResponse<IAuthSession>> => {
+    try {
+      const res: AxiosResponse<ApiResponse<IAuthSession>> =
+        await axiosInstance.get('/auth/me')
       return res.data
     } catch (error) {
       console.error(error)

@@ -109,23 +109,24 @@ export function AccountsScreen() {
   const save = async () => {
     try {
       if (editing.id) {
+        // PUT /api/accounts/{id} — no username; optional password reset
         const data: IUpdateAccount = {
-          username: editing.username,
           fullName: editing.fullName,
           employeeId: editing.employeeId,
           roleIds: editing.roleIds,
           status: editing.status,
+          ...(editing.password ? { newPassword: editing.password } : {}),
         }
         await updateAccount.mutateAsync({ id: editing.id, data })
         toast.success('Đã cập nhật tài khoản')
       } else {
+        // POST /api/accounts — username + password required, no status
         const data: ICreateAccount = {
           username: editing.username,
           fullName: editing.fullName,
           employeeId: editing.employeeId,
           roleIds: editing.roleIds,
-          status: editing.status,
-          ...(editing.password ? { password: editing.password } : {}),
+          password: editing.password,
         }
         await createAccount.mutateAsync(data)
         toast.success('Đã tạo tài khoản')
@@ -184,7 +185,7 @@ export function AccountsScreen() {
             <SelectContent>
               <SelectItem value="all">Mọi trạng thái</SelectItem>
               <SelectItem value="Active">Đang hoạt động</SelectItem>
-              <SelectItem value="Inactive">Khóa</SelectItem>
+              <SelectItem value="Locked">Khóa</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -371,7 +372,7 @@ export function AccountsScreen() {
               })}
             </div>
           </div>
-          {!editing.id && (
+          {!editing.id ? (
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Mật khẩu</Label>
@@ -396,6 +397,18 @@ export function AccountsScreen() {
                 />
               </div>
             </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label>Đặt lại mật khẩu</Label>
+              <Input
+                type="password"
+                placeholder="Để trống nếu không đổi"
+                value={editing.password}
+                onChange={(e) =>
+                  setEditing({ ...editing, password: e.target.value })
+                }
+              />
+            </div>
           )}
           <div className="space-y-1.5">
             <Label>Trạng thái</Label>
@@ -410,7 +423,7 @@ export function AccountsScreen() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Active">Đang hoạt động</SelectItem>
-                <SelectItem value="Inactive">Đã khóa</SelectItem>
+                <SelectItem value="Locked">Đã khóa</SelectItem>
               </SelectContent>
             </Select>
           </div>

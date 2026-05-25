@@ -22,17 +22,6 @@ export const employeeApi = {
     }
   },
 
-  getEmployeeById: async (id: string): Promise<ApiResponse<IEmployee>> => {
-    try {
-      const res: AxiosResponse<ApiResponse<IEmployee>> =
-        await axiosInstance.get(`/employees/${id}`)
-      return res.data
-    } catch (error) {
-      console.error(error)
-      throw error
-    }
-  },
-
   createEmployee: async (
     data: ICreateEmployee,
   ): Promise<ApiResponse<IEmployee>> => {

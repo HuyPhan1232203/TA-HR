@@ -7,11 +7,16 @@ export interface IRole {
   permissions: string[]
 }
 
+// POST /api/roles — {code, name, permissionIds}
 export interface ICreateRole {
   code: string
   name: string
-  isActive: boolean
   permissionIds: string[]
 }
 
-export type IUpdateRole = Partial<ICreateRole>
+// PUT /api/roles/{id} — {name, isActive, permissionIds} (no code)
+export interface IUpdateRole {
+  name?: string
+  isActive?: boolean
+  permissionIds?: string[]
+}

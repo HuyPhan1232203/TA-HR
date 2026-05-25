@@ -100,7 +100,6 @@ export function DepartmentsScreen() {
         await createMut.mutateAsync({
           code: editing.code,
           name: editing.name,
-          isActive: editing.isActive,
         })
         toast.success('Đã tạo phòng ban', { description: editing.name })
       }

@@ -140,7 +140,6 @@ function PermissionEditor({ role, groups, permissions }: PermissionEditorProps) 
       await updateRole.mutateAsync({
         id: role.id,
         data: {
-          code: role.code,
           name: role.name,
           isActive: role.isActive,
           permissionIds,

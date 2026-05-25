@@ -1,4 +1,4 @@
-export type AccountStatus = 'Active' | 'Inactive'
+export type AccountStatus = 'Active' | 'Locked'
 
 export interface IAccount {
   id: string
@@ -9,16 +9,23 @@ export interface IAccount {
   employeeId: string | null
 }
 
+// POST /api/accounts — username + password, no status (created Active)
 export interface ICreateAccount {
   username: string
   fullName: string
-  status: AccountStatus
+  password: string
   roleIds: string[]
   employeeId: string | null
-  password?: string
 }
 
-export type IUpdateAccount = Partial<Omit<ICreateAccount, 'password'>>
+// PUT /api/accounts/{id} — no username; optional password reset via newPassword
+export interface IUpdateAccount {
+  fullName?: string
+  newPassword?: string
+  status?: AccountStatus
+  roleIds?: string[]
+  employeeId?: string | null
+}
 
 export interface IAccountFilter {
   q?: string

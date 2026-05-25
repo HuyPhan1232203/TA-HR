@@ -1,5 +1,10 @@
-export type EmployeeStatus = 'Active' | 'Inactive'
-export type SalaryCalculationType = 'Monthly' | 'Daily' | 'Hourly' | 'Mixed'
+export type EmployeeStatus = 'Active' | 'Inactive' | 'Resigned'
+export type SalaryCalculationType =
+  | 'FixedMonthly'
+  | 'DailyWage'
+  | 'HourlyWage'
+  | 'ProductBased'
+  | 'Mixed'
 
 export interface IEmployee {
   id: string
@@ -11,8 +16,10 @@ export interface IEmployee {
   status: EmployeeStatus
 }
 
-export type ICreateEmployee = Omit<IEmployee, 'id'>
-export type IUpdateEmployee = Partial<ICreateEmployee>
+// POST /api/employees — no status (server defaults to Active)
+export type ICreateEmployee = Omit<IEmployee, 'id' | 'status'>
+// PUT /api/employees/{id} — status settable
+export type IUpdateEmployee = Partial<Omit<IEmployee, 'id'>>
 
 export interface IEmployeeFilter {
   q?: string
