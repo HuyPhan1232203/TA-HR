@@ -2,6 +2,7 @@ import { NavLink } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { Avatar } from '../ui/avatar'
 import { useAuth } from '../auth-context'
+import { hasAnyPermission } from '../../lib/permissions'
 import { NAV_GROUPS } from './nav'
 import { cn } from '../../lib/utils'
 
@@ -9,6 +10,13 @@ export function Sidebar() {
   const { session, signOut } = useAuth()
   const displayName = session?.fullName ?? session?.username ?? 'Khách'
   const subtitle = session?.roles?.[0] ?? 'Tài khoản nội bộ'
+
+  const groups = NAV_GROUPS.map((g) => ({
+    ...g,
+    items: g.items.filter(
+      (item) => !item.perms || hasAnyPermission(session, item.perms),
+    ),
+  })).filter((g) => g.items.length > 0)
 
   return (
     <aside className="w-[244px] shrink-0 bg-sidebar text-sidebar-foreground border-r border-sidebar-border flex flex-col">
@@ -29,7 +37,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 overflow-y-auto scrollbar-thin py-2 px-3">
-        {NAV_GROUPS.map((g) => (
+        {groups.map((g) => (
           <div key={g.label} className="mt-3 first:mt-1">
             <div className="px-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground mb-1.5">
               {g.label}

@@ -4,6 +4,10 @@
 // canonical type. Conversion happens at the api boundary (see src/api/*).
 import type { AccountStatus } from '@/types/AccountType'
 import type { AttendanceStatus } from '@/types/AttendanceType'
+import type {
+  AdjustmentRequestStatus,
+  AdjustmentRequestType,
+} from '@/types/MyAttendanceType'
 import type { EmployeeStatus, SalaryCalculationType } from '@/types/EmployeeType'
 import type {
   PayrollItemType,
@@ -34,6 +38,17 @@ export const ATTENDANCE_STATUSES = [
   'Draft',
   'Confirmed',
 ] as const satisfies readonly AttendanceStatus[]
+
+export const REQUEST_TYPES = [
+  'LateArrival',
+  'EarlyLeave',
+] as const satisfies readonly AdjustmentRequestType[]
+
+export const REQUEST_STATUSES = [
+  'Pending',
+  'Approved',
+  'Rejected',
+] as const satisfies readonly AdjustmentRequestStatus[]
 
 export const PERIOD_STATUSES = [
   'Draft',

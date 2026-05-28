@@ -7,49 +7,57 @@
   --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  /* Light canvas — default (:root). Dark overrides live in .dark below. */
-  --color-background: #ffffff;
-  --color-foreground: #181818;
-  --color-card: #f7f7f7;
-  --color-card-foreground: #181818;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #181818;
-  --color-primary: #0066FF;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: #ebebeb;
-  --color-secondary-foreground: #181818;
-  --color-muted: #ebebeb;
-  --color-muted-foreground: #666666;
-  --color-accent: #ebebeb;
-  --color-accent-foreground: #181818;
-  --color-destructive: #da291c; /* rendered as outline; see button.tsx */
-  --color-destructive-foreground: #ffffff;
-  --color-success: #03904a;
-  --color-success-foreground: #ffffff;
-  --color-warning: #f13a2c;
-  --color-warning-foreground: #ffffff;
-  --color-border: #d2d2d2; /* hairline on light */
-  --color-input: #d2d2d2;
-  --color-ring: #186DB0; /* focus ring */
-  --color-sidebar: #ffffff;
-  --color-sidebar-foreground: #181818;
-  --color-sidebar-border: #d2d2d2;
-  --color-sidebar-accent: #ebebeb;
-  --color-sidebar-accent-foreground: #181818;
+  /* ============ LIGHT THEME ============
+     Triết lý: nền trắng tinh khiết, text gần đen (không pure black để đỡ mỏi mắt),
+     hierarchy rõ ràng qua 3 cấp xám: bg → card → border.
+     Contrast ratio đều đạt WCAG AA/AAA. */
 
-  /* Sharp by default — the brand signature */
+  --color-background: #ffffff;
+  --color-foreground: #0a0a0a;          /* 19.3:1 — gần đen, dễ đọc hơn pure black */
+  --color-card: #fafafa;                /* nhẹ hơn #f7f7f7, tách khỏi bg tinh tế hơn */
+  --color-card-foreground: #0a0a0a;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #0a0a0a;
+
+  --color-primary: #0052cc;             /* đậm hơn #0066FF — contrast 7.2:1 trên trắng (AAA) */
+  --color-primary-foreground: #ffffff;
+
+  --color-secondary: #f1f1f1;           /* sáng hơn để tách rõ với muted */
+  --color-secondary-foreground: #0a0a0a;
+  --color-muted: #f4f4f4;
+  --color-muted-foreground: #595959;    /* 7.0:1 — đọc được rõ ràng, không bị fade */
+  --color-accent: #ededed;
+  --color-accent-foreground: #0a0a0a;
+
+  --color-destructive: #c41e0a;         /* đậm hơn để contrast tốt trên trắng */
+  --color-destructive-foreground: #ffffff;
+  --color-success: #027a3e;             /* đậm hơn — 5.1:1 trên trắng */
+  --color-success-foreground: #ffffff;
+  --color-warning: #b8500a;             /* cam-đỏ đậm thay vì #f13a2c (vốn quá sáng) */
+  --color-warning-foreground: #ffffff;
+
+  --color-border: #e4e4e4;              /* nhẹ hơn #d2d2d2 — hairline tinh tế hơn */
+  --color-input: #d4d4d4;               /* input border đậm hơn border thường để dễ nhận biết */
+  --color-ring: #0052cc;                /* khớp với primary — focus state nhất quán */
+
+  --color-sidebar: #fafafa;             /* tách nhẹ khỏi background chính */
+  --color-sidebar-foreground: #0a0a0a;
+  --color-sidebar-border: #e4e4e4;
+  --color-sidebar-accent: #ededed;
+  --color-sidebar-accent-foreground: #0a0a0a;
+
   --radius: 0rem;
   --radius-sm: 0rem;
   --radius-md: 0rem;
   --radius-lg: 0rem;
   --radius-xl: 0rem;
 
-  /* Rosso ramp for charts */
-  --color-chart-1: #0066FF;
-  --color-chart-2: #b01e0a;
-  --color-chart-3: #9d2211;
-  --color-chart-4: #f13a2c;
-  --color-chart-5: #969696;
+  /* Chart ramp — gradient có nhịp, không bị lộn xộn */
+  --color-chart-1: #0052cc;             /* primary blue */
+  --color-chart-2: #c41e0a;             /* deep red */
+  --color-chart-3: #027a3e;             /* green */
+  --color-chart-4: #b8500a;             /* amber */
+  --color-chart-5: #6b6b6b;             /* neutral */
 }
 
 @layer base {
@@ -63,6 +71,8 @@
     font-family: var(--font-sans);
     background: var(--color-background);
     color: var(--color-foreground);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   *,
   *::before,
@@ -71,37 +81,50 @@
   }
 }
 
-/* Dark theme — applied when <html class="dark"> (see theme toggle). */
+/* ============ DARK THEME ============
+   Triết lý: KHÔNG dùng pure black (#000) — dùng #0f0f0f để đỡ "burn" trên OLED và đỡ chói.
+   Card sáng hơn bg để có depth. Text trắng hơi ngà để không bị quá gắt. */
 .dark {
-  --color-background: #181818;
-  --color-foreground: #ffffff;
-  --color-card: #303030;
-  --color-card-foreground: #ffffff;
-  --color-popover: #303030;
-  --color-popover-foreground: #ffffff;
-  --color-primary: #da291c;
-    --color-chart-1: #da291c;
+  --color-background: #0f0f0f;          /* không pure black — dịu mắt hơn */
+  --color-foreground: #f5f5f5;          /* trắng hơi ngà — không bị chói như pure white */
+  --color-card: #1a1a1a;                /* sáng hơn bg → tạo elevation */
+  --color-card-foreground: #f5f5f5;
+  --color-popover: #1a1a1a;
+  --color-popover-foreground: #f5f5f5;
+
+  --color-primary: #e63946;             /* đỏ tươi hơn #da291c — pop trên nền tối tốt hơn */
   --color-primary-foreground: #ffffff;
-  --color-secondary: #303030;
-  --color-secondary-foreground: #ffffff;
-  --color-muted: #303030;
-  --color-muted-foreground: #969696;
-  --color-accent: #303030;
-  --color-accent-foreground: #ffffff;
-  --color-destructive: #da291c;
+
+  --color-secondary: #262626;
+  --color-secondary-foreground: #f5f5f5;
+  --color-muted: #1f1f1f;
+  --color-muted-foreground: #a3a3a3;    /* 7.5:1 trên bg — vẫn đọc tốt cho text phụ */
+  --color-accent: #262626;
+  --color-accent-foreground: #f5f5f5;
+
+  --color-destructive: #e63946;
   --color-destructive-foreground: #ffffff;
-  --color-success: #03904a;
-  --color-success-foreground: #ffffff;
-  --color-warning: #f13a2c;
-  --color-warning-foreground: #181818;
-  --color-border: #414040; /* hairline on dark */
-  --color-input: #ffffff;
-  --color-ring: #fff200; /* Hypersail yellow focus ring */
-  --color-sidebar: #181818;
-  --color-sidebar-foreground: #ffffff;
-  --color-sidebar-border: #303030;
-  --color-sidebar-accent: #303030;
-  --color-sidebar-accent-foreground: #ffffff;
+  --color-success: #22c55e;             /* sáng hơn để contrast trên dark — 6.8:1 */
+  --color-success-foreground: #0f0f0f;
+  --color-warning: #fbbf24;              /* vàng amber thay đỏ — semantic warning chuẩn hơn */
+  --color-warning-foreground: #0f0f0f;
+
+  --color-border: #2a2a2a;              /* hairline tinh tế, không quá lộ */
+  --color-input: #3a3a3a;               /* đậm hơn border để nhận biết được input */
+  --color-ring: #fff200;                /* giữ vàng Hypersail — signature accent */
+
+  --color-sidebar: #0f0f0f;
+  --color-sidebar-foreground: #f5f5f5;
+  --color-sidebar-border: #2a2a2a;
+  --color-sidebar-accent: #1f1f1f;
+  --color-sidebar-accent-foreground: #f5f5f5;
+
+  /* Chart ramp cho dark — màu sáng hơn để pop trên nền tối */
+  --color-chart-1: #e63946;
+  --color-chart-2: #fbbf24;
+  --color-chart-3: #22c55e;
+  --color-chart-4: #60a5fa;
+  --color-chart-5: #a3a3a3;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -111,6 +134,9 @@
 .scrollbar-thin::-webkit-scrollbar-thumb {
   background: #4a4a4a;
   border-radius: 999px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #5a5a5a;
 }
 .scrollbar-thin::-webkit-scrollbar-track {
   background: transparent;

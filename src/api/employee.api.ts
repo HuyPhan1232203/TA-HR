@@ -2,6 +2,7 @@ import axiosInstance from '@/config/axios.config'
 import type { ApiResponse } from '@/types'
 import type {
   ICreateEmployee,
+  ICreateEmployeeAccount,
   IEmployee,
   IEmployeeFilter,
   IUpdateEmployee,
@@ -65,6 +66,22 @@ export const employeeApi = {
       const res: AxiosResponse<ApiResponse<IEmployee>> =
         await axiosInstance.put(`/employees/${id}`, body)
       return { ...res.data, data: res.data.data && hydrate(res.data.data) }
+    } catch (error) {
+      console.error(error)
+      throw error
+    }
+  },
+
+  // POST /api/employees/{id}/account — server defaults password to
+  // `<username>@123` and role to `employee` when omitted (guide §8).
+  createAccount: async (
+    employeeId: string,
+    data: ICreateEmployeeAccount,
+  ): Promise<ApiResponse<unknown>> => {
+    try {
+      const res: AxiosResponse<ApiResponse<unknown>> =
+        await axiosInstance.post(`/employees/${employeeId}/account`, data)
+      return res.data
     } catch (error) {
       console.error(error)
       throw error

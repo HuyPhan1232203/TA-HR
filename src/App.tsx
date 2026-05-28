@@ -12,6 +12,7 @@ import { DepartmentsScreen } from '@/screens/departments'
 import { EmployeesScreen } from '@/screens/employees'
 import { EmployeeDetailScreen } from '@/screens/employee-detail'
 import { AttendancesScreen } from '@/screens/attendances'
+import { MyAttendanceScreen } from '@/screens/my-attendance'
 import { ShiftConfigsScreen } from '@/screens/shift-configs'
 import { SalaryPeriodsScreen } from '@/screens/salary-periods'
 import { PayrollRunsScreen } from '@/screens/payroll-runs'
@@ -76,6 +77,21 @@ function App() {
                 element={
                   <ProtectedRoute perms={['attendance.read']}>
                     <ShiftConfigsScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/my-attendance"
+                element={
+                  <ProtectedRoute
+                    perms={[
+                      'attendance.self.check-in',
+                      'attendance.self.check-out',
+                      'attendance.self.request',
+                      'attendance.self.request.read',
+                    ]}
+                  >
+                    <MyAttendanceScreen />
                   </ProtectedRoute>
                 }
               />

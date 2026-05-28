@@ -12,12 +12,16 @@ import {
   ShieldCheck,
   KeyRound,
   History,
+  UserCheck,
 } from 'lucide-react'
 
 export interface NavItem {
   to: string
   label: string
   icon: LucideIcon
+  // When set, the item only shows if the user has any of these permissions.
+  // Items without `perms` are always visible.
+  perms?: string[]
 }
 
 export interface NavGroup {
@@ -38,6 +42,17 @@ export const NAV_GROUPS: NavGroup[] = [
       { to: '/salary-rates', label: 'Định mức lương', icon: Coins },
       { to: '/attendances', label: 'Chấm công', icon: CalendarDays },
       { to: '/shift-configs', label: 'Cấu hình ca', icon: Timer },
+      {
+        to: '/my-attendance',
+        label: 'Chấm công của tôi',
+        icon: UserCheck,
+        perms: [
+          'attendance.self.check-in',
+          'attendance.self.check-out',
+          'attendance.self.request',
+          'attendance.self.request.read',
+        ],
+      },
     ],
   },
   {
@@ -70,6 +85,7 @@ export const SCREEN_META: Record<string, ScreenMeta> = {
   '/salary-rates': { title: 'Định mức lương', subtitle: 'Định mức theo nhân viên' },
   '/attendances': { title: 'Chấm công', subtitle: 'Bảng công tháng' },
   '/shift-configs': { title: 'Cấu hình ca', subtitle: 'Ca làm việc & phiên' },
+  '/my-attendance': { title: 'Chấm công của tôi', subtitle: 'Check-in & đơn điều chỉnh' },
   '/salary-periods': { title: 'Kỳ lương', subtitle: 'Chu kỳ tính lương' },
   '/payroll-runs': { title: 'Bảng lương', subtitle: 'Generate & xác nhận' },
   '/reports': { title: 'Báo cáo', subtitle: 'Thống kê tài chính & nhân sự' },

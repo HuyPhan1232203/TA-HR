@@ -5,6 +5,7 @@ import {
   CalendarDays,
   Coins,
   ExternalLink,
+  KeyRound,
   Plus,
   Wallet,
 } from 'lucide-react'
@@ -15,7 +16,16 @@ import { Badge } from '../components/ui/badge'
 import { Avatar } from '../components/ui/avatar'
 import { Empty } from '../components/ui/empty'
 import { Label } from '../components/ui/label'
+import { Input } from '../components/ui/input'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
@@ -32,7 +42,11 @@ import {
   TableCell,
   TableBody,
 } from '@/components/ui/table'
-import { useEmployees } from '@/hooks/useEmployees'
+import { useEmployees, useCreateEmployeeAccount } from '@/hooks/useEmployees'
+import { useAccounts } from '@/hooks/useAccounts'
+import { useRoles } from '@/hooks/useRoles'
+import { useAuth } from '@/components/auth-context'
+import { hasAnyPermission } from '@/lib/permissions'
 import { useDepartments } from '@/hooks/useDepartments'
 import { useEmployeeSalaryRates } from '@/hooks/useEmployeeSalaryRates'
 import { useAttendances } from '@/hooks/useAttendances'
@@ -44,6 +58,7 @@ import {
 } from '@/hooks/useShifts'
 import type { SalaryCalculationType, EmployeeStatus } from '@/types/EmployeeType'
 import { fmtDate, fmtVND } from '../lib/format'
+import { cn } from '../lib/utils'
 
 const SALARY_LABELS: Record<SalaryCalculationType, string> = {
   FixedMonthly: 'Lương tháng cố định',
@@ -66,12 +81,53 @@ export function EmployeeDetailScreen() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<Tab>('overview')
 
+  const { session } = useAuth()
+  const canManageAccounts = hasAnyPermission(session, [
+    'accounts.manage',
+    'accounts.create',
+  ])
+
   const { data: shiftConfigs = [] } = useShiftConfigs()
   const { data: assignments = [] } = useEmployeeShiftAssignments(id || undefined)
   const assignMut = useAssignShift()
   const [assignConfigId, setAssignConfigId] = useState('')
   const [assignFrom, setAssignFrom] = useState('')
   const [assignTo, setAssignTo] = useState('')
+
+  const { data: accounts = [] } = useAccounts()
+  const { data: roles = [] } = useRoles()
+  const linkedAccount = accounts.find((a) => a.employeeId === id)
+  const createAccountMut = useCreateEmployeeAccount()
+  const [accountOpen, setAccountOpen] = useState(false)
+  const [acctUsername, setAcctUsername] = useState('')
+  const [acctPassword, setAcctPassword] = useState('')
+  const [acctRoleIds, setAcctRoleIds] = useState<string[]>([])
+
+  const createAccount = async () => {
+    if (!acctUsername.trim()) {
+      toast.error('Nhập tên đăng nhập')
+      return
+    }
+    try {
+      await createAccountMut.mutateAsync({
+        employeeId: id,
+        data: {
+          username: acctUsername.trim(),
+          password: acctPassword || null,
+          roleIds: acctRoleIds,
+        },
+      })
+      toast.success('Đã tạo tài khoản cho nhân viên')
+      setAccountOpen(false)
+      setAcctUsername('')
+      setAcctPassword('')
+      setAcctRoleIds([])
+    } catch (e) {
+      toast.error('Không thể tạo tài khoản', {
+        description: e instanceof Error ? e.message : undefined,
+      })
+    }
+  }
 
   const assignShift = async () => {
     if (!assignConfigId || !assignFrom) {
@@ -163,7 +219,22 @@ export function EmployeeDetailScreen() {
               {employee.positionName || '—'} · {deptName(employee.departmentId)}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
+            {linkedAccount ? (
+              <Badge variant="outline" className="gap-1.5">
+                <KeyRound className="size-3.5" /> @{linkedAccount.username}
+              </Badge>
+            ) : (
+              canManageAccounts && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setAccountOpen(true)}
+                >
+                  <KeyRound className="size-4" /> Tạo tài khoản
+                </Button>
+              )
+            )}
             <Button variant="outline" size="sm" asChild>
               <Link to={`/salary-rates?employeeId=${employee.id}`}>
                 <Coins className="size-4" /> Định mức
@@ -447,6 +518,81 @@ export function EmployeeDetailScreen() {
           </Card>
         )}
       </div>
+
+      <Dialog open={accountOpen} onOpenChange={setAccountOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Tạo tài khoản cho nhân viên</DialogTitle>
+            <DialogDescription>
+              {employee.fullName} ({employee.code}). Để trống mật khẩu để hệ
+              thống tự sinh <code>{'<username>@123'}</code>; bỏ trống vai trò để
+              gán mặc định <code>employee</code>.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Tên đăng nhập *</Label>
+                <Input
+                  value={acctUsername}
+                  onChange={(e) => setAcctUsername(e.target.value)}
+                  placeholder="nv001"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Mật khẩu</Label>
+                <Input
+                  type="password"
+                  value={acctPassword}
+                  onChange={(e) => setAcctPassword(e.target.value)}
+                  placeholder="Tự sinh nếu để trống"
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Vai trò</Label>
+              <div className="flex flex-wrap gap-2 p-3 border rounded-none">
+                {roles.map((r) => {
+                  const checked = acctRoleIds.includes(r.id)
+                  return (
+                    <label
+                      key={r.id}
+                      className={cn(
+                        'flex items-center gap-2 px-2.5 py-1 rounded-none border cursor-pointer text-sm',
+                        checked
+                          ? 'bg-primary/10 border-primary/30 text-primary'
+                          : 'hover:bg-muted',
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) =>
+                          setAcctRoleIds(
+                            e.target.checked
+                              ? [...acctRoleIds, r.id]
+                              : acctRoleIds.filter((x) => x !== r.id),
+                          )
+                        }
+                        className="rounded"
+                      />
+                      {r.name}
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAccountOpen(false)}>
+              Hủy
+            </Button>
+            <Button onClick={createAccount} disabled={createAccountMut.isPending}>
+              Tạo tài khoản
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

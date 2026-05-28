@@ -4,6 +4,7 @@ import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
+  Lock,
   Plus,
   RefreshCw,
   Trash2,
@@ -56,6 +57,7 @@ import {
 } from '@/hooks/useAttendances'
 import { useEmployees } from '@/hooks/useEmployees'
 import { useEmployeeShiftAssignments } from '@/hooks/useShifts'
+import { usePayrollPeriods } from '@/hooks/usePayroll'
 import type { IAttendance, ICreateAttendance } from '@/types/AttendanceType'
 import type { IShiftSession } from '@/types/ShiftType'
 import { cn } from '../lib/utils'
@@ -142,6 +144,22 @@ export function AttendancesScreen() {
 
   const { data: rows = [], isFetching, refetch } = useAttendances(filter)
   const { data: employees = [] } = useEmployees()
+  const { data: periods = [] } = usePayrollPeriods()
+
+  // Guide §10: no create/delete of attendance inside a Locked/Paid period.
+  const lockedPeriodFor = useMemo(() => {
+    const locked = periods.filter(
+      (p) => p.status === 'Locked' || p.status === 'Paid',
+    )
+    return (workDate: string) => {
+      const d = workDate.slice(0, 10)
+      return (
+        locked.find(
+          (p) => p.fromDate.slice(0, 10) <= d && d <= p.toDate.slice(0, 10),
+        ) ?? null
+      )
+    }
+  }, [periods])
   // Shifts assigned to the employee being entered (guide §7)
   const { data: shiftAssignments = [] } = useEmployeeShiftAssignments(
     form.employeeId || undefined,
@@ -190,6 +208,13 @@ export function AttendancesScreen() {
       toast.error('Chọn ngày')
       return
     }
+    const lp = lockedPeriodFor(form.workDate)
+    if (lp) {
+      toast.error('Kỳ lương đã khóa/đã trả', {
+        description: `Không thể nhập chấm công trong kỳ "${lp.name}".`,
+      })
+      return
+    }
     const data: ICreateAttendance = {
       employeeId: form.employeeId,
       workDate: form.workDate,
@@ -212,6 +237,13 @@ export function AttendancesScreen() {
   }
 
   const remove = (r: IAttendance) => {
+    const lp = lockedPeriodFor(r.workDate)
+    if (lp) {
+      toast.error('Kỳ lương đã khóa/đã trả', {
+        description: `Không thể xóa chấm công trong kỳ "${lp.name}".`,
+      })
+      return
+    }
     setConfirmState({
       title: 'Xóa chấm công?',
       description: `Bản ghi của ${empName(r.employeeId)} ngày ${r.workDate.slice(0, 10)} sẽ bị xóa.`,
@@ -233,6 +265,8 @@ export function AttendancesScreen() {
   }
 
   const selectedRecs = selectedDay ? (byDay.get(selectedDay) ?? []) : []
+  const selectedDayLock = selectedDay ? lockedPeriodFor(selectedDay) : null
+  const formLock = form.workDate ? lockedPeriodFor(form.workDate) : null
 
   // Assignments effective on the entry's work date
   const activeAssignments = shiftAssignments.filter(
@@ -469,6 +503,7 @@ export function AttendancesScreen() {
                     variant="ghost"
                     size="icon-sm"
                     aria-label="Xóa"
+                    disabled={!!selectedDayLock}
                     onClick={() => remove(r)}
                   >
                     <Trash2 className="size-4" />
@@ -477,9 +512,16 @@ export function AttendancesScreen() {
               ))
             )}
           </div>
-          <SheetFooter>
+          <SheetFooter className="flex-col gap-2">
+            {selectedDayLock && (
+              <div className="flex items-center gap-2 w-full text-xs text-muted-foreground">
+                <Lock className="size-3.5 shrink-0" />
+                Kỳ lương "{selectedDayLock.name}" đã khóa/đã trả — không thể chỉnh.
+              </div>
+            )}
             <Button
               className="w-full"
+              disabled={!!selectedDayLock}
               onClick={() => selectedDay && openAddFor(selectedDay)}
             >
               <Plus className="size-4" /> Thêm chấm công
@@ -498,6 +540,13 @@ export function AttendancesScreen() {
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            {formLock && (
+              <div className="flex items-center gap-2 rounded-none border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                <Lock className="size-4 shrink-0" />
+                Kỳ lương "{formLock.name}" đã khóa/đã trả — không thể nhập chấm
+                công cho ngày này.
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Nhân viên *</Label>
@@ -635,7 +684,10 @@ export function AttendancesScreen() {
             <Button variant="outline" onClick={() => setAddOpen(false)}>
               Hủy
             </Button>
-            <Button onClick={saveAdd} disabled={createMut.isPending}>
+            <Button
+              onClick={saveAdd}
+              disabled={createMut.isPending || !!formLock}
+            >
               Lưu
             </Button>
           </DialogFooter>

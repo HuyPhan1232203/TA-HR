@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { employeeApi } from '@/api/employee.api'
 import type {
   ICreateEmployee,
+  ICreateEmployeeAccount,
   IEmployee,
   IUpdateEmployee,
 } from '@/types/EmployeeType'
@@ -33,5 +34,14 @@ export function useUpdateEmployee() {
     mutationFn: (vars: { id: string; data: IUpdateEmployee }) =>
       employeeApi.updateEmployee(vars.id, vars.data),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  })
+}
+
+export function useCreateEmployeeAccount() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (vars: { employeeId: string; data: ICreateEmployeeAccount }) =>
+      employeeApi.createAccount(vars.employeeId, vars.data),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['accounts'] }),
   })
 }
