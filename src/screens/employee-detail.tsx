@@ -159,6 +159,10 @@ export function EmployeeDetailScreen() {
       await updateAccountMut.mutateAsync({
         id: linkedAccount.id,
         data: {
+          // Backend PUT requires FullName + RoleIds; keep employeeId so the
+          // edit doesn't accidentally unlink.
+          fullName: linkedAccount.fullName,
+          employeeId: linkedAccount.employeeId,
           roleIds: editAcctRoleIds,
           status: editAcctStatus,
           ...(editAcctPassword ? { newPassword: editAcctPassword } : {}),
@@ -178,7 +182,15 @@ export function EmployeeDetailScreen() {
     try {
       await updateAccountMut.mutateAsync({
         id: linkedAccount.id,
-        data: { employeeId: null },
+        data: {
+          // Backend PUT requires FullName + RoleIds even when only detaching.
+          fullName: linkedAccount.fullName,
+          roleIds: linkedAccount.roles
+            .map((code) => roles.find((r) => r.code === code)?.id)
+            .filter((rid): rid is string => Boolean(rid)),
+          status: linkedAccount.status,
+          employeeId: null,
+        },
       })
       toast.success('Đã gỡ liên kết tài khoản')
     } catch (e) {
