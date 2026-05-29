@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Edit, Plus, Search } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
@@ -77,8 +77,9 @@ export function AccountsScreen() {
   const { data: departments = [] } = useDepartments()
   const createAccount = useCreateAccount()
   const updateAccount = useUpdateAccount()
-  const [q, setQ] = useState('')
-  const [roleFilter, setRoleFilter] = useState('all')
+  const [searchParams] = useSearchParams()
+  const [q, setQ] = useState(searchParams.get('q') ?? '')
+  const [roleFilter, setRoleFilter] = useState(searchParams.get('role') ?? 'all')
   const [statusFilter, setStatusFilter] = useState('all')
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<EditableAccount>(blank)
@@ -90,6 +91,16 @@ export function AccountsScreen() {
         a.fullName.toLowerCase().includes(q.toLowerCase())) &&
       (roleFilter === 'all' || a.roles.includes(roleFilter)) &&
       (statusFilter === 'all' || a.status === statusFilter),
+  )
+
+  // 1:1 guard: hide employees already linked to a *different* account.
+  const linkedEmployeeIds = new Set(
+    list
+      .filter((a) => a.employeeId && a.id !== editing.id)
+      .map((a) => a.employeeId as string),
+  )
+  const selectableEmployees = employees.filter(
+    (e) => !linkedEmployeeIds.has(e.id) || e.id === editing.employeeId,
   )
 
   const startEdit = (a: IAccount) =>
@@ -240,13 +251,19 @@ export function AccountsScreen() {
                       <div className="flex flex-wrap gap-1">
                         {a.roles.map((rc) => {
                           const r = roles.find((x) => x.code === rc)
-                          return (
+                          const badge = (
                             <Badge
-                              key={rc}
                               variant={rc === 'admin' ? 'default' : 'outline'}
                             >
                               {r?.name ?? rc}
                             </Badge>
+                          )
+                          return r ? (
+                            <Link key={rc} to={`/system/roles?roleId=${r.id}`}>
+                              {badge}
+                            </Link>
+                          ) : (
+                            <span key={rc}>{badge}</span>
                           )
                         })}
                       </div>
@@ -334,7 +351,7 @@ export function AccountsScreen() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">— Không liên kết —</SelectItem>
-                {employees.map((e) => (
+                {selectableEmployees.map((e) => (
                   <SelectItem key={e.id} value={e.id}>
                     {e.code} — {e.fullName}
                   </SelectItem>
