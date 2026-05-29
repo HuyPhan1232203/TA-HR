@@ -16,6 +16,7 @@ import {
   UserCheck,
   AlarmClockPlus,
 } from 'lucide-react'
+import type { RouteAccess } from '@/lib/permissions'
 
 export interface NavItem {
   to: string
@@ -76,6 +77,30 @@ export const NAV_GROUPS: NavGroup[] = [
     ],
   },
 ]
+
+export const ROUTE_ACCESS: Record<string, RouteAccess> = {
+  '/departments': { perms: ['hr.departments.manage', 'hr.departments.read'] },
+  '/employees': { perms: ['hr.employees.manage', 'hr.employees.read'] },
+  '/salary-rates': { perms: ['hr.employees.manage', 'hr.employees.read'] },
+  '/attendances': { perms: ['attendance.read'] },
+  '/shift-configs': { perms: ['attendance.read'] },
+  '/holidays': { perms: ['attendance.read'] },
+  '/my-attendance': {
+    perms: [
+      'attendance.self.check-in',
+      'attendance.self.check-out',
+      'attendance.self.request',
+      'attendance.self.request.read',
+    ],
+  },
+  '/salary-periods': { perms: ['payroll.periods.read'] },
+  '/payroll-runs': { perms: ['payroll.read'] },
+  '/overtime-approvals': { perms: ['attendance.read'] },
+  '/reports': { perms: ['payroll.reports.read'] },
+  '/system/accounts': { perms: ['accounts.manage', 'accounts.read'] },
+  '/system/roles': { perms: ['roles.manage', 'roles.read'] },
+  '/system/audit-logs': { roles: ['admin'] },
+}
 
 export interface ScreenMeta {
   title: string
