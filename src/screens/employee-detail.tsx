@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import type * as React from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
@@ -216,7 +217,13 @@ export function EmployeeDetailScreen() {
             </div>
             <div className="text-sm text-muted-foreground mt-0.5">
               <code className="font-mono">{employee.code}</code> ·{' '}
-              {employee.positionName || '—'} · {deptName(employee.departmentId)}
+              {employee.positionName || '—'} ·{' '}
+              <Link
+                to={`/employees?departmentId=${employee.departmentId}`}
+                className="hover:text-primary hover:underline"
+              >
+                {deptName(employee.departmentId)}
+              </Link>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -268,7 +275,17 @@ export function EmployeeDetailScreen() {
               </CardHeader>
               <CardBody className="text-sm divide-y">
                 <Row label="Mã nhân viên" value={employee.code} />
-                <Row label="Phòng ban" value={deptName(employee.departmentId)} />
+                <Row
+                  label="Phòng ban"
+                  value={
+                    <Link
+                      to={`/employees?departmentId=${employee.departmentId}`}
+                      className="hover:text-primary hover:underline"
+                    >
+                      {deptName(employee.departmentId)}
+                    </Link>
+                  }
+                />
                 <Row label="Chức danh" value={employee.positionName || '—'} />
                 <Row
                   label="Hình thức lương"
@@ -597,7 +614,13 @@ export function EmployeeDetailScreen() {
   )
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({
+  label,
+  value,
+}: {
+  label: string
+  value: React.ReactNode
+}) {
   return (
     <div className="flex justify-between py-2">
       <span className="text-muted-foreground">{label}</span>
