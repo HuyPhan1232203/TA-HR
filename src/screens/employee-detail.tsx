@@ -371,7 +371,9 @@ export function EmployeeDetailScreen() {
                 <CardTitle>Tài khoản</CardTitle>
                 {linkedAccount && (
                   <Button variant="outline" size="sm" asChild>
-                    <Link to={`/system/accounts?q=${linkedAccount.username}`}>
+                    <Link
+                      to={`/system/accounts?q=${encodeURIComponent(linkedAccount.username)}`}
+                    >
                       Accounts <ExternalLink className="size-3.5" />
                     </Link>
                   </Button>
