@@ -5,9 +5,11 @@ import {
   ArrowLeft,
   CalendarDays,
   Coins,
+  Edit,
   ExternalLink,
   KeyRound,
   Plus,
+  Unlink,
   Wallet,
 } from 'lucide-react'
 import { toast } from 'sonner'
@@ -35,6 +37,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { DatePicker } from '@/components/ui/date-picker'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   Table,
   TableHeader,
@@ -44,7 +47,7 @@ import {
   TableBody,
 } from '@/components/ui/table'
 import { useEmployees, useCreateEmployeeAccount } from '@/hooks/useEmployees'
-import { useAccounts } from '@/hooks/useAccounts'
+import { useAccounts, useUpdateAccount } from '@/hooks/useAccounts'
 import { useRoles } from '@/hooks/useRoles'
 import { useAuth } from '@/components/auth-context'
 import { hasAnyPermission } from '@/lib/permissions'
@@ -58,6 +61,7 @@ import {
   useShiftConfigs,
 } from '@/hooks/useShifts'
 import type { SalaryCalculationType, EmployeeStatus } from '@/types/EmployeeType'
+import type { AccountStatus } from '@/types/AccountType'
 import { fmtDate, fmtVND } from '../lib/format'
 import { cn } from '../lib/utils'
 
@@ -125,6 +129,60 @@ export function EmployeeDetailScreen() {
       setAcctRoleIds([])
     } catch (e) {
       toast.error('Không thể tạo tài khoản', {
+        description: e instanceof Error ? e.message : undefined,
+      })
+    }
+  }
+
+  const updateAccountMut = useUpdateAccount()
+  const [editAcctOpen, setEditAcctOpen] = useState(false)
+  const [editAcctRoleIds, setEditAcctRoleIds] = useState<string[]>([])
+  const [editAcctPassword, setEditAcctPassword] = useState('')
+  const [editAcctStatus, setEditAcctStatus] = useState<AccountStatus>('Active')
+  const [unlinkOpen, setUnlinkOpen] = useState(false)
+
+  const openEditAccount = () => {
+    if (!linkedAccount) return
+    setEditAcctRoleIds(
+      linkedAccount.roles
+        .map((code) => roles.find((r) => r.code === code)?.id)
+        .filter((rid): rid is string => Boolean(rid)),
+    )
+    setEditAcctPassword('')
+    setEditAcctStatus(linkedAccount.status)
+    setEditAcctOpen(true)
+  }
+
+  const saveEditAccount = async () => {
+    if (!linkedAccount) return
+    try {
+      await updateAccountMut.mutateAsync({
+        id: linkedAccount.id,
+        data: {
+          roleIds: editAcctRoleIds,
+          status: editAcctStatus,
+          ...(editAcctPassword ? { newPassword: editAcctPassword } : {}),
+        },
+      })
+      toast.success('Đã cập nhật tài khoản')
+      setEditAcctOpen(false)
+    } catch (e) {
+      toast.error('Không thể cập nhật tài khoản', {
+        description: e instanceof Error ? e.message : undefined,
+      })
+    }
+  }
+
+  const unlinkAccount = async () => {
+    if (!linkedAccount) return
+    try {
+      await updateAccountMut.mutateAsync({
+        id: linkedAccount.id,
+        data: { employeeId: null },
+      })
+      toast.success('Đã gỡ liên kết tài khoản')
+    } catch (e) {
+      toast.error('Không thể gỡ liên kết', {
         description: e instanceof Error ? e.message : undefined,
       })
     }
@@ -227,21 +285,6 @@ export function EmployeeDetailScreen() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {linkedAccount ? (
-              <Badge variant="outline" className="gap-1.5">
-                <KeyRound className="size-3.5" /> @{linkedAccount.username}
-              </Badge>
-            ) : (
-              canManageAccounts && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setAccountOpen(true)}
-                >
-                  <KeyRound className="size-4" /> Tạo tài khoản
-                </Button>
-              )
-            )}
             <Button variant="outline" size="sm" asChild>
               <Link to={`/salary-rates?employeeId=${employee.id}`}>
                 <Coins className="size-4" /> Định mức
@@ -268,54 +311,136 @@ export function EmployeeDetailScreen() {
 
       <div className="mt-4">
         {tab === 'overview' && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Thông tin</CardTitle>
+                </CardHeader>
+                <CardBody className="text-sm divide-y">
+                  <Row label="Mã nhân viên" value={employee.code} />
+                  <Row
+                    label="Phòng ban"
+                    value={
+                      <Link
+                        to={`/employees?departmentId=${employee.departmentId}`}
+                        className="hover:text-primary hover:underline"
+                      >
+                        {deptName(employee.departmentId)}
+                      </Link>
+                    }
+                  />
+                  <Row label="Chức danh" value={employee.positionName || '—'} />
+                  <Row
+                    label="Hình thức lương"
+                    value={SALARY_LABELS[employee.salaryCalculationType]}
+                  />
+                  <Row label="Trạng thái" value={STATUS_LABELS[employee.status]} />
+                </CardBody>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Định mức đang áp dụng</CardTitle>
+                </CardHeader>
+                <CardBody className="text-sm">
+                  {activeRate ? (
+                    <div className="divide-y">
+                      <Row
+                        label="Hình thức"
+                        value={SALARY_LABELS[activeRate.calculationType]}
+                      />
+                      <Row label="Lương tháng" value={fmtVND(activeRate.monthlySalary)} />
+                      <Row label="Đơn giá ngày" value={fmtVND(activeRate.dailyRate)} />
+                      <Row label="Đơn giá giờ" value={fmtVND(activeRate.hourlyRate)} />
+                      <Row
+                        label="Hiệu lực từ"
+                        value={fmtDate(activeRate.effectiveFrom)}
+                      />
+                    </div>
+                  ) : (
+                    <div className="text-muted-foreground py-4">
+                      Chưa có định mức lương.
+                    </div>
+                  )}
+                </CardBody>
+              </Card>
+            </div>
+
             <Card>
-              <CardHeader>
-                <CardTitle>Thông tin</CardTitle>
-              </CardHeader>
-              <CardBody className="text-sm divide-y">
-                <Row label="Mã nhân viên" value={employee.code} />
-                <Row
-                  label="Phòng ban"
-                  value={
-                    <Link
-                      to={`/employees?departmentId=${employee.departmentId}`}
-                      className="hover:text-primary hover:underline"
-                    >
-                      {deptName(employee.departmentId)}
+              <CardHeader className="flex-row items-center justify-between">
+                <CardTitle>Tài khoản</CardTitle>
+                {linkedAccount && (
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={`/system/accounts?q=${linkedAccount.username}`}>
+                      Accounts <ExternalLink className="size-3.5" />
                     </Link>
-                  }
-                />
-                <Row label="Chức danh" value={employee.positionName || '—'} />
-                <Row
-                  label="Hình thức lương"
-                  value={SALARY_LABELS[employee.salaryCalculationType]}
-                />
-                <Row label="Trạng thái" value={STATUS_LABELS[employee.status]} />
-              </CardBody>
-            </Card>
-            <Card>
-              <CardHeader>
-                <CardTitle>Định mức đang áp dụng</CardTitle>
+                  </Button>
+                )}
               </CardHeader>
-              <CardBody className="text-sm">
-                {activeRate ? (
-                  <div className="divide-y">
-                    <Row
-                      label="Hình thức"
-                      value={SALARY_LABELS[activeRate.calculationType]}
-                    />
-                    <Row label="Lương tháng" value={fmtVND(activeRate.monthlySalary)} />
-                    <Row label="Đơn giá ngày" value={fmtVND(activeRate.dailyRate)} />
-                    <Row label="Đơn giá giờ" value={fmtVND(activeRate.hourlyRate)} />
-                    <Row
-                      label="Hiệu lực từ"
-                      value={fmtDate(activeRate.effectiveFrom)}
-                    />
+              <CardBody>
+                {linkedAccount ? (
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">
+                          @{linkedAccount.username}
+                        </span>
+                        <Badge
+                          variant={
+                            linkedAccount.status === 'Active'
+                              ? 'success'
+                              : 'destructive'
+                          }
+                        >
+                          {linkedAccount.status === 'Active'
+                            ? 'Hoạt động'
+                            : 'Đã khóa'}
+                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {linkedAccount.roles.map((rc) => {
+                          const r = roles.find((x) => x.code === rc)
+                          return (
+                            <Badge key={rc} variant="outline">
+                              {r?.name ?? rc}
+                            </Badge>
+                          )
+                        })}
+                      </div>
+                    </div>
+                    {canManageAccounts && (
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={openEditAccount}
+                        >
+                          <Edit className="size-4" /> Sửa
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setUnlinkOpen(true)}
+                        >
+                          <Unlink className="size-4" /> Gỡ liên kết
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
-                  <div className="text-muted-foreground py-4">
-                    Chưa có định mức lương.
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-sm text-muted-foreground">
+                      Chưa có tài khoản đăng nhập.
+                    </span>
+                    {canManageAccounts && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setAccountOpen(true)}
+                      >
+                        <KeyRound className="size-4" /> Tạo tài khoản
+                      </Button>
+                    )}
                   </div>
                 )}
               </CardBody>
@@ -610,6 +735,100 @@ export function EmployeeDetailScreen() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={editAcctOpen} onOpenChange={setEditAcctOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Sửa tài khoản</DialogTitle>
+            <DialogDescription>
+              {linkedAccount ? `@${linkedAccount.username}` : ''} — đổi vai trò,
+              đặt lại mật khẩu hoặc khóa tài khoản.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Vai trò</Label>
+              <div className="flex flex-wrap gap-2 p-3 border rounded-none">
+                {roles.map((r) => {
+                  const checked = editAcctRoleIds.includes(r.id)
+                  return (
+                    <label
+                      key={r.id}
+                      className={cn(
+                        'flex items-center gap-2 px-2.5 py-1 rounded-none border cursor-pointer text-sm',
+                        checked
+                          ? 'bg-primary/10 border-primary/30 text-primary'
+                          : 'hover:bg-muted',
+                      )}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) =>
+                          setEditAcctRoleIds(
+                            e.target.checked
+                              ? [...editAcctRoleIds, r.id]
+                              : editAcctRoleIds.filter((x) => x !== r.id),
+                          )
+                        }
+                        className="rounded"
+                      />
+                      {r.name}
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Đặt lại mật khẩu</Label>
+                <Input
+                  type="password"
+                  value={editAcctPassword}
+                  onChange={(e) => setEditAcctPassword(e.target.value)}
+                  placeholder="Để trống nếu không đổi"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Trạng thái</Label>
+                <Select
+                  value={editAcctStatus}
+                  onValueChange={(v) => setEditAcctStatus(v as AccountStatus)}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Đang hoạt động</SelectItem>
+                    <SelectItem value="Locked">Đã khóa</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditAcctOpen(false)}>
+              Hủy
+            </Button>
+            <Button
+              onClick={saveEditAccount}
+              disabled={updateAccountMut.isPending}
+            >
+              Lưu
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={unlinkOpen}
+        onOpenChange={setUnlinkOpen}
+        title="Gỡ liên kết tài khoản?"
+        description={`Tài khoản @${linkedAccount?.username ?? ''} sẽ tách khỏi nhân viên này. Tài khoản không bị xóa.`}
+        danger
+        confirmText="Gỡ liên kết"
+        onConfirm={unlinkAccount}
+      />
     </div>
   )
 }
