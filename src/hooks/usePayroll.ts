@@ -7,6 +7,7 @@ import type {
   IPayrollPeriod,
   IPayrollReport,
   IPayrollRow,
+  ITransferBatch,
 } from '@/types/PayrollType'
 
 const PERIODS_KEY = ['payroll-periods'] as const
@@ -113,6 +114,13 @@ export function useAddPayrollItem() {
       qc.invalidateQueries({ queryKey: ['payroll'] })
       qc.invalidateQueries({ queryKey: ['payroll-detail'] })
     },
+  })
+}
+
+export function useTransferBatch() {
+  return useMutation({
+    mutationFn: (vars: { periodId: string; data: ITransferBatch }) =>
+      payrollApi.transferBatch(vars.periodId, vars.data),
   })
 }
 

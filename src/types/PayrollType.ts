@@ -31,6 +31,18 @@ export interface ICreatePeriod {
   name: string
   fromDate: string
   toDate: string
+  // Working weekdays (1=Mon … 7=Sun) and standard hours/day (guide §8).
+  workingDays: number[]
+  standardHoursPerDay: number
+}
+
+// POST /api/payrolls/{periodId}/transfer-batch — returns an .xlsx file
+// (guide §10). transactionType/feeType are bank-template enum numbers.
+export interface ITransferBatch {
+  sourceAccount: string
+  description: string
+  transactionType: number
+  feeType: number
 }
 
 export interface IPayrollRow {

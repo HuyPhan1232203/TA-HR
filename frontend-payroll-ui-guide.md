@@ -1,31 +1,28 @@
-# Tài Liệu FE Tổng Hợp (Attendance + Payroll)
+# FE Development Guide (TA Backend)
 
-Tài liệu này là bản tổng hợp chính cho FE, bám theo backend hiện tại trong `backend/src/HR.Api`.
+Tài liệu này là tài liệu chính cho FE theo code backend hiện tại.
 
-## 1. Phạm vi hệ thống
+## 1. Scope hệ thống
 
-Các module đang active:
+Module đang dùng:
 
-- Auth / RBAC
+- Auth + RBAC
 - Departments
 - Employees
 - Attendance + Shift Config + Shift Assignment
-- Attendance Self-service + Approval Workflow
-- Employee Salary Rates
-- Payroll Periods + Payrolls + Payroll Reports
-- Audit Logs
+- My Attendance (self-service)
+- Holiday calendar
+- Overtime request + approval + comp-time allocation
+- Employee salary rates
+- Payroll periods + payrolls + reports + transfer batch export
+- Audit logs
 
-Không còn module `Production` (Products, Operations, ProductOperationRates, ProductionOutputs).
+Module `Production` đã loại bỏ.
 
-## 2. Quy ước bắt buộc cho FE
+## 2. Quy ước chung
 
-### 2.1 Auth header
-
-```http
-Authorization: Bearer <access-token>
-```
-
-### 2.2 Envelope response
+- Authorization header: `Bearer <token>`
+- Response envelope:
 
 ```json
 {
@@ -35,203 +32,221 @@ Authorization: Bearer <access-token>
 }
 ```
 
-### 2.3 HTTP status cần xử lý
+- Enum trả về dạng số (không trả `ToString`).
+- FE xử lý status chính: `200`, `400`, `401`, `403`, `404`, `409`.
 
-- `200`: thành công
-- `400`: validation lỗi
-- `401`: chưa đăng nhập / token sai
-- `403`: không đủ quyền
-- `404`: không tìm thấy
-- `409`: conflict nghiệp vụ
+## 3. Auth + RBAC
 
-### 2.4 Enum trả về dạng số
-
-FE map enum theo số, không kỳ vọng `ToString()`.
-
-## 3. Luồng triển khai FE tối ưu
-
-### Bước 1: Auth + Permission bootstrap
-
-API:
+API chính:
 
 - `POST /api/auth/login`
 - `GET /api/auth/me`
 - `GET /api/auth/my-permissions`
+- `GET /api/permissions`
+- `GET /api/roles`
+- `POST /api/roles`
+- `PUT /api/roles/{roleId}`
 
-FE cần lưu:
-
-- `accessToken`
-- `currentUser` (`accountId`, `employeeId`, ...)
-- `permissions: string[]`
-
-### Bước 2: Master data
-
-API:
-
-- `GET/POST/PUT/DELETE /api/departments`
-- `GET/POST/PUT/DELETE /api/employees`
-
-### Bước 3: Tạo account cho employee
+### Rule gán role cho account employee
 
 API:
 
 - `POST /api/employees/{employeeId}/account`
 
-Contract bắt buộc:
-
-- `roleIds` là bắt buộc, FE phải chọn ít nhất 1 role.
-- `password` có thể bỏ trống (`null` hoặc rỗng), backend tự sinh `<username>@123`.
-
-Request mẫu:
+Request:
 
 ```json
 {
   "username": "nv001",
   "password": "123456",
-  "roleIds": ["role-guid-employee"]
+  "roleIds": []
 }
 ```
 
-### Bước 4: Shift config + gán ca theo nhân viên
+Rule backend:
+
+- Nếu `roleIds` rỗng/null: tự gán role `employee`.
+- Nếu `password` rỗng/null: tự sinh `<username>@123`.
+- Nếu `roleIds` có dữ liệu: backend validate tất cả role tồn tại.
+
+## 4. Employees
 
 API:
 
-- `GET /api/attendance-shift-configs`
-- `POST /api/attendance-shift-configs`
-- `DELETE /api/attendance-shift-configs/{id}`
-- `GET /api/employees/{employeeId}/shift-assignments`
-- `POST /api/employees/{employeeId}/shift-assignments`
+- `GET /api/employees`
+- `POST /api/employees`
+- `PUT /api/employees/{id}`
+- `DELETE /api/employees/{id}`
 
-Khuyến nghị FE:
+### Field ngân hàng đã hỗ trợ
 
-- Cache danh sách ca làm sau login.
-- Dùng sessions của ca để tự tính công phía FE.
+- `bankAccountNumber`
+- `bankAccountName`
+- `bankBranchName`
+- `bankPartnerEmail`
 
-### Bước 5: Attendance admin
+Các field này dùng cho export chuyển khoản payroll.
+
+### Salary type
+
+Hiện chỉ hỗ trợ `FixedMonthly` (`1`).
+
+## 5. Attendance
+
+### 5.1 Admin attendance
 
 API:
 
-- `GET /api/attendances?employeeId=&fromDate=&toDate=`
+- `GET /api/attendances`
 - `POST /api/attendances`
 - `DELETE /api/attendances/{id}`
 
-Contract thời gian bắt buộc:
+Rule thời gian:
 
-- `checkIn` / `checkOut` dùng format `HH:mm`.
-- Không gửi ISO datetime cho create attendance.
+- `checkIn`, `checkOut` input format `HH:mm`.
+- Response attendance cũng trả `HH:mm` cho check-in/check-out.
 
-Regex FE nên validate:
+Regex FE nên dùng:
 
 - `^([01]\d|2[0-3]):[0-5]\d$`
 
-### Bước 6: Attendance self-service
+### 5.2 Self attendance
 
 API:
 
 - `POST /api/my-attendance/check-in`
 - `POST /api/my-attendance/check-out`
-- `POST /api/my-attendance/adjustment-requests`
-- `GET /api/my-attendance/adjustment-requests`
+- `GET /api/my-attendance/attendances?fromDate=&toDate=`
 
-Enum request:
-
-- `requestType`: `1 = LateArrival`, `2 = EarlyLeave`
-
-### Bước 7: Approval workflow (HR/Manager/Admin)
+### 5.3 Late/Early request
 
 API:
 
-- `GET /api/attendance-adjustment-requests?status=&fromDate=&toDate=`
+- `POST /api/my-attendance/adjustment-requests`
+- `GET /api/my-attendance/adjustment-requests`
+- `GET /api/attendance-adjustment-requests`
 - `POST /api/attendance-adjustment-requests/{id}/approve`
 - `POST /api/attendance-adjustment-requests/{id}/reject`
 
-Enum status:
-
-- `1 = Pending`, `2 = Approved`, `3 = Rejected`
-
-Rule:
-
-- Chỉ xử lý được đơn `Pending`.
-- Khi reject, `reviewNote` bắt buộc.
-
-### Bước 8: Payroll flow
+## 6. Holiday calendar
 
 API:
 
-- Salary rates: `GET/POST/PUT/DELETE /api/employee-salary-rates`
-- Payroll periods: `GET/POST /api/payroll-periods`, `POST /{id}/lock`, `POST /{id}/paid`, `DELETE /{id}`
-- Payrolls: `POST /api/payrolls/generate`, `GET /api/payrolls/{periodId}`, `GET /api/payrolls/{periodId}/employees/{employeeId}`, `POST /api/payrolls/{payrollId}/confirm`, `POST /api/payrolls/{payrollId}/items`
-- Reports: `GET /api/payroll-reports/periods/{periodId}`
+- `GET /api/holidays?fromDate=&toDate=`
+- `POST /api/holidays`
+- `DELETE /api/holidays/{id}`
 
-Flow chuẩn:
+Holiday có cờ `isPaidLeave` để ảnh hưởng công chuẩn kỳ lương.
 
-1. Tạo kỳ lương.
-2. Chốt dữ liệu attendance.
-3. Generate payroll.
-4. Điều chỉnh items (nếu cần).
-5. Confirm payroll.
-6. Lock kỳ lương.
-7. Mark paid.
+## 7. Overtime workflow (tách khỏi check-in/check-out)
 
-## 4. Permission quan trọng cho route guard FE
+API employee:
 
-- `accounts.*`
-- `roles.*`
-- `permissions.read`
-- `hr.departments.*`
-- `hr.employees.*`
-- `attendance.*`
-- `attendance.self.*`
-- `attendance.request.*`
-- `payroll.salary-rates.*`
-- `payroll.periods.*`
-- `payroll.*`
-- `payroll.reports.read`
-- `system.audit-logs.read`
+- `POST /api/my-attendance/overtime-requests`
+- `GET /api/my-attendance/overtime-requests`
 
-## 5. RBAC gán role ngắn gọn (cho FE)
+API manager/HR:
 
-- Lấy quyền: `GET /api/permissions`
-- Lấy role: `GET /api/roles`
-- Tạo/cập nhật role:
-  - `POST /api/roles`
-  - `PUT /api/roles/{roleId}`
-- Tạo account cho employee:
-  - `POST /api/employees/{employeeId}/account`
-  - `roleIds` bắt buộc
-- Verify sau khi gán:
-  - login account vừa tạo
-  - gọi `GET /api/auth/my-permissions`
-  - đối chiếu quyền với menu/action FE
+- `GET /api/overtime-requests?status=&fromDate=&toDate=`
+- `POST /api/overtime-requests/{id}/approve`
+- `POST /api/overtime-requests/{id}/reject`
 
-## 6. Calendar dashboard (tuỳ chọn mở rộng)
+Approve request cần:
 
-Hiện tại FE có thể dùng:
+- `compensationPayrollPeriodId` (kỳ lương dùng để bù giờ).
 
-- `GET /api/attendances?employeeId=&fromDate=&toDate=`
+Ý nghĩa nghiệp vụ:
 
-Nếu cần tối ưu dashboard theo tháng, có thể đề xuất backend endpoint aggregate:
+- Tăng ca không cộng trực tiếp từ check-in/check-out.
+- Chỉ khi đơn tăng ca được duyệt mới tạo `comp-time allocation` vào kỳ lương được chọn.
 
-- `GET /api/attendances/dashboard?employeeId=&year=2026&month=5`
+## 8. Payroll period config + công thức tính lương
 
-Mục tiêu response:
+### 8.1 Config kỳ lương
 
-- `summary` theo tháng
-- `days[]` để render lịch
-- `employeeChart[]` cho biểu đồ theo nhân viên
+API:
 
-## 7. Checklist triển khai FE
+- `POST /api/payroll-periods`
 
-1. Dựng API client + interceptor Bearer token.
-2. Làm auth store (`login`, `me`, `my-permissions`).
-3. Dựng route/menu guard theo permission.
-4. Triển khai màn employees + create employee account (role bắt buộc).
-5. Triển khai shift config + shift assignment.
-6. Triển khai attendance admin theo format `HH:mm`.
-7. Triển khai self-service + approval workflow.
-8. Triển khai payroll flow.
-9. Kiểm thử E2E tối thiểu với 3 role: `employee`, `reviewer`, `hr/admin`.
+Field mới:
 
----
+- `workingDays`: danh sách ngày làm việc trong tuần (`1=Mon ... 7=Sun`), ví dụ T2-T7 = `[1,2,3,4,5,6]`
+- `standardHoursPerDay`: số giờ chuẩn/ngày, ví dụ `8`
 
-Nếu backend đổi contract, cập nhật file này trước rồi mới triển khai FE để tránh lệch luồng.
+### 8.2 Công thức thực thi trong backend
+
+Khi `POST /api/payrolls/generate`, backend tính:
+
+- `StandardWorkingDays` = số ngày theo `workingDays` trong khoảng kỳ lương, trừ các ngày `holiday.isPaidLeave = true`
+- `StandardHoursMonth` = `StandardWorkingDays × standardHoursPerDay`
+- `ActualHours` = tổng giờ chấm công đã duyệt, có chặn theo ngày: `min(workingHours, standardHoursPerDay)`
+- `CompHours` = tổng giờ bù từ overtime đã duyệt và gán vào kỳ lương
+- `PayableHours` = `min(StandardHoursMonth, ActualHours + CompHours)`
+
+Lương tháng thực nhận:
+
+- Nếu `StandardHoursMonth > 0`:
+  - `Salary = MonthlySalary × (PayableHours / StandardHoursMonth)`
+- Nếu `StandardHoursMonth = 0`:
+  - `Salary = MonthlySalary`
+
+Tức là cùng bản chất với công thức trừ giờ thiếu:
+
+- `HourRate = MonthlySalary / StandardHoursMonth`
+- `MissingHours = StandardHoursMonth - PayableHours`
+- `Salary = MonthlySalary - (MissingHours × HourRate)`
+
+## 9. Salary rates
+
+API:
+
+- `GET /api/employee-salary-rates/{employeeId}`
+- `POST /api/employee-salary-rates`
+- `PUT /api/employee-salary-rates/{id}`
+- `DELETE /api/employee-salary-rates/{id}`
+
+Rule:
+
+- Chỉ cho phép `FixedMonthly`.
+- `MonthlySalary > 0` bắt buộc.
+- `DailyRate`, `HourlyRate` không dùng.
+
+## 10. Export chuyển khoản theo template
+
+API:
+
+- `POST /api/payrolls/transfer-batch?year=2026&month=6`
+- `POST /api/payrolls/{periodId}/transfer-batch`
+
+Request:
+
+```json
+{
+  "sourceAccount": "03001017000323",
+  "description": "Luong thang 06/2026",
+  "transactionType": 2,
+  "feeType": 1
+}
+```
+
+Ghi chú:
+
+- Backend sẽ trả file `.xlsx` đúng format template.
+- Backend tự dùng template mặc định trên server, FE không truyền path.
+- Backend chặn export nếu nhân viên còn thiếu thông tin ngân hàng bắt buộc (`bankAccountNumber`, `bankAccountName`, `bankBranchName`).
+- Với endpoint `transfer-batch?year=&month=`:
+  - nếu không tìm thấy kỳ lương: trả `404`
+  - nếu trùng nhiều kỳ trong cùng tháng: trả `409`, FE gọi endpoint theo `periodId`.
+
+## 11. FE rollout thứ tự khuyến nghị
+
+1. Login + permission store + route guard.
+2. Employee CRUD + tạo account employee.
+3. Shift config + shift assignment.
+4. Attendance admin + self attendance.
+5. Late/Early request + approval.
+6. Holiday management.
+7. Overtime request + approval + chọn kỳ bù giờ.
+8. Payroll period config (workingDays + standardHoursPerDay).
+9. Generate/confirm/lock/paid payroll.
+10. Export transfer batch và gửi file cho kế toán/ngân hàng.

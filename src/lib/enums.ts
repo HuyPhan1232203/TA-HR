@@ -9,6 +9,7 @@ import type {
   AdjustmentRequestType,
 } from '@/types/MyAttendanceType'
 import type { EmployeeStatus, SalaryCalculationType } from '@/types/EmployeeType'
+import type { OvertimeStatus } from '@/types/OvertimeType'
 import type {
   PayrollItemType,
   PayrollStatus,
@@ -49,6 +50,12 @@ export const REQUEST_STATUSES = [
   'Approved',
   'Rejected',
 ] as const satisfies readonly AdjustmentRequestStatus[]
+
+export const OVERTIME_STATUSES = [
+  'Pending',
+  'Approved',
+  'Rejected',
+] as const satisfies readonly OvertimeStatus[]
 
 export const PERIOD_STATUSES = [
   'Draft',

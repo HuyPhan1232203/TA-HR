@@ -70,6 +70,10 @@ const blankEmployee: IEmployee = {
   positionName: '',
   salaryCalculationType: 'FixedMonthly',
   status: 'Active',
+  bankAccountNumber: '',
+  bankAccountName: '',
+  bankBranchName: '',
+  bankPartnerEmail: '',
 }
 
 export function EmployeesScreen() {
@@ -407,6 +411,51 @@ function EmployeeDrawer({ drawer, onClose, onSave, saving }: EmployeeDrawerProps
               </SelectContent>
             </Select>
           </div>
+          </div>
+          <div className="pt-2">
+            <div className="text-sm font-medium mb-2">Thông tin ngân hàng</div>
+            <div className="text-xs text-muted-foreground mb-3">
+              Dùng cho xuất file chuyển khoản lương.
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Số tài khoản</Label>
+                <Input
+                  value={form.bankAccountNumber ?? ''}
+                  onChange={(e) =>
+                    setForm({ ...form, bankAccountNumber: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Tên chủ tài khoản</Label>
+                <Input
+                  value={form.bankAccountName ?? ''}
+                  onChange={(e) =>
+                    setForm({ ...form, bankAccountName: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Chi nhánh</Label>
+                <Input
+                  value={form.bankBranchName ?? ''}
+                  onChange={(e) =>
+                    setForm({ ...form, bankBranchName: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Email nhận uỷ nhiệm chi</Label>
+                <Input
+                  type="email"
+                  value={form.bankPartnerEmail ?? ''}
+                  onChange={(e) =>
+                    setForm({ ...form, bankPartnerEmail: e.target.value })
+                  }
+                />
+              </div>
+            </div>
           </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
+  Banknote,
   BarChart3,
   Check,
   DollarSign,
@@ -34,6 +35,14 @@ import {
   SheetFooter,
 } from '@/components/ui/sheet'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { ConfirmDialog, type ConfirmState } from '@/components/ui/confirm-dialog'
 import { toast } from 'sonner'
 import {
@@ -55,6 +64,7 @@ import {
   useAddPayrollItem,
   useLockPeriod,
   useMarkPaid,
+  useTransferBatch,
 } from '@/hooks/usePayroll'
 import type {
   IPayrollRow,
@@ -159,6 +169,50 @@ export function PayrollRunsScreen() {
   const detail = detailQuery.data
   const confirmMut = useConfirmPayroll()
   const addItemMut = useAddPayrollItem()
+  const transferMut = useTransferBatch()
+
+  const [transferOpen, setTransferOpen] = useState(false)
+  const [sourceAccount, setSourceAccount] = useState('')
+  const [transferDesc, setTransferDesc] = useState('')
+  const [transactionType, setTransactionType] = useState('2')
+  const [feeType, setFeeType] = useState('1')
+
+  const openTransfer = () => {
+    setSourceAccount('')
+    setTransferDesc(period ? `Luong ${period.name}` : '')
+    setTransactionType('2')
+    setFeeType('1')
+    setTransferOpen(true)
+  }
+
+  const submitTransfer = async () => {
+    if (!periodId) return
+    if (!sourceAccount.trim()) {
+      toast.error('Nhập số tài khoản nguồn')
+      return
+    }
+    if (!transferDesc.trim()) {
+      toast.error('Nhập nội dung chuyển khoản')
+      return
+    }
+    try {
+      await transferMut.mutateAsync({
+        periodId,
+        data: {
+          sourceAccount: sourceAccount.trim(),
+          description: transferDesc.trim(),
+          transactionType: Number(transactionType),
+          feeType: Number(feeType),
+        },
+      })
+      toast.success('Đã tạo file chuyển khoản')
+      setTransferOpen(false)
+    } catch (e) {
+      toast.error('Không thể xuất chuyển khoản', {
+        description: e instanceof Error ? e.message : undefined,
+      })
+    }
+  }
 
   const blankAdjust = {
     type: 'Allowance' as PayrollItemType,
@@ -362,6 +416,11 @@ export function PayrollRunsScreen() {
             <Button variant="outline">
               <Download className="size-4" /> Xuất Excel
             </Button>
+            {rows.length > 0 && (
+              <Button variant="outline" onClick={openTransfer}>
+                <Banknote className="size-4" /> Xuất chuyển khoản
+              </Button>
+            )}
             {(period.status === 'Open' || period.status === 'Draft') && (
               <Button onClick={generate} disabled={generateMut.isPending}>
                 {generateMut.isPending ? (
@@ -683,6 +742,65 @@ export function PayrollRunsScreen() {
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={transferOpen} onOpenChange={setTransferOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xuất file chuyển khoản</DialogTitle>
+            <DialogDescription>
+              Tạo file .xlsx theo template ngân hàng cho {period.name}. Nhân viên
+              thiếu thông tin ngân hàng bắt buộc sẽ bị backend chặn.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label>Tài khoản nguồn *</Label>
+              <Input
+                value={sourceAccount}
+                onChange={(e) => setSourceAccount(e.target.value)}
+                placeholder="03001017000323"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Nội dung chuyển khoản *</Label>
+              <Input
+                value={transferDesc}
+                onChange={(e) => setTransferDesc(e.target.value)}
+                placeholder="Luong thang 06/2026"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Loại giao dịch</Label>
+                <Input
+                  type="number"
+                  value={transactionType}
+                  onChange={(e) => setTransactionType(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Loại phí</Label>
+                <Input
+                  type="number"
+                  value={feeType}
+                  onChange={(e) => setFeeType(e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTransferOpen(false)}>
+              Hủy
+            </Button>
+            <Button
+              onClick={() => void submitTransfer()}
+              disabled={transferMut.isPending}
+            >
+              {transferMut.isPending ? 'Đang tạo…' : 'Tải file'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ConfirmDialog
         open={!!confirmState}

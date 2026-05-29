@@ -70,20 +70,36 @@ function statusLabel(status: PeriodStatus) {
 
 const WEEKDAY_LABELS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7']
 
+// Weekday options for the config picker: guide numbering (1=Mon … 7=Sun).
+const WORKDAY_OPTIONS: { num: number; label: string }[] = [
+  { num: 1, label: 'T2' },
+  { num: 2, label: 'T3' },
+  { num: 3, label: 'T4' },
+  { num: 4, label: 'T5' },
+  { num: 5, label: 'T6' },
+  { num: 6, label: 'T7' },
+  { num: 7, label: 'CN' },
+]
+
+// JS getDay (0=Sun … 6=Sat) → guide weekday (1=Mon … 7=Sun).
+const toGuideWeekday = (jsDay: number) => (jsDay === 0 ? 7 : jsDay)
+
 function parseDay(s: string): Date | null {
   if (!s) return null
   const d = parse(s, 'yyyy-MM-dd', new Date())
   return isValid(d) ? d : null
 }
 
-// Preview of the selected payroll period: real calendar(s) for the range,
-// working days = Mon–Sat (T2–T7), rest = Sunday (CN).
+// Preview of the selected payroll period: real calendar(s) for the range.
+// Working days = those whose weekday is in `workingDays` (guide numbering).
 function MiniCalendar({
   fromDate,
   toDate,
+  workingDays: workdaySet,
 }: {
   fromDate: string
   toDate: string
+  workingDays: number[]
 }) {
   const from = parseDay(fromDate)
   const to = parseDay(toDate)
@@ -96,9 +112,10 @@ function MiniCalendar({
     )
   }
 
+  const isWorkday = (d: Date) => workdaySet.includes(toGuideWeekday(getDay(d)))
   const days = eachDayOfInterval({ start: from, end: to })
-  const restDays = days.filter((d) => getDay(d) === 0).length
-  const workingDays = days.length - restDays
+  const workingDays = days.filter(isWorkday).length
+  const restDays = days.length - workingDays
   const months = eachMonthOfInterval({ start: from, end: to })
 
   return (
@@ -130,10 +147,10 @@ function MiniCalendar({
                 ))}
                 {cells.map((d) => {
                   const inRange = isWithinInterval(d, { start: from, end: to })
-                  const isSunday = getDay(d) === 0
+                  const rest = !isWorkday(d)
                   const cls = !inRange
                     ? 'text-muted-foreground/40'
-                    : isSunday
+                    : rest
                       ? 'bg-muted text-muted-foreground'
                       : 'bg-primary/15 text-primary font-medium'
                   return (
@@ -151,7 +168,7 @@ function MiniCalendar({
         })}
       </div>
       <div className="text-xs text-muted-foreground">
-        Bao gồm {workingDays} ngày làm việc (T2–T7), {restDays} ngày nghỉ (CN).{' '}
+        Bao gồm {workingDays} ngày làm việc, {restDays} ngày nghỉ.{' '}
         <Clock className="inline size-3" />
       </div>
     </div>
@@ -164,7 +181,16 @@ export function SalaryPeriodsScreen() {
   const [name, setName] = useState('')
   const [fromDate, setFromDate] = useState('')
   const [toDate, setToDate] = useState('')
+  const [workingDays, setWorkingDays] = useState<number[]>([1, 2, 3, 4, 5, 6])
+  const [standardHoursPerDay, setStandardHoursPerDay] = useState('8')
   const [statusFilter, setStatusFilter] = useState('all')
+
+  const toggleWorkday = (num: number) =>
+    setWorkingDays((prev) =>
+      prev.includes(num)
+        ? prev.filter((n) => n !== num)
+        : [...prev, num].sort((a, b) => a - b),
+    )
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null)
 
   const navigate = useNavigate()
@@ -239,12 +265,29 @@ export function SalaryPeriodsScreen() {
       toast.error('Vui lòng nhập đủ tên kỳ và khoảng thời gian')
       return
     }
+    if (workingDays.length === 0) {
+      toast.error('Chọn ít nhất một ngày làm việc trong tuần')
+      return
+    }
+    const hours = Number(standardHoursPerDay)
+    if (!Number.isFinite(hours) || hours <= 0) {
+      toast.error('Số giờ chuẩn/ngày phải lớn hơn 0')
+      return
+    }
     try {
-      await createMut.mutateAsync({ name, fromDate, toDate })
+      await createMut.mutateAsync({
+        name,
+        fromDate,
+        toDate,
+        workingDays,
+        standardHoursPerDay: hours,
+      })
       toast.success('Đã tạo kỳ lương', { description: name })
       setName('')
       setFromDate('')
       setToDate('')
+      setWorkingDays([1, 2, 3, 4, 5, 6])
+      setStandardHoursPerDay('8')
       setOpen(false)
     } catch (e) {
       toast.error('Không thể tạo kỳ lương', {
@@ -378,10 +421,43 @@ export function SalaryPeriodsScreen() {
                   <DatePicker value={toDate} onChange={setToDate} />
                 </div>
               </div>
+              <div className="space-y-1.5">
+                <Label>Ngày làm việc trong tuần</Label>
+                <div className="flex flex-wrap gap-1">
+                  {WORKDAY_OPTIONS.map((opt) => (
+                    <Button
+                      key={opt.num}
+                      type="button"
+                      variant={
+                        workingDays.includes(opt.num) ? 'default' : 'outline'
+                      }
+                      size="sm"
+                      onClick={() => toggleWorkday(opt.num)}
+                    >
+                      {opt.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Số giờ chuẩn / ngày *</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  step={0.5}
+                  value={standardHoursPerDay}
+                  onChange={(e) => setStandardHoursPerDay(e.target.value)}
+                  placeholder="8"
+                />
+              </div>
             </div>
             <div>
               <Label className="mb-2 block">Xem trước</Label>
-              <MiniCalendar fromDate={fromDate} toDate={toDate} />
+              <MiniCalendar
+                fromDate={fromDate}
+                toDate={toDate}
+                workingDays={workingDays}
+              />
             </div>
           </div>
           <DialogFooter>

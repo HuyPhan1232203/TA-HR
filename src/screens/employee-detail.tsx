@@ -348,6 +348,22 @@ export function EmployeeDetailScreen() {
                     value={SALARY_LABELS[employee.salaryCalculationType]}
                   />
                   <Row label="Trạng thái" value={STATUS_LABELS[employee.status]} />
+                  <Row
+                    label="Số tài khoản"
+                    value={employee.bankAccountNumber || '—'}
+                  />
+                  <Row
+                    label="Chủ tài khoản"
+                    value={employee.bankAccountName || '—'}
+                  />
+                  <Row
+                    label="Chi nhánh"
+                    value={employee.bankBranchName || '—'}
+                  />
+                  <Row
+                    label="Email UNC"
+                    value={employee.bankPartnerEmail || '—'}
+                  />
                 </CardBody>
               </Card>
               <Card>

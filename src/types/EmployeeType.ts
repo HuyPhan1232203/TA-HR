@@ -14,6 +14,11 @@ export interface IEmployee {
   positionName: string
   salaryCalculationType: SalaryCalculationType
   status: EmployeeStatus
+  // Bank info for payroll transfer export (guide §4).
+  bankAccountNumber?: string
+  bankAccountName?: string
+  bankBranchName?: string
+  bankPartnerEmail?: string
 }
 
 // POST /api/employees — no status (server defaults to Active)

@@ -8,6 +8,7 @@ import type {
   IPayrollPeriod,
   IPayrollReport,
   IPayrollRow,
+  ITransferBatch,
 } from '@/types/PayrollType'
 import {
   PAYROLL_ITEM_TYPES,
@@ -173,6 +174,52 @@ export const payrollApi = {
         await axiosInstance.post(`/payrolls/${payrollId}/items`, body)
       return res.data
     } catch (error) {
+      console.error(error)
+      throw error
+    }
+  },
+
+  // POST /api/payrolls/{periodId}/transfer-batch — downloads the .xlsx file.
+  // Backend rejects (400/409) if employees miss required bank info (guide §10).
+  transferBatch: async (
+    periodId: string,
+    data: ITransferBatch,
+  ): Promise<void> => {
+    try {
+      const res = await axiosInstance.post(
+        `/payrolls/${periodId}/transfer-batch`,
+        data,
+        { responseType: 'blob' },
+      )
+      const blob = res.data as Blob
+      const cd = res.headers['content-disposition'] as string | undefined
+      let filename = `transfer-batch-${periodId}.xlsx`
+      const m = cd && /filename\*?=(?:UTF-8'')?["']?([^"';]+)/i.exec(cd)
+      if (m) filename = decodeURIComponent(m[1])
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      // With responseType 'blob' an error body is also a Blob — read it back
+      // so the JSON `message` can be surfaced to the user.
+      const blobData = (error as { response?: { data?: unknown } }).response
+        ?.data
+      if (blobData instanceof Blob) {
+        const text = await blobData.text()
+        let message = text || 'Xuất chuyển khoản thất bại'
+        try {
+          const parsed = JSON.parse(text) as { message?: string }
+          if (parsed.message) message = parsed.message
+        } catch {
+          // body wasn't JSON — keep the raw text
+        }
+        throw new Error(message, { cause: error })
+      }
       console.error(error)
       throw error
     }

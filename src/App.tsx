@@ -14,8 +14,10 @@ import { EmployeeDetailScreen } from '@/screens/employee-detail'
 import { AttendancesScreen } from '@/screens/attendances'
 import { MyAttendanceScreen } from '@/screens/my-attendance'
 import { ShiftConfigsScreen } from '@/screens/shift-configs'
+import { HolidaysScreen } from '@/screens/holidays'
 import { SalaryPeriodsScreen } from '@/screens/salary-periods'
 import { PayrollRunsScreen } from '@/screens/payroll-runs'
+import { OvertimeApprovalsScreen } from '@/screens/overtime-approvals'
 import { ReportsScreen } from '@/screens/reports'
 import { SalaryRatesScreen } from '@/screens/salary-rates'
 import { AccountsScreen } from '@/screens/accounts'
@@ -81,6 +83,14 @@ function App() {
                 }
               />
               <Route
+                path="/holidays"
+                element={
+                  <ProtectedRoute perms={['attendance.read']}>
+                    <HolidaysScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/my-attendance"
                 element={
                   <ProtectedRoute
@@ -116,6 +126,14 @@ function App() {
                 element={
                   <ProtectedRoute perms={['payroll.read']}>
                     <PayrollRunsScreen />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/overtime-approvals"
+                element={
+                  <ProtectedRoute perms={['attendance.read']}>
+                    <OvertimeApprovalsScreen />
                   </ProtectedRoute>
                 }
               />
