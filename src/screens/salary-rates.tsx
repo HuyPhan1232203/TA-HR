@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Edit, Plus, Trash2 } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ArrowLeft, Edit, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '../components/ui/button'
 import { Card } from '../components/ui/card'
@@ -242,6 +242,13 @@ export function SalaryRatesScreen() {
               </SelectContent>
             </Select>
           </div>
+          {employeeId && (
+            <Button variant="ghost" size="sm" asChild className="mt-2 -ml-2">
+              <Link to={`/employees/${employeeId}`}>
+                <ArrowLeft className="size-4" /> Về hồ sơ nhân viên
+              </Link>
+            </Button>
+          )}
         </div>
 
         {!employeeId ? (

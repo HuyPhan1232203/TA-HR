@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { Edit, Plus } from 'lucide-react'
 import { Button } from '../components/ui/button'
 import {
@@ -15,6 +16,7 @@ import { PageHeader } from '../components/layout/page-header'
 import { toast } from 'sonner'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useRoles, useUpdateRole } from '@/hooks/useRoles'
+import { useAccounts } from '@/hooks/useAccounts'
 import type { IPermission } from '@/types/PermissionType'
 import type { IRole } from '@/types/RoleType'
 import { cn } from '../lib/utils'
@@ -34,7 +36,10 @@ export function RolesScreen() {
     return Array.from(map.entries())
   }, [permissions])
 
-  const [selectedId, setSelectedId] = useState<string>('')
+  const [searchParams] = useSearchParams()
+  const [selectedId, setSelectedId] = useState<string>(
+    searchParams.get('roleId') ?? '',
+  )
   const selected = roles.find((r) => r.id === selectedId) ?? roles[0]
 
   return (
@@ -114,6 +119,10 @@ interface PermissionEditorProps {
 
 function PermissionEditor({ role, groups, permissions }: PermissionEditorProps) {
   const updateRole = useUpdateRole()
+  const { data: accounts = [] } = useAccounts()
+  const accountCount = accounts.filter((a) =>
+    a.roles.includes(role.code),
+  ).length
 
   // Local editable set of granted permission CODES, seeded from the role.
   // Remounted via `key={role.id}` upstream, so the initializer reseeds on
@@ -163,6 +172,11 @@ function PermissionEditor({ role, groups, permissions }: PermissionEditorProps) 
             </CardDesc>
           </div>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to={`/system/accounts?role=${role.code}`}>
+                Tài khoản với vai trò này ({accountCount})
+              </Link>
+            </Button>
             <Button variant="outline" size="sm">
               <Edit className="size-4" /> Sửa
             </Button>
