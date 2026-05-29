@@ -2,8 +2,8 @@ import { NavLink } from 'react-router-dom'
 import { LogOut } from 'lucide-react'
 import { Avatar } from '../ui/avatar'
 import { useAuth } from '../auth-context'
-import { hasAnyPermission } from '../../lib/permissions'
-import { NAV_GROUPS } from './nav'
+import { canAccess } from '../../lib/permissions'
+import { NAV_GROUPS, ROUTE_ACCESS } from './nav'
 import { cn } from '../../lib/utils'
 
 export function Sidebar() {
@@ -13,9 +13,7 @@ export function Sidebar() {
 
   const groups = NAV_GROUPS.map((g) => ({
     ...g,
-    items: g.items.filter(
-      (item) => !item.perms || hasAnyPermission(session, item.perms),
-    ),
+    items: g.items.filter((item) => canAccess(session, ROUTE_ACCESS[item.to])),
   })).filter((g) => g.items.length > 0)
 
   return (
