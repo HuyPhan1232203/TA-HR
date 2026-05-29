@@ -19,7 +19,7 @@ export function ProtectedRoute({ children, access }: ProtectedRouteProps) {
   }
 
   if (access && !canAccess(session, access)) {
-    const needed = access.perms ?? access.roles ?? []
+    const needed = [...(access.perms ?? []), ...(access.roles ?? [])]
     return (
       <Empty
         icon={ShieldAlert}
