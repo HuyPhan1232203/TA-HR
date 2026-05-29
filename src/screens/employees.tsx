@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Download, Eye, Plus, Search } from 'lucide-react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Button } from '../components/ui/button'
-import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import {
@@ -38,6 +37,7 @@ import type {
   IEmployee,
   SalaryCalculationType,
 } from '@/types/EmployeeType'
+import TableWrapper from '@/components/ui/table-wrapper'
 
 type DrawerMode = 'create' | 'edit'
 
@@ -219,7 +219,7 @@ export function EmployeesScreen() {
         }
       />
 
-      <Card>
+      <TableWrapper>
         <FilterBar className="p-4 border-b mb-0">
           <div className="relative">
             <Search className="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -270,7 +270,7 @@ export function EmployeesScreen() {
             emptyMessage="Chưa có nhân viên nào"
           />
         </QueryState>
-      </Card>
+      </TableWrapper>
 
       <EmployeeDrawer
         key={drawer ? `${drawer.mode}-${drawer.employee.id}` : 'closed'}

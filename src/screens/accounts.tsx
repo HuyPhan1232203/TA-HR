@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { Edit, Plus, Search } from 'lucide-react'
 import { Button } from '../components/ui/button'
-import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import {
@@ -48,6 +47,7 @@ import type {
   IUpdateAccount,
 } from '@/types/AccountType'
 import { cn } from '../lib/utils'
+import TableWrapper from '@/components/ui/table-wrapper'
 
 interface EditableAccount {
   id?: string
@@ -166,7 +166,7 @@ export function AccountsScreen() {
         }
       />
 
-      <Card>
+      <TableWrapper>
         <div className="p-4 border-b flex items-center gap-3">
           <div className="relative">
             <Search className="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -302,7 +302,7 @@ export function AccountsScreen() {
             </TableBody>
           </Table>
         </QueryState>
-      </Card>
+      </TableWrapper>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl">

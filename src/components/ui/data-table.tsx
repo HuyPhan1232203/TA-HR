@@ -57,7 +57,7 @@ export function DataTable<TData>({
   const rows = table.getRowModel().rows
 
   return (
-    <div className="border border-black/10 dark:border-white/10">
+    <div>
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((hg) => (

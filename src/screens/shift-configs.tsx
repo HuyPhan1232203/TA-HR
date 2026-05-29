@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Plus, Trash2, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '../components/ui/button'
-import { Card } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
@@ -31,6 +30,7 @@ import {
   useShiftConfigs,
 } from '@/hooks/useShifts'
 import type { IAttendanceShiftConfig } from '@/types/ShiftType'
+import TableWrapper from '@/components/ui/table-wrapper'
 
 interface SessionRow {
   checkIn: string
@@ -114,7 +114,7 @@ export function ShiftConfigsScreen() {
       />
 
       <QueryState isLoading={isLoading} error={error}>
-        <Card>
+        <TableWrapper>
           <Table>
             <TableHeader>
               <TableRow>
@@ -172,7 +172,7 @@ export function ShiftConfigsScreen() {
               )}
             </TableBody>
           </Table>
-        </Card>
+        </TableWrapper>
       </QueryState>
 
       <Dialog open={open} onOpenChange={setOpen}>

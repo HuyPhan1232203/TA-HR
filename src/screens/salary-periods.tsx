@@ -12,7 +12,6 @@ import {
 } from 'date-fns'
 import { Check, Clock, Eye, Lock, Plus, Trash2 } from 'lucide-react'
 import { Button } from '../components/ui/button'
-import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import {
@@ -53,6 +52,7 @@ import {
 } from '@/hooks/usePayroll'
 import type { IPayrollPeriod, PeriodStatus } from '../types/PayrollType'
 import { fmtDate } from '../lib/format'
+import TableWrapper from '@/components/ui/table-wrapper'
 
 function statusVariant(status: PeriodStatus) {
   if (status === 'Open') return 'default' as const
@@ -308,7 +308,7 @@ export function SalaryPeriodsScreen() {
         }
       />
 
-      <Card>
+      <TableWrapper>
         <div className="p-4 border-b flex items-center justify-between">
           <div className="text-sm font-medium">Danh sách kỳ lương</div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -391,7 +391,7 @@ export function SalaryPeriodsScreen() {
             </TableBody>
           </Table>
         </QueryState>
-      </Card>
+      </TableWrapper>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-2xl">

@@ -3,7 +3,6 @@ import { Download, Edit, Filter, Plus, Search, Trash2, Users } from 'lucide-reac
 import { useNavigate } from 'react-router-dom'
 import type { ColumnDef } from '@tanstack/react-table'
 import { Button } from '../components/ui/button'
-import { Card } from '../components/ui/card'
 import { Input } from '../components/ui/input'
 import { Label } from '../components/ui/label'
 import {
@@ -34,6 +33,7 @@ import {
   useDeleteDepartment,
 } from '@/hooks/useDepartments'
 import type { IDepartment } from '@/types/DepartmentType'
+import TableWrapper from '@/components/ui/table-wrapper'
 
 interface EditableDepartment {
   id?: string
@@ -219,7 +219,7 @@ export function DepartmentsScreen() {
         }
       />
 
-      <Card>
+      <TableWrapper>
         <div className="p-4 flex items-center justify-between gap-3 border-b">
           <div className="relative">
             <Search className="size-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -247,7 +247,7 @@ export function DepartmentsScreen() {
             emptyMessage="Chưa có phòng ban nào"
           />
         </QueryState>
-      </Card>
+      </TableWrapper>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
