@@ -22,9 +22,6 @@ export interface NavItem {
   to: string
   label: string
   icon: LucideIcon
-  // When set, the item only shows if the user has any of these permissions.
-  // Items without `perms` are always visible.
-  perms?: string[]
 }
 
 export interface NavGroup {
@@ -46,17 +43,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { to: '/attendances', label: 'Chấm công', icon: CalendarDays },
       { to: '/shift-configs', label: 'Cấu hình ca', icon: Timer },
       { to: '/holidays', label: 'Ngày lễ', icon: CalendarOff },
-      {
-        to: '/my-attendance',
-        label: 'Chấm công của tôi',
-        icon: UserCheck,
-        perms: [
-          'attendance.self.check-in',
-          'attendance.self.check-out',
-          'attendance.self.request',
-          'attendance.self.request.read',
-        ],
-      },
+      { to: '/my-attendance', label: 'Chấm công của tôi', icon: UserCheck },
     ],
   },
   {
