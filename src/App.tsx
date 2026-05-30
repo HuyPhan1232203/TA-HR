@@ -2,10 +2,10 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { queryClient } from '@/lib/query-client'
-import { AuthProvider } from '@/components/auth-context'
+import { AuthProvider, useAuth } from '@/components/auth-context'
 import { AppShell } from '@/components/layout/app-shell'
 import { ProtectedRoute } from '@/components/protected-route'
-import { ROUTE_ACCESS } from '@/components/layout/nav'
+import { ROUTE_ACCESS, pickLandingRoute } from '@/components/layout/nav'
 import { LoginScreen } from '@/screens/login'
 import { ForbiddenScreen } from '@/screens/forbidden'
 import { DashboardScreen } from '@/screens/dashboard'
@@ -25,6 +25,11 @@ import { AccountsScreen } from '@/screens/accounts'
 import { RolesScreen } from '@/screens/roles'
 import { AuditLogsScreen } from '@/screens/audit-logs'
 
+function IndexRedirect() {
+  const { session } = useAuth()
+  return <Navigate to={pickLandingRoute(session)} replace />
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -41,8 +46,15 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<Navigate to="/dashboard" replace />} />
-              <Route path="/dashboard" element={<DashboardScreen />} />
+              <Route index element={<IndexRedirect />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <ProtectedRoute access={ROUTE_ACCESS['/dashboard']}>
+                    <DashboardScreen />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="/departments"
                 element={
