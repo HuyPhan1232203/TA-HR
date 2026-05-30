@@ -5,6 +5,7 @@ import { queryClient } from '@/lib/query-client'
 import { AuthProvider } from '@/components/auth-context'
 import { AppShell } from '@/components/layout/app-shell'
 import { ProtectedRoute } from '@/components/protected-route'
+import { ROUTE_ACCESS } from '@/components/layout/nav'
 import { LoginScreen } from '@/screens/login'
 import { ForbiddenScreen } from '@/screens/forbidden'
 import { DashboardScreen } from '@/screens/dashboard'
@@ -45,7 +46,7 @@ function App() {
               <Route
                 path="/departments"
                 element={
-                  <ProtectedRoute perms={['hr.departments.manage', 'hr.departments.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/departments']}>
                     <DepartmentsScreen />
                   </ProtectedRoute>
                 }
@@ -53,7 +54,7 @@ function App() {
               <Route
                 path="/employees"
                 element={
-                  <ProtectedRoute perms={['hr.employees.manage', 'hr.employees.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/employees']}>
                     <EmployeesScreen />
                   </ProtectedRoute>
                 }
@@ -61,7 +62,7 @@ function App() {
               <Route
                 path="/employees/:id"
                 element={
-                  <ProtectedRoute perms={['hr.employees.manage', 'hr.employees.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/employees']}>
                     <EmployeeDetailScreen />
                   </ProtectedRoute>
                 }
@@ -69,7 +70,7 @@ function App() {
               <Route
                 path="/attendances"
                 element={
-                  <ProtectedRoute perms={['attendance.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/attendances']}>
                     <AttendancesScreen />
                   </ProtectedRoute>
                 }
@@ -77,7 +78,7 @@ function App() {
               <Route
                 path="/shift-configs"
                 element={
-                  <ProtectedRoute perms={['attendance.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/shift-configs']}>
                     <ShiftConfigsScreen />
                   </ProtectedRoute>
                 }
@@ -85,7 +86,7 @@ function App() {
               <Route
                 path="/holidays"
                 element={
-                  <ProtectedRoute perms={['attendance.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/holidays']}>
                     <HolidaysScreen />
                   </ProtectedRoute>
                 }
@@ -93,14 +94,7 @@ function App() {
               <Route
                 path="/my-attendance"
                 element={
-                  <ProtectedRoute
-                    perms={[
-                      'attendance.self.check-in',
-                      'attendance.self.check-out',
-                      'attendance.self.request',
-                      'attendance.self.request.read',
-                    ]}
-                  >
+                  <ProtectedRoute access={ROUTE_ACCESS['/my-attendance']}>
                     <MyAttendanceScreen />
                   </ProtectedRoute>
                 }
@@ -108,7 +102,7 @@ function App() {
               <Route
                 path="/salary-rates"
                 element={
-                  <ProtectedRoute perms={['hr.employees.manage', 'hr.employees.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/salary-rates']}>
                     <SalaryRatesScreen />
                   </ProtectedRoute>
                 }
@@ -116,7 +110,7 @@ function App() {
               <Route
                 path="/salary-periods"
                 element={
-                  <ProtectedRoute perms={['payroll.periods.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/salary-periods']}>
                     <SalaryPeriodsScreen />
                   </ProtectedRoute>
                 }
@@ -124,7 +118,7 @@ function App() {
               <Route
                 path="/payroll-runs"
                 element={
-                  <ProtectedRoute perms={['payroll.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/payroll-runs']}>
                     <PayrollRunsScreen />
                   </ProtectedRoute>
                 }
@@ -132,7 +126,7 @@ function App() {
               <Route
                 path="/overtime-approvals"
                 element={
-                  <ProtectedRoute perms={['attendance.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/overtime-approvals']}>
                     <OvertimeApprovalsScreen />
                   </ProtectedRoute>
                 }
@@ -140,7 +134,7 @@ function App() {
               <Route
                 path="/reports"
                 element={
-                  <ProtectedRoute perms={['payroll.reports.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/reports']}>
                     <ReportsScreen />
                   </ProtectedRoute>
                 }
@@ -148,7 +142,7 @@ function App() {
               <Route
                 path="/system/accounts"
                 element={
-                  <ProtectedRoute perms={['accounts.manage', 'accounts.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/system/accounts']}>
                     <AccountsScreen />
                   </ProtectedRoute>
                 }
@@ -156,12 +150,19 @@ function App() {
               <Route
                 path="/system/roles"
                 element={
-                  <ProtectedRoute perms={['roles.manage', 'roles.read']}>
+                  <ProtectedRoute access={ROUTE_ACCESS['/system/roles']}>
                     <RolesScreen />
                   </ProtectedRoute>
                 }
               />
-              <Route path="/system/audit-logs" element={<AuditLogsScreen />} />
+              <Route
+                path="/system/audit-logs"
+                element={
+                  <ProtectedRoute access={ROUTE_ACCESS['/system/audit-logs']}>
+                    <AuditLogsScreen />
+                  </ProtectedRoute>
+                }
+              />
             </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

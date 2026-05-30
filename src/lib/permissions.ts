@@ -15,3 +15,26 @@ export function hasAnyPermission(
 ): boolean {
   return perms.some((p) => hasPermission(session, p))
 }
+
+export interface RouteAccess {
+  perms?: string[]
+  roles?: string[]
+}
+
+export function hasAnyRole(
+  session: IAuthSession | null,
+  roles: string[],
+): boolean {
+  return roles.some((r) => session?.roles?.includes(r) ?? false)
+}
+
+export function canAccess(
+  session: IAuthSession | null,
+  access?: RouteAccess,
+): boolean {
+  if (!access) return true
+  if (session?.roles?.includes('admin')) return true
+  if (access.perms && hasAnyPermission(session, access.perms)) return true
+  if (access.roles && hasAnyRole(session, access.roles)) return true
+  return false
+}
