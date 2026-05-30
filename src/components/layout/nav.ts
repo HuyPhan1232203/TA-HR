@@ -16,7 +16,8 @@ import {
   UserCheck,
   AlarmClockPlus,
 } from 'lucide-react'
-import type { RouteAccess } from '@/lib/permissions'
+import { canAccess, type RouteAccess } from '@/lib/permissions'
+import type { IAuthSession } from '@/types/AuthType'
 
 export interface NavItem {
   to: string
@@ -66,6 +67,7 @@ export const NAV_GROUPS: NavGroup[] = [
 ]
 
 export const ROUTE_ACCESS: Record<string, RouteAccess> = {
+  '/dashboard': { roles: ['admin'] },
   '/departments': { perms: ['hr.departments.manage', 'hr.departments.read'] },
   '/employees': { perms: ['hr.employees.manage', 'hr.employees.read'] },
   '/salary-rates': { perms: ['hr.employees.manage', 'hr.employees.read'] },
@@ -87,6 +89,19 @@ export const ROUTE_ACCESS: Record<string, RouteAccess> = {
   '/system/accounts': { perms: ['accounts.manage', 'accounts.read'] },
   '/system/roles': { perms: ['roles.manage', 'roles.read'] },
   '/system/audit-logs': { roles: ['admin'] },
+}
+
+export const LANDING_ROUTES = [
+  '/dashboard',
+  '/my-attendance',
+  '/employees',
+  '/attendances',
+] as const
+
+export function pickLandingRoute(session: IAuthSession | null): string {
+  return (
+    LANDING_ROUTES.find((p) => canAccess(session, ROUTE_ACCESS[p])) ?? '/403'
+  )
 }
 
 export interface ScreenMeta {
