@@ -7,6 +7,7 @@ import { Label } from '../components/ui/label'
 import { useAuth } from '@/components/auth-context'
 import { authApi } from '@/api/auth.api'
 import { setToken } from '@/lib/auth-storage'
+import { pickLandingRoute } from '@/components/layout/nav'
 import { toast } from 'sonner'
 
 interface FromState {
@@ -40,16 +41,19 @@ export function LoginScreen() {
       const permRes = await authApi.myPermissions()
       const permissions = permRes.data?.permissions ?? []
 
-      signIn({
+      const nextSession = {
         accountId: login.accountId,
         username: login.username,
         fullName: login.fullName,
         employeeId: login.employeeId,
         roles: login.roles,
         permissions,
-      })
+      }
+      signIn(nextSession)
       toast.success('Đăng nhập thành công')
-      const from = (location.state as FromState | null)?.from?.pathname ?? '/dashboard'
+      const from =
+        (location.state as FromState | null)?.from?.pathname ??
+        pickLandingRoute(nextSession)
       navigate(from, { replace: true })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Đăng nhập thất bại')
